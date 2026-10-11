@@ -7,5 +7,14 @@ export default defineConfig({
   server: {
     port: 5070,
     strictPort: true,
+    // Relative URLs are used everywhere, so proxying here keeps local
+    // development identical to production (same-origin through CloudFront).
+    proxy: {
+      '/health': 'http://localhost:5071',
+      '/api': {
+        target: 'ws://localhost:5071',
+        ws: true,
+      },
+    },
   },
 })

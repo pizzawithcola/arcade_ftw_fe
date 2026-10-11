@@ -1,0 +1,93 @@
+name: Deploy frontend to S3 + CloudFront
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Deploys are cheap but the invalidation is global; keep them serial.
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-south-1
+  AWS_ROLE_ARN: arn:aws:iam::866730904414:role/arcade-ftw-fe-github-deploy
+  SITE_BUCKET: arcade-ftw-frontend
+  # Update both if the distribution is ever replaced (see the
+  # arcade-ftw-frontend stack outputs DistributionId / DistributionDomain).
+  DISTRIBUTION_ID: EJUERA5VLSVBB
+  SITE_DOMAIN: d39s9y5ma27s5.cloudfront.net
+
+# No long-lived AWS keys: a short-lived GitHub OIDC token is exchanged for
+# temporary credentials, and the role is locked to this repository and branch.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Vite writes fingerprinted files under assets/, so those can be cached
+      # forever. --exclude keeps sync from touching anything outside assets/.
+      - name: Sync fingerprinted assets (long cache)
+        run: |
+          aws s3 sync dist/assets/ "s3://$SITE_BUCKET/assets/" \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable"
+
+      # Everything else - index.html above all - must not be cached, or a
+      # released build would keep serving the previous page.
+      - name: Sync everything else (no cache)
+        run: |
+          aws s3 sync dist/ "s3://$SITE_BUCKET/" \
+            --delete \
+            --exclude "assets/*" \
+            --cache-control "no-cache"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/*"
+
+      - name: Verify the deployed site
+        run: |
+          echo "Site: https://$SITE_DOMAIN"
+          for attempt in 1 2 3 4 5; do
+            if curl -fsS --max-time 15 "https://$SITE_DOMAIN/health"; then
+              echo
+              echo "API reachable through CloudFront."
+              exit 0
+            fi
+            echo "Attempt $attempt failed; retrying in 20s..."
+            sleep 20
+          done
+          echo "::error::/health did not respond through CloudFront."
+          exit 1

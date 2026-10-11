@@ -1,0 +1,68 @@
+:root {
+  color-scheme: dark;
+}
+
+.status {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+}
+
+.status h1 {
+  margin: 0 0 0.25rem;
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  color: #57f2c4;
+}
+
+.muted {
+  color: #8b94a8;
+  font-size: 0.85rem;
+}
+
+.card {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #232a3b;
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: #111726;
+}
+
+.card.ok {
+  border-left-color: #57f2c4;
+}
+
+.card.fail {
+  border-left-color: #ff5c7a;
+}
+
+.card header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5a6478;
+}
+
+.dot.ok {
+  background: #57f2c4;
+}
+
+.dot.fail {
+  background: #ff5c7a;
+}
+
+.card pre {
+  margin: 0.6rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.8rem;
+  color: #b7c0d4;
+}

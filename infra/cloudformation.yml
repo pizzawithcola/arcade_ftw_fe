@@ -1,0 +1,266 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Arcade FTW - frontend infrastructure.
+  Creates a private S3 bucket served through CloudFront via OAC, a distribution
+  that proxies /api/* and /health* to the backend ALB, an SPA fallback function,
+  and the GitHub OIDC deploy role for this repository.
+  Deliberately NO distribution-level 403/404 -> 200 rewrite: that is what made
+  the legacy stack report every backend error as a fake 200 text/html.
+
+Metadata:
+  Notes: |
+    - The API origin comes from the backend stack's AlbDns export, so the two
+      stacks can never drift. A consequence: the backend stack cannot be deleted
+      while this one imports from it.
+    - WebSocket upgrades pass through CloudFront to the same ALB origin.
+
+Parameters:
+  NamePrefix:
+    Type: String
+    Default: arcade-ftw
+    Description: Prefix for resource names.
+
+  BackendStackName:
+    Type: String
+    Default: arcade-ftw
+    Description: Stack whose AlbDns export is used as the API origin.
+
+  SiteBucketName:
+    Type: String
+    Default: arcade-ftw-frontend
+    Description: Globally unique S3 bucket name for the built site.
+
+  GitHubRepo:
+    Type: String
+    Default: pizzawithcola/arcade_ftw_fe
+
+  GitHubRepoIds:
+    Type: String
+    Default: pizzawithcola@68038650/arcade_ftw_fe@1414195281
+    Description: owner@ownerId/repo@repoId as it appears in the OIDC subject.
+
+  GitHubBranch:
+    Type: String
+    Default: main
+
+  PriceClass:
+    Type: String
+    Default: PriceClass_200
+    Description: >
+      PriceClass_200 covers North America, Europe, Asia, the Middle East and
+      Africa - everything the events need - while skipping South America and
+      Oceania. Use PriceClass_All if an edge in those regions is ever required.
+
+Resources:
+  # ─── S3 ───────────────────────────────────────────────────────────────────────
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref SiteBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${NamePrefix}-frontend-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # Only this distribution may read the bucket.
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${SiteBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+
+  # Rewrites extension-less paths to /index.html so client-side routes work.
+  # This replaces the legacy distribution-level error rewrite: because it only
+  # touches the S3 behavior, a genuinely missing API path still reports its real
+  # status instead of a fake 200 text/html.
+  SpaFallbackFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub ${NamePrefix}-spa-fallback
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Rewrite extension-less paths to /index.html
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        function handler(event) {
+            var request = event.request;
+            var uri = request.uri;
+            if (uri.endsWith('/')) {
+                request.uri = uri + 'index.html';
+            } else if (!uri.split('/').pop().includes('.')) {
+                request.uri = '/index.html';
+            }
+            return request;
+        }
+
+  # ─── CloudFront ───────────────────────────────────────────────────────────────
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub ${NamePrefix} frontend and API
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        IPV6Enabled: true
+        PriceClass: !Ref PriceClass
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+          - Id: ApiOrigin
+            # Comes from the backend stack, so the two never drift.
+            DomainName:
+              Fn::ImportValue:
+                Fn::Sub: ${BackendStackName}-AlbDns
+            CustomOriginConfig:
+              # The ALB has no certificate; CloudFront terminates TLS and talks
+              # plain HTTP to the origin. This is also why the frontend and the
+              # API share one hostname: an https page calling an http API would
+              # be blocked as mixed content.
+              OriginProtocolPolicy: http-only
+              OriginSSLProtocols:
+                - TLSv1.2
+              HTTPPort: 80
+              HTTPSPort: 443
+              # Raised to the maximum so CloudFront does not cut long-lived
+              # WebSocket connections short.
+              OriginReadTimeout: 60
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          # Managed CachingOptimized: respects the Cache-Control headers that CI
+          # sets per object, long for hashed assets and no-cache for index.html.
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt SpaFallbackFunction.FunctionARN
+        CacheBehaviors:
+          # Everything the backend serves, including the WebSocket handshake.
+          - PathPattern: /api/*
+            TargetOriginId: ApiOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            # Managed CachingDisabled + AllViewer.
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - PATCH
+              - POST
+              - DELETE
+            CachedMethods:
+              - GET
+              - HEAD
+          # Ops endpoints kept at the root so the load balancer can probe them
+          # directly. This is the one deliberate exception to the /api prefix.
+          - PathPattern: /health*
+            TargetOriginId: ApiOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  # ─── GitHub Actions OIDC ──────────────────────────────────────────────────────
+  # The provider itself is created by the backend stack; this only references it.
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${NamePrefix}-fe-github-deploy
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                # No wildcards, so the match stays exact. Both spellings are
+                # accepted in case a repository omits the numeric IDs.
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubRepo}:ref:refs/heads/${GitHubBranch}
+                  - !Sub repo:${GitHubRepoIds}:ref:refs/heads/${GitHubBranch}
+      Policies:
+        - PolicyName: deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ListBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt SiteBucket.Arn
+              - Sid: WriteObjects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub ${SiteBucket.Arn}/*
+              - Sid: InvalidateCache
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+
+Outputs:
+  DistributionDomain:
+    Description: Public site and API hostname.
+    Value: !GetAtt Distribution.DomainName
+
+  DistributionId:
+    Description: Distribution id, used for cache invalidations.
+    Value: !Ref Distribution
+
+  SiteBucketName:
+    Description: Bucket the built site is synced into.
+    Value: !Ref SiteBucket
+
+  GitHubDeployRoleArn:
+    Description: Role ARN for the frontend workflow's role-to-assume.
+    Value: !GetAtt GitHubDeployRole.Arn
