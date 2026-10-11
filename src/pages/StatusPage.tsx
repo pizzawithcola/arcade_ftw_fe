@@ -23,7 +23,7 @@ function StatusPage() {
     messages: [],
   })
   const phase = useGameStore((store) => store.phase)
-  const current = useGameStore((store) => store.current)
+  const current = useGameStore((store) => store.node)
 
   useEffect(() => {
     let cancelled = false
@@ -67,7 +67,7 @@ function StatusPage() {
       // Every message goes through the store, the same entry point the real
       // gameplay screens will use.
       try {
-        useGameStore.getState().onMessage(JSON.parse(raw))
+        useGameStore.getState().applyMessage(JSON.parse(raw))
       } catch {
         // Not JSON; the raw message is already shown above.
       }

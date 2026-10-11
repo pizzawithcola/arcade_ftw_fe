@@ -1,0 +1,99 @@
+.login {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.25rem;
+}
+
+.login__card {
+  position: relative;
+  width: min(380px, 100%);
+  padding: 2rem;
+  border: 1px solid #232a3b;
+  border-radius: 10px;
+  background: #111726;
+}
+
+.login__card h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  color: #57f2c4;
+}
+
+.login__hint {
+  margin: 0 0 1.5rem;
+  color: #8b94a8;
+  font-size: 0.85rem;
+}
+
+.login__field {
+  display: block;
+  margin-bottom: 0.9rem;
+}
+
+.login__field span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #8b94a8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login__field input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #2c3549;
+  border-radius: 6px;
+  background: #0b0f1a;
+  color: #e6e9f0;
+  font: inherit;
+}
+
+.login__field input:focus {
+  outline: none;
+  border-color: #57f2c4;
+}
+
+.login__card button[type='submit'] {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 6px;
+  background: #57f2c4;
+  color: #06121a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login__card button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login__error {
+  margin: 0 0 0.8rem;
+  color: #ff5c7a;
+  font-size: 0.8rem;
+}
+
+/* Deliberately low-key: the audience never needs to notice this exists. */
+.login__admin-toggle {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border: none;
+  background: none;
+  color: #3a4358;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.login__admin-toggle:hover {
+  color: #8b94a8;
+}

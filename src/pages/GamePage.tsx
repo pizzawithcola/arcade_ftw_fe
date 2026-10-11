@@ -1,0 +1,126 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { clearToken, fetchSession, gameAction, type Session } from '../api'
+import { useGameSocket } from '../hooks/useGameSocket'
+import { useTicker } from '../hooks/useTicker'
+import { useGameStore, type FlowNode } from '../store/gameStore'
+import './GamePage.css'
+
+function formatClock(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000))
+  const minutes = Math.floor(total / 60)
+  const seconds = total % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+/** What the audience sees while a node is running. Real screens replace this. */
+function NodeStage({ node }: { node: FlowNode | null }) {
+  if (!node) {
+    return (
+      <div className="stage stage--waiting">
+        <p>Waiting for the show to start…</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`stage stage--${node.type}`}>
+      <span className="stage__kind">{node.type}</span>
+      <h2>{node.title ?? node.game ?? 'Untitled node'}</h2>
+      <p className="stage__note">
+        {node.type === 'game' && `Placeholder for the ${node.game} game.`}
+        {node.type === 'quiz' && 'Placeholder for a quiz round.'}
+        {node.type !== 'game' && node.type !== 'quiz' && 'Placeholder screen.'}
+      </p>
+    </div>
+  )
+}
+
+export default function GamePage() {
+  useGameSocket()
+
+  const phase = useGameStore((state) => state.phase)
+  const node = useGameStore((state) => state.node)
+  const index = useGameStore((state) => state.index)
+  const nodeCount = useGameStore((state) => state.nodeCount)
+  const endsAt = useGameStore((state) => state.endsAt)
+  const heldMs = useGameStore((state) => state.heldMs)
+  const connection = useGameStore((state) => state.connection)
+
+  const navigate = useNavigate()
+  const now = useTicker()
+  const [session, setSession] = useState<Session | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    void fetchSession().then((found) => {
+      if (!found) navigate('/login', { replace: true })
+      else setSession(found)
+    })
+  }, [navigate])
+
+  const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
+
+  const run = async (action: string) => {
+    setError('')
+    try {
+      await gameAction(action)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }
+
+  return (
+    <main className="game">
+      <header className="game__bar">
+        <span className={`dot dot--${connection}`} />
+        <span className="game__conn">{connection}</span>
+        <span className="game__phase">{phase}</span>
+        <span className="game__progress">
+          node {Math.min(index + 1, nodeCount)} / {nodeCount}
+        </span>
+        <span className="game__clock">{formatClock(remaining)}</span>
+        <button
+          type="button"
+          className="game__signout"
+          onClick={() => {
+            clearToken()
+            navigate('/login', { replace: true })
+          }}
+        >
+          sign out
+        </button>
+      </header>
+
+      <NodeStage node={node} />
+
+      {session?.isAdmin && (
+        <section className="controls">
+          <h3>Operator</h3>
+          <div className="controls__row">
+            <button type="button" onClick={() => void run('start')}>start</button>
+            <button type="button" onClick={() => void run('pause')} disabled={phase !== 'playing'}>pause</button>
+            <button type="button" onClick={() => void run('resume')} disabled={phase !== 'paused'}>resume</button>
+            <button type="button" onClick={() => void run('finish')}>finish</button>
+          </div>
+          {nodeCount > 0 && (
+            <div className="controls__row controls__row--jump">
+              <span>jump to</span>
+              {Array.from({ length: nodeCount }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={i === index ? 'is-current' : ''}
+                  onClick={() => void run(`go/${i}`)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+          {error && <p className="controls__error">{error}</p>}
+        </section>
+      )}
+    </main>
+  )
+}
