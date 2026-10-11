@@ -17,10 +17,10 @@ src/
 
 ```bash
 npm install
-npm run dev     # 5060（在 vite.config.ts 里固定，strictPort）
+npm run dev     # 5070（在 vite.config.ts 里固定，strictPort）
 ```
 
-后端默认跑在 `http://localhost:5070`（见 `arcade_ftw_be`）。
+后端默认跑在 `http://localhost:5071`（见 `arcade_ftw_be`）。
 
 ## 脚本
 
