@@ -23,14 +23,22 @@ function NodeStage({ node }: { node: FlowNode | null }) {
     )
   }
 
+  // Games share one category, so keying the styling off the category alone
+  // would give all three games the same hook. Keep the category class for the
+  // shared look and add the game as a second class for per-game screens.
+  const kind = node.game ?? node.type
+  const stageClass = node.game ? `stage--${node.type} stage--${node.game}` : `stage--${node.type}`
+
   return (
-    <div className={`stage stage--${node.type}`}>
-      <span className="stage__kind">{node.type}</span>
+    <div className={`stage ${stageClass}`}>
+      <span className="stage__kind">{kind}</span>
       <h2>{node.title ?? node.game ?? 'Untitled node'}</h2>
       <p className="stage__note">
-        {node.type === 'game' && `Placeholder for the ${node.game} game.`}
-        {node.type === 'quiz' && 'Placeholder for a quiz round.'}
-        {node.type !== 'game' && node.type !== 'quiz' && 'Placeholder screen.'}
+        {node.type === 'game'
+          ? `Placeholder for the ${node.game} game.`
+          : node.type === 'quiz'
+            ? 'Placeholder for a quiz round.'
+            : 'Placeholder screen.'}
       </p>
     </div>
   )
