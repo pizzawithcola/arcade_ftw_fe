@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { clearToken, fetchSession, gameAction, type Session } from '../api'
 import { useGameSocket } from '../hooks/useGameSocket'
 import { useTicker } from '../hooks/useTicker'
-import { useGameStore, type FlowNode } from '../store/gameStore'
+import { useGameStore, type FlowNode, type Phase } from '../store/gameStore'
 import './GamePage.css'
 
 function formatClock(ms: number): string {
@@ -14,8 +14,11 @@ function formatClock(ms: number): string {
 }
 
 /** What the audience sees while a node is running. Real screens replace this. */
-function NodeStage({ node }: { node: FlowNode | null }) {
-  if (!node) {
+function NodeStage({ node, phase }: { node: FlowNode | null; phase: Phase }) {
+  // IDLE is the hand-over state: nothing has run yet, or the operator reset
+  // back to the top. Showing node 1 at 0:00 there would look like a stalled
+  // show, so the waiting screen stands in for both cases.
+  if (!node || phase === 'idle') {
     return (
       <div className="stage stage--waiting">
         <p>Waiting for the show to start…</p>
@@ -100,16 +103,27 @@ export default function GamePage() {
         </button>
       </header>
 
-      <NodeStage node={node} />
+      <NodeStage node={node} phase={phase} />
 
       {session?.isAdmin && (
         <section className="controls">
           <h3>Operator</h3>
           <div className="controls__row">
-            <button type="button" onClick={() => void run('start')}>start</button>
+            <button
+              type="button"
+              onClick={() => void run('start')}
+              // start rewinds to the first node, so it only means "begin the
+              // show" before the show has begun. Mid-show the operator wants
+              // resume; leaving start enabled there silently teleports the
+              // whole show back to node 1.
+              disabled={phase !== 'idle' && phase !== 'finished'}
+            >
+              start
+            </button>
             <button type="button" onClick={() => void run('pause')} disabled={phase !== 'playing'}>pause</button>
             <button type="button" onClick={() => void run('resume')} disabled={phase !== 'paused'}>resume</button>
             <button type="button" onClick={() => void run('finish')}>finish</button>
+            <button type="button" onClick={() => void run('reset')} disabled={phase === 'idle'}>reset</button>
           </div>
           {nodeCount > 0 && (
             <div className="controls__row controls__row--jump">
