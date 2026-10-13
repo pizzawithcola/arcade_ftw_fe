@@ -41,7 +41,8 @@
   letter-spacing: 0.08em;
 }
 
-.login__field input {
+.login__field input,
+.login__field select {
   width: 100%;
   padding: 0.6rem 0.7rem;
   border: 1px solid #2c3549;
@@ -51,9 +52,32 @@
   font: inherit;
 }
 
-.login__field input:focus {
+.login__field input:focus,
+.login__field select:focus {
   outline: none;
   border-color: #57f2c4;
+}
+
+.login__field select {
+  /* The native arrow renders dark-on-dark against this card, so draw our own.
+     color-scheme keeps the popup list dark on macOS. */
+  color-scheme: dark;
+  appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%238b94a8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 0.7rem;
+}
+
+/* The placeholder is not a real choice, so it should not read as one. */
+.login__field select.is-placeholder {
+  color: #5a6478;
+}
+
+.login__field select:disabled {
+  color: #5a6478;
+  cursor: default;
 }
 
 .login__card button[type='submit'] {

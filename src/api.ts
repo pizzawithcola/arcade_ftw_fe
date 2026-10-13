@@ -5,9 +5,15 @@ export interface Session {
   isAdmin: boolean
 }
 
+export interface EventOption {
+  key: string
+  label: string
+}
+
 export interface PlayerSession extends Session {
   playerId: number
   nickname: string
+  event: string
 }
 
 export function readToken(): string | null {
@@ -48,13 +54,27 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (text ? JSON.parse(text) : undefined) as T
 }
 
-export async function loginPlayer(nickname: string): Promise<PlayerSession> {
-  const body = await request<{ token: string; player_id: number; nickname: string }>(
-    '/api/auth/player',
-    { method: 'POST', body: JSON.stringify({ nickname }) },
-  )
+/** The events the backend will accept. The dropdown is built from this. */
+export async function fetchEvents(): Promise<EventOption[]> {
+  const body = await request<{ events: EventOption[] }>('/api/auth/events')
+  return body.events
+}
+
+export async function loginPlayer(nickname: string, event: string): Promise<PlayerSession> {
+  const body = await request<{
+    token: string
+    player_id: number
+    nickname: string
+    event: string
+  }>('/api/auth/player', { method: 'POST', body: JSON.stringify({ nickname, event }) })
   saveToken(body.token)
-  return { subject: `player:${body.player_id}`, isAdmin: false, playerId: body.player_id, nickname: body.nickname }
+  return {
+    subject: `player:${body.player_id}`,
+    isAdmin: false,
+    playerId: body.player_id,
+    nickname: body.nickname,
+    event: body.event,
+  }
 }
 
 export async function loginAdmin(username: string, password: string): Promise<Session> {
