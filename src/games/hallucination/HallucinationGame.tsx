@@ -22,7 +22,12 @@ export default function HallucinationGame() {
   )
 
   if (finished) {
-    const best = HALLUCINATION_QUESTIONS.length * 20
+    // Derived, not assumed: the best a doubt sentence can pay is 10, so the
+    // ceiling is not simply 20 per question.
+    const best = HALLUCINATION_QUESTIONS.reduce(
+      (sum, item) => sum + Math.max(...TRUST_LEVELS.map((level) => scoreFor(level, item.truth))),
+      0,
+    )
     return (
       <div className="stage stage--game stage--hallucination hallu">
         <span className="stage__kind">Hallucination</span>
