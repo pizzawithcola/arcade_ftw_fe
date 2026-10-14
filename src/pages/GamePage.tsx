@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearToken, fetchSession, gameAction, type Session } from '../api'
+import HallucinationGame from '../games/hallucination/HallucinationGame'
 import { useGameSocket } from '../hooks/useGameSocket'
 import { useTicker } from '../hooks/useTicker'
 import { useGameStore, type FlowNode, type Phase } from '../store/gameStore'
@@ -24,6 +25,12 @@ function NodeStage({ node, phase }: { node: FlowNode | null; phase: Phase }) {
         <p>Waiting for the show to start…</p>
       </div>
     )
+  }
+
+  // A real game owns its whole screen; only the placeholder screens use the
+  // shared category layout below.
+  if (node.game === 'hallucination') {
+    return <HallucinationGame key={node.game} />
   }
 
   // Games share one category, so keying the styling off the category alone

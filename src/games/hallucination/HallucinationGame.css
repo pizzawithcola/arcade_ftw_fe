@@ -1,0 +1,285 @@
+/* The hallucination round. Two classes so it wins over the shared .stage shell
+   without depending on which stylesheet Vite happens to emit first. */
+
+.stage.hallu {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+.hallu__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid #1c2333;
+}
+
+.hallu__count {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: #8b94a8;
+}
+
+.hallu__score {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #8b94a8;
+}
+
+.hallu__score.is-good {
+  color: #57f2c4;
+}
+
+.hallu__score.is-bad {
+  color: #ff5c7a;
+}
+
+.hallu__board {
+  width: 100%;
+  padding: 1.5rem 1.25rem 0.5rem;
+}
+
+.hallu__ask,
+.hallu__replylabel {
+  margin: 0 0 0.4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8b94a8;
+}
+
+.hallu__prompt {
+  margin: 0 0 1.4rem;
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  color: #e6e9f0;
+}
+
+.hallu__reply {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #2c3549;
+  border-left: 3px solid #ffd166;
+  border-radius: 8px;
+  background: #0e1421;
+  color: #dfe4ee;
+  font-size: clamp(0.95rem, 1.9vw, 1.15rem);
+  line-height: 1.65;
+}
+
+.hallu__choices {
+  width: 100%;
+  padding: 1.4rem 1.25rem 1.6rem;
+}
+
+.hallu__question {
+  margin: 0 0 0.9rem;
+  font-size: 0.95rem;
+  color: #8b94a8;
+}
+
+.hallu__buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.hallu__button {
+  padding: 1rem 0.5rem;
+  border: 1px solid #2c3549;
+  border-radius: 8px;
+  background: #111726;
+  color: #e6e9f0;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.hallu__button:hover {
+  transform: translateY(-2px);
+}
+
+/* Cool for doubt, warm for trust, so the axis is readable before you read it. */
+.hallu__button--very_doubt {
+  border-color: #2f6ea8;
+  color: #9fd0ff;
+}
+
+.hallu__button--doubt {
+  border-color: #2c5680;
+  color: #7cc4ff;
+}
+
+.hallu__button--not_sure {
+  color: #8b94a8;
+}
+
+.hallu__button--partial_trust {
+  border-color: #8a6a2a;
+  color: #ffd166;
+}
+
+.hallu__button--full_trust {
+  border-color: #2f8a6a;
+  color: #57f2c4;
+}
+
+.hallu__button:hover,
+.hallu__button:focus-visible {
+  background: #182031;
+}
+
+.hallu__hint {
+  margin: 0.9rem 0 0;
+  font-size: 0.8rem;
+  color: #5a6478;
+}
+
+.hallu__reveal {
+  width: 100%;
+  padding: 1.2rem 1.25rem 1.6rem;
+  border-top: 1px solid #1c2333;
+}
+
+.hallu__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.hallu__verdictkind {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.hallu__reveal.is-good .hallu__verdictkind {
+  color: #57f2c4;
+}
+
+.hallu__reveal.is-bad .hallu__verdictkind {
+  color: #ff5c7a;
+}
+
+.hallu__verdictpoints {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.hallu__reveal.is-good .hallu__verdictpoints {
+  color: #57f2c4;
+}
+
+.hallu__reveal.is-bad .hallu__verdictpoints {
+  color: #ff5c7a;
+}
+
+.hallu__verdictpick {
+  font-size: 0.8rem;
+  color: #8b94a8;
+}
+
+.hallu__why {
+  margin: 0 0 1.2rem;
+  max-width: 52rem;
+  color: #b9c1d1;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.hallu__next {
+  padding: 0.7rem 1.6rem;
+  border: none;
+  border-radius: 6px;
+  background: #57f2c4;
+  color: #06121a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hallu__final {
+  width: 100%;
+  padding: 1.6rem 1.25rem 2rem;
+  text-align: center;
+}
+
+.hallu__finallabel {
+  margin: 0 0 0.3rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8b94a8;
+}
+
+.hallu__finalscore {
+  margin: 0 0 0.8rem;
+  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #57f2c4;
+}
+
+.hallu__finalnote {
+  margin: 0 auto 1.6rem;
+  max-width: 42rem;
+  color: #b9c1d1;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.hallu__review {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.hallu__review li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #232a3b;
+  border-radius: 6px;
+  background: #0e1421;
+  color: #b9c1d1;
+  font-size: 0.85rem;
+}
+
+.hallu__reviewpoints {
+  flex: none;
+  min-width: 3rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #8b94a8;
+}
+
+.hallu__review li.is-good .hallu__reviewpoints {
+  color: #57f2c4;
+}
+
+.hallu__review li.is-bad .hallu__reviewpoints {
+  color: #ff5c7a;
+}
+
+@media (max-width: 44rem) {
+  .hallu__buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
