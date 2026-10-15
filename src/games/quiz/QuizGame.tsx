@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useTicker } from '../../hooks/useTicker'
+import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { optionsOf, QUIZ_QUESTIONS } from './content'
 import { questionScore } from './scoring'
 import './QuizGame.css'
@@ -10,14 +10,16 @@ export default function QuizGame() {
   const [index, setIndex] = useState(0)
   const [picks, setPicks] = useState<Picks>({})
   const [finished, setFinished] = useState(false)
-  const [questionStart, setQuestionStart] = useState(() => Date.now())
 
-  const now = useTicker()
+  // Frozen while the operator has the show paused, so a pause stops the
+  // questions too instead of letting them expire off-screen.
+  const elapsed = useNodeElapsed()
+  const [questionStart, setQuestionStart] = useState(elapsed)
 
   const question = QUIZ_QUESTIONS[index]
   const picked = picks[question.id]
 
-  const timeLeftMs = Math.max(0, questionStart + question.time_limit * 1000 - now)
+  const timeLeftMs = Math.max(0, question.time_limit * 1000 - (elapsed - questionStart))
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
   // Derived rather than stored, so expiry needs no effect and no extra render.
   const expired = picked === undefined && timeLeftMs === 0
@@ -40,7 +42,9 @@ export default function QuizGame() {
       return
     }
     setIndex((current) => current + 1)
-    setQuestionStart(Date.now())
+    // Anchor to the node clock, so a question started while paused keeps its
+    // full time until the show resumes.
+    setQuestionStart(elapsed)
   }
 
   if (finished) {

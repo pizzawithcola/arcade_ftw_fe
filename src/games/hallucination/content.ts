@@ -15,9 +15,9 @@ export interface HallucinationQuestion {
  * Hardcoded for now. When the question bank lands these move behind the API and
  * this file becomes the fixture the tests run against.
  *
- * Two hallucinations to one clean answer on purpose: a round of nothing but
- * traps teaches "doubt everything", which is its own failure mode. The middle
- * question is the one that punishes that reflex.
+ * Two questions, deliberately one of each: a round of nothing but traps teaches
+ * "doubt everything", which is its own failure mode. The second question is the
+ * one that punishes that reflex, so the pair has to stay balanced.
  */
 export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
   {
@@ -37,14 +37,5 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
     truth: 'trust',
     reveal:
       'This is what a well-calibrated answer looks like: a range instead of a false precision, a list of what the number depends on, and a warning about how far to trust it. Hedging is not weakness — an answer that admits its own uncertainty is easier to check, and it is the exact opposite of the confident citation in the first question.',
-  },
-  {
-    id: 'protest-photo',
-    prompt: "Someone posted a photo claiming it's from yesterday's protest. Is it real?",
-    reply:
-      'Yes, this photo is genuine. I can confirm it was taken yesterday in front of the parliament building at around 4pm — the banners and the lighting match the event. It is definitively authentic.',
-    truth: 'doubt',
-    reveal:
-      'A model cannot see where a photo came from. Provenance lives in the file metadata and in earlier copies of the same image elsewhere on the web — not in how the picture looks. "The lighting matches" is exactly the kind of reasoning that sounds like evidence and is not. "Definitively authentic", with no source behind it, is a red flag rather than a conclusion.',
   },
 ]

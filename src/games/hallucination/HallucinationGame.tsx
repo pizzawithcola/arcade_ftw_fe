@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useTicker } from '../../hooks/useTicker'
+import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { HALLUCINATION_QUESTIONS } from './content'
 import { isCorrect, levelByKey, scoreFor, TRUST_LEVELS } from './scoring'
 import './HallucinationGame.css'
@@ -7,27 +7,27 @@ import './HallucinationGame.css'
 type Picks = Record<string, string>
 
 /** Each reply gets this long before the round moves on without an answer. */
-const QUESTION_SECONDS = 20
+const QUESTION_SECONDS = 30
 
 export default function HallucinationGame() {
   const [index, setIndex] = useState(0)
   const [picks, setPicks] = useState<Picks>({})
   const [finished, setFinished] = useState(false)
-  const [questionStart, setQuestionStart] = useState(() => Date.now())
 
-  // The same ticker that drives the header clock. Anchored to a timestamp so a
-  // throttled background tab cannot freeze the countdown (see useTicker).
-  const now = useTicker()
+  // Frozen while the operator has the show paused, so a pause stops the
+  // questions too instead of letting them expire off-screen.
+  const elapsed = useNodeElapsed()
+  const [questionStart, setQuestionStart] = useState(elapsed)
 
   const question = HALLUCINATION_QUESTIONS[index]
 
   const pickKey = picks[question.id]
   const picked = pickKey ? levelByKey(pickKey) : undefined
 
-  const timeLeftMs = Math.max(0, questionStart + QUESTION_SECONDS * 1000 - now)
+  const timeLeftMs = Math.max(0, QUESTION_SECONDS * 1000 - (elapsed - questionStart))
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
   // Derived, not stored: a show must not stall waiting for a kiosk that never
-  // picked, and the clock already lives in `now`.
+  // picked, and the clock already lives in `elapsed`.
   const expired = picked === undefined && timeLeftMs === 0
   const revealed = picked !== undefined || expired
 
@@ -48,7 +48,9 @@ export default function HallucinationGame() {
       return
     }
     setIndex((current) => current + 1)
-    setQuestionStart(Date.now())
+    // Anchor to the node clock, so a question started while paused keeps its
+    // full time until the show resumes.
+    setQuestionStart(elapsed)
   }
 
   if (finished) {
