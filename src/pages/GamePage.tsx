@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearToken, fetchSession, gameAction, type Session } from '../api'
+import DataShadowGame from '../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../games/hallucination/HallucinationGame'
 import QuizGame from '../games/quiz/QuizGame'
 import { useGameSocket } from '../hooks/useGameSocket'
@@ -33,6 +34,9 @@ function NodeStage({ node, phase, nodeIndex }: { node: FlowNode | null; phase: P
   // quiz round cannot carry its answers into the next one.
   if (node.game === 'hallucination') {
     return <HallucinationGame key={nodeIndex} />
+  }
+  if (node.game === 'data_shadow') {
+    return <DataShadowGame key={nodeIndex} />
   }
   if (node.type === 'quiz') {
     return <QuizGame key={nodeIndex} />
