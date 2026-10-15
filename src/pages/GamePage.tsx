@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearToken, fetchSession, gameAction, type Session } from '../api'
 import HallucinationGame from '../games/hallucination/HallucinationGame'
+import QuizGame from '../games/quiz/QuizGame'
 import { useGameSocket } from '../hooks/useGameSocket'
 import { useTicker } from '../hooks/useTicker'
 import { useGameStore, type FlowNode, type Phase } from '../store/gameStore'
@@ -15,7 +16,7 @@ function formatClock(ms: number): string {
 }
 
 /** What the audience sees while a node is running. Real screens replace this. */
-function NodeStage({ node, phase }: { node: FlowNode | null; phase: Phase }) {
+function NodeStage({ node, phase, nodeIndex }: { node: FlowNode | null; phase: Phase; nodeIndex: number }) {
   // IDLE is the hand-over state: nothing has run yet, or the operator reset
   // back to the top. Showing node 1 at 0:00 there would look like a stalled
   // show, so the waiting screen stands in for both cases.
@@ -28,9 +29,13 @@ function NodeStage({ node, phase }: { node: FlowNode | null; phase: Phase }) {
   }
 
   // A real game owns its whole screen; only the placeholder screens use the
-  // shared category layout below.
+  // shared category layout below. The key remounts the screen per node, so a
+  // quiz round cannot carry its answers into the next one.
   if (node.game === 'hallucination') {
-    return <HallucinationGame key={node.game} />
+    return <HallucinationGame key={nodeIndex} />
+  }
+  if (node.type === 'quiz') {
+    return <QuizGame key={nodeIndex} />
   }
 
   // Games share one category, so keying the styling off the category alone
@@ -110,7 +115,7 @@ export default function GamePage() {
         </button>
       </header>
 
-      <NodeStage node={node} phase={phase} />
+      <NodeStage node={node} phase={phase} nodeIndex={index} />
 
       {session?.isAdmin && (
         <section className="controls">

@@ -1,16 +1,35 @@
 import { useMemo, useState } from 'react'
+import { useTicker } from '../../hooks/useTicker'
 import { HALLUCINATION_QUESTIONS } from './content'
 import { isCorrect, levelByKey, scoreFor, TRUST_LEVELS } from './scoring'
 import './HallucinationGame.css'
 
 type Picks = Record<string, string>
 
+/** Each reply gets this long before the round moves on without an answer. */
+const QUESTION_SECONDS = 20
+
 export default function HallucinationGame() {
   const [index, setIndex] = useState(0)
   const [picks, setPicks] = useState<Picks>({})
   const [finished, setFinished] = useState(false)
+  const [questionStart, setQuestionStart] = useState(() => Date.now())
+
+  // The same ticker that drives the header clock. Anchored to a timestamp so a
+  // throttled background tab cannot freeze the countdown (see useTicker).
+  const now = useTicker()
 
   const question = HALLUCINATION_QUESTIONS[index]
+
+  const pickKey = picks[question.id]
+  const picked = pickKey ? levelByKey(pickKey) : undefined
+
+  const timeLeftMs = Math.max(0, questionStart + QUESTION_SECONDS * 1000 - now)
+  const secondsLeft = Math.ceil(timeLeftMs / 1000)
+  // Derived, not stored: a show must not stall waiting for a kiosk that never
+  // picked, and the clock already lives in `now`.
+  const expired = picked === undefined && timeLeftMs === 0
+  const revealed = picked !== undefined || expired
 
   const total = useMemo(
     () =>
@@ -20,6 +39,17 @@ export default function HallucinationGame() {
       }, 0),
     [picks],
   )
+
+  const isLast = index === HALLUCINATION_QUESTIONS.length - 1
+
+  const next = () => {
+    if (isLast) {
+      setFinished(true)
+      return
+    }
+    setIndex((current) => current + 1)
+    setQuestionStart(Date.now())
+  }
 
   if (finished) {
     // Derived, not assumed: the best a doubt sentence can pay is 10, so the
@@ -64,12 +94,8 @@ export default function HallucinationGame() {
     )
   }
 
-  const pickKey = picks[question.id]
-  const picked = pickKey ? levelByKey(pickKey) : undefined
-  const revealed = picked !== undefined
   const points = picked ? scoreFor(picked, question.truth) : 0
   const right = picked ? isCorrect(picked, question.truth) : false
-  const isLast = index === HALLUCINATION_QUESTIONS.length - 1
 
   return (
     <div className="stage stage--game stage--hallucination hallu">
@@ -78,6 +104,11 @@ export default function HallucinationGame() {
         <span className="hallu__count">
           {index + 1} / {HALLUCINATION_QUESTIONS.length}
         </span>
+        {!revealed && (
+          <span className={`hallu__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
+            {secondsLeft}s
+          </span>
+        )}
         <span className={`hallu__score ${total < 0 ? 'is-bad' : total > 0 ? 'is-good' : ''}`}>
           {total > 0 ? '+' : ''}
           {total}
@@ -109,26 +140,29 @@ export default function HallucinationGame() {
           <p className="hallu__hint">Not Sure scores nothing either way. The rest are symmetric — you gain and lose the same amount.</p>
         </div>
       ) : (
-        <div className={`hallu__reveal ${right ? 'is-good' : 'is-bad'}`}>
+        <div className={`hallu__reveal ${expired ? '' : right ? 'is-good' : 'is-bad'}`}>
           <div className="hallu__verdict">
             <span className="hallu__verdictkind">
-              {question.truth === 'trust' ? 'This one held up' : 'This one was a hallucination'}
+              {expired
+                ? "Time's up"
+                : question.truth === 'trust'
+                  ? 'This one held up'
+                  : 'This one was a hallucination'}
             </span>
             <span className="hallu__verdictpoints">
               {points > 0 ? '+' : ''}
               {points}
             </span>
             <span className="hallu__verdictpick">
-              you chose {picked?.label}
-              {right ? '' : ' — the sign flips when you read it backwards'}
+              {expired
+                ? 'you did not pick in time'
+                : `you chose ${picked?.label}${
+                    right ? '' : ' — the sign flips when you read it backwards'
+                  }`}
             </span>
           </div>
           <p className="hallu__why">{question.reveal}</p>
-          <button
-            type="button"
-            className="hallu__next"
-            onClick={() => (isLast ? setFinished(true) : setIndex(index + 1))}
-          >
+          <button type="button" className="hallu__next" onClick={next}>
             {isLast ? 'See final score' : 'Next'}
           </button>
         </div>

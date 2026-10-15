@@ -34,6 +34,22 @@
   color: #8b94a8;
 }
 
+.hallu__timer {
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #2c3549;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e6e9f0;
+}
+
+.hallu__timer.is-urgent {
+  border-color: #ff5c7a;
+  color: #ff5c7a;
+}
+
 .hallu__score.is-good {
   color: #57f2c4;
 }
