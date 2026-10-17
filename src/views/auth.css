@@ -121,3 +121,22 @@
 .login__admin-toggle:hover {
   color: #8b94a8;
 }
+
+/* Staff links sit in the corner: present, never part of the audience flow. */
+.login__staff {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.6rem;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.login__staff a {
+  color: #3a4358;
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+
+.login__staff a:hover {
+  color: #8b94a8;
+}

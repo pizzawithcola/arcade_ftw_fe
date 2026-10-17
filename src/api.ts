@@ -1,8 +1,21 @@
 const TOKEN_KEY = 'arcade_ftw_token'
 
+/**
+ * The room is part of every URL even while only one show runs, so adding a
+ * second one later is data rather than a protocol change.
+ */
+export const DEFAULT_ROOM = 'main'
+
 export interface Session {
   subject: string
   isAdmin: boolean
+  /** Full admin scope. A display token reads everything and controls nothing. */
+  canControl: boolean
+  scope: string
+  /** Present when the token belongs to a player. */
+  playerId?: number
+  nickname?: string
+  event?: string
 }
 
 export interface EventOption {
@@ -14,6 +27,19 @@ export interface PlayerSession extends Session {
   playerId: number
   nickname: string
   event: string
+}
+
+export interface RoomSnapshot {
+  code: string
+  state: {
+    phase: 'idle' | 'playing' | 'paused' | 'finished'
+    index: number
+    node_count: number
+    node: { type: string; title?: string; game?: string; duration_sec?: number } | null
+    remaining_ms: number
+    server_time_ms: number
+  }
+  clients: number
 }
 
 export function readToken(): string | null {
@@ -54,7 +80,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (text ? JSON.parse(text) : undefined) as T
 }
 
-/** The events the backend will accept. The dropdown is built from this. */
+// ─── auth ─────────────────────────────────────────────────────────────────────
 export async function fetchEvents(): Promise<EventOption[]> {
   const body = await request<{ events: EventOption[] }>('/api/auth/events')
   return body.events
@@ -66,38 +92,79 @@ export async function loginPlayer(nickname: string, event: string): Promise<Play
     player_id: number
     nickname: string
     event: string
-  }>('/api/auth/player', { method: 'POST', body: JSON.stringify({ nickname, event }) })
+  }>('/api/auth/player', {
+    method: 'POST',
+    // Sending the old token is how a returning device proves it is the same
+    // person and keeps its row when someone else has taken the nickname.
+    body: JSON.stringify({ nickname, event, token: readToken() }),
+  })
   saveToken(body.token)
   return {
     subject: `player:${body.player_id}`,
     isAdmin: false,
+    canControl: false,
+    scope: 'player',
     playerId: body.player_id,
     nickname: body.nickname,
     event: body.event,
   }
 }
 
-export async function loginAdmin(username: string, password: string): Promise<Session> {
-  const body = await request<{ token: string; subject: string }>('/api/auth/admin', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  })
+export async function loginAdmin(
+  username: string,
+  password: string,
+  scope: 'full' | 'display' = 'full',
+): Promise<Session> {
+  const body = await request<{ token: string; subject: string; scope: string }>(
+    '/api/auth/admin',
+    { method: 'POST', body: JSON.stringify({ username, password, scope }) },
+  )
   saveToken(body.token)
-  return { subject: body.subject, isAdmin: true }
+  return {
+    subject: body.subject,
+    isAdmin: true,
+    canControl: body.scope === 'full',
+    scope: body.scope,
+  }
 }
 
 /** Returns null when there is no usable token, rather than throwing. */
 export async function fetchSession(): Promise<Session | null> {
   if (!readToken()) return null
   try {
-    const body = await request<{ subject: string; is_admin: boolean }>('/api/auth/me')
-    return { subject: body.subject, isAdmin: body.is_admin }
+    const body = await request<{
+      subject: string
+      is_admin: boolean
+      scope: string
+      can_control: boolean
+      player_id?: number
+      nickname?: string
+      event?: string
+    }>('/api/auth/me')
+    return {
+      subject: body.subject,
+      isAdmin: body.is_admin,
+      canControl: body.can_control,
+      scope: body.scope,
+      playerId: body.player_id,
+      nickname: body.nickname,
+      event: body.event,
+    }
   } catch {
     clearToken()
     return null
   }
 }
 
-export function gameAction(action: string): Promise<unknown> {
-  return request(`/api/game/${action}`, { method: 'POST' })
+// ─── rooms ────────────────────────────────────────────────────────────────────
+export function roomState(code: string) {
+  return request<RoomSnapshot['state']>(`/api/rooms/${code}/state`)
+}
+
+export function roomAction(code: string, action: string): Promise<unknown> {
+  return request(`/api/rooms/${code}/${action}`, { method: 'POST' })
+}
+
+export function listRooms(): Promise<RoomSnapshot[]> {
+  return request<{ rooms: RoomSnapshot[] }>('/api/rooms').then((body) => body.rooms)
 }

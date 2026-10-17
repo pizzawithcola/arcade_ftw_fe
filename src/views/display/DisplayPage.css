@@ -1,0 +1,173 @@
+/* Display View: read from five metres away, nothing to click. */
+
+.display {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 0%, #132038 0%, #0b0f1a 60%);
+  cursor: none;
+}
+
+.display__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  font-size: 0.9rem;
+  color: #5a6478;
+}
+
+.display__brand {
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #57f2c4;
+}
+
+.display__room {
+  letter-spacing: 0.1em;
+}
+
+.display__bar .dot {
+  margin-left: auto;
+}
+
+/* ─── idle: the join screen ─────────────────────────────────────────────────── */
+
+.display__join {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(2rem, 6vw, 6rem);
+  padding: clamp(1.5rem, 5vw, 4rem);
+}
+
+.display__joinTitle {
+  margin: 0 0 1rem;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  line-height: 1;
+  color: #e6e9f0;
+}
+
+.display__joinNote {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: #8b94a8;
+}
+
+.display__url {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+  font-weight: 700;
+  color: #57f2c4;
+  word-break: break-all;
+}
+
+.display__qr {
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  background: #ffffff;
+  line-height: 0;
+}
+
+/* ─── a round in progress ──────────────────────────────────────────────────── */
+
+.display__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1rem, 3vw, 2.5rem) clamp(1.5rem, 5vw, 4rem);
+  text-align: center;
+  overflow-y: auto;
+}
+
+.display__kicker {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #5a6478;
+}
+
+.display__title {
+  margin: 0;
+  font-size: clamp(2.6rem, 7vw, 5.5rem);
+  line-height: 1.05;
+  color: #e6e9f0;
+}
+
+.display__clock {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4.5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #57f2c4;
+}
+
+.display__look {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: #8b94a8;
+}
+
+/* The post, sized for reading at distance while players work on their iPads. */
+.display__post {
+  width: min(56rem, 100%);
+  margin-top: 0.5rem;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1b1f24;
+  text-align: left;
+}
+
+.display__posthead {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.display__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0a66c2, #004182);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.display__posthead strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.display__posthead em {
+  display: block;
+  font-size: 0.85rem;
+  font-style: normal;
+  color: #5a6470;
+}
+
+.display__post p {
+  margin: 0 0 0.7rem;
+  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+  line-height: 1.6;
+}
+
+.display__post p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 60rem) {
+  .display__join {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+}

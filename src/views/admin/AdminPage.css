@@ -1,0 +1,183 @@
+/* Operator console. Dense, dark, no game rendering. */
+
+.admin {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.admin__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin__bar h1 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #57f2c4;
+}
+
+.admin__bar button {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: #5a6478;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.admin__grid {
+  display: grid;
+  grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin__panel {
+  border: 1px solid #232a3b;
+  border-radius: 10px;
+  background: #0e1421;
+  padding: 0.9rem 1rem 1.1rem;
+}
+
+.admin__panel h2 {
+  margin: 0 0 0.7rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8b94a8;
+}
+
+.admin__rooms {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin__rooms button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #2a3242;
+  border-radius: 6px;
+  background: #131a28;
+  color: #dfe4ee;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin__rooms button.is-current {
+  border-color: #57f2c4;
+}
+
+.admin__code {
+  font-weight: 700;
+}
+
+.admin__phase {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b94a8;
+}
+
+.admin__phase.is-playing {
+  color: #57f2c4;
+}
+
+.admin__phase.is-paused {
+  color: #ffd166;
+}
+
+.admin__phase.is-finished {
+  color: #8b94a8;
+}
+
+.admin__meta {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  color: #5a6478;
+}
+
+.admin__node {
+  margin: 0 0 0.9rem;
+  font-size: 1.4rem;
+  color: #e6e9f0;
+}
+
+.admin__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.admin__controls button,
+.admin__jumps button {
+  padding: 0.55rem 1rem;
+  border: 1px solid #2c3549;
+  border-radius: 6px;
+  background: #131a28;
+  color: #e6e9f0;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.admin__controls button:hover:not(:disabled),
+.admin__jumps button:hover:not(:disabled) {
+  border-color: #57f2c4;
+}
+
+.admin__controls button:disabled,
+.admin__jumps button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.admin__hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: #5a6478;
+}
+
+.admin__jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin__jumps button {
+  min-width: 2.4rem;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+}
+
+.admin__jumps button.is-current {
+  border-color: #57f2c4;
+  color: #57f2c4;
+}
+
+.admin__error {
+  margin: 0.9rem 0 0;
+  color: #ff5c7a;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 52rem) {
+  .admin__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -11,13 +11,13 @@ const RETRY_MS = 2000
  * (re)connect the server immediately sends the current state, which is what
  * makes a reconnect invisible to the audience.
  */
-export function useGameSocket(): void {
+export function useGameSocket(room: string): void {
   const setConnection = useGameStore((state) => state.setConnection)
   const applyMessage = useGameStore((state) => state.applyMessage)
 
   useEffect(() => {
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws'
-    const url = `${scheme}://${location.host}/api/ws`
+    const url = `${scheme}://${location.host}/api/ws?room=${encodeURIComponent(room)}`
 
     let socket: WebSocket | null = null
     let retry: number | undefined
@@ -53,5 +53,5 @@ export function useGameSocket(): void {
       if (retry !== undefined) window.clearTimeout(retry)
       socket?.close()
     }
-  }, [setConnection, applyMessage])
+  }, [room, setConnection, applyMessage])
 }
