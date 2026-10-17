@@ -16,6 +16,18 @@ function formatClock(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
+/**
+ * Game screens that run their own countdown.
+ *
+ * The shell's clock shows the node's remaining time, which for these screens is
+ * a *different* number from the timer the player is acting on - a 45s round
+ * inside a 51s node, for instance - and two countdowns disagreeing on screen is
+ * simply confusing. When the screen owns the clock, the shell stays quiet.
+ */
+function ownsTimer(node: FlowNode): boolean {
+  return node.game === 'hallucination' || node.game === 'data_shadow' || node.type === 'quiz'
+}
+
 /** What the audience sees while a node is running. Real screens replace this. */
 function NodeStage({ node, phase, nodeIndex }: { node: FlowNode | null; phase: Phase; nodeIndex: number }) {
   // IDLE is the hand-over state: nothing has run yet, or the operator reset
@@ -106,7 +118,9 @@ export default function GamePage() {
         <span className="game__progress">
           node {Math.min(index + 1, nodeCount)} / {nodeCount}
         </span>
-        <span className="game__clock">{formatClock(remaining)}</span>
+        {node && !ownsTimer(node) && (
+          <span className="game__clock">{formatClock(remaining)}</span>
+        )}
         <button
           type="button"
           className="game__signout"

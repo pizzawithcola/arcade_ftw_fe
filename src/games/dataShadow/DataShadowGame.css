@@ -152,6 +152,19 @@
   -webkit-box-decoration-break: clone;
 }
 
+/* A highlighter, not a selection: this is what the player has already flagged,
+   so it has to read as "mine" rather than as a transient browser selection. */
+.post__mark.is-flagged {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 235, 59, 0) 12%,
+    rgba(255, 235, 59, 0.55) 12%,
+    rgba(255, 235, 59, 0.55) 92%,
+    rgba(255, 235, 59, 0) 92%
+  );
+  box-shadow: none;
+}
+
 .post__mark.is-hit {
   background: #d7f5e6;
   box-shadow: inset 0 -2px 0 #34a06b;
@@ -204,7 +217,10 @@
   border-bottom: 1px solid #1c2333;
 }
 
-.report__head h2 {
+/* Two classes on purpose: `.stage h2` (a clamp up to 3rem) ties with a single
+   class plus element, so stylesheet order would otherwise decide the font size
+   and blow the panel header out of its column. */
+.report__head .report__title {
   margin: 0;
   font-size: 0.74rem;
   letter-spacing: 0.12em;
@@ -324,11 +340,13 @@
   gap: 0.5rem;
 }
 
-.report__add,
 .report__submit {
   width: 100%;
   padding: 0.65rem 0.7rem;
+  border: none;
   border-radius: 7px;
+  background: #57f2c4;
+  color: #06121a;
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -336,25 +354,6 @@
   /* Taps should not select the button label on a tablet. */
   user-select: none;
   -webkit-user-select: none;
-}
-
-.report__add {
-  border: 1px dashed #2f8a6a;
-  background: rgba(87, 242, 196, 0.08);
-  color: #57f2c4;
-}
-
-.report__add:disabled {
-  border-color: #2a3242;
-  background: transparent;
-  color: #5a6478;
-  cursor: default;
-}
-
-.report__submit {
-  border: none;
-  background: #57f2c4;
-  color: #06121a;
 }
 
 .report__submit:disabled {
@@ -452,6 +451,41 @@
   margin: 0.8rem 0 0;
   font-size: 0.8rem;
   color: #7b8794;
+}
+
+/* ─── the bubble that appears beside the selection ──────────────────────────── */
+
+.bubble {
+  position: fixed;
+  z-index: 30;
+  transform: translate(-50%, -100%);
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-radius: 999px;
+  background: #57f2c4;
+  color: #06121a;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  -webkit-user-select: none;
+  /* Big enough for a fingertip on an iPad. */
+  min-height: 2.5rem;
+}
+
+.bubble.is-below {
+  transform: translate(-50%, 0);
+}
+
+.bubble:active {
+  transform: translate(-50%, -100%) scale(0.96);
+}
+
+.bubble.is-below:active {
+  transform: translate(-50%, 0) scale(0.96);
 }
 
 /* ─── narrow fallback: stack instead of squeezing two columns ───────────────── */

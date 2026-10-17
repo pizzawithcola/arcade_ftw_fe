@@ -26,26 +26,51 @@ const BLOCK_OFFSETS: number[] = (() => {
 
 const LEAK_SPANS: LeakSpan[] = resolveLeaks(POST_TEXT, LEAKS)
 
-/** The text of a block with each leak wrapped, so the reveal is readable in place. */
-function renderBlock(blockIndex: number, caughtIds: Set<string>) {
+interface Mark {
+  start: number
+  end: number
+  className: string
+  key: string
+}
+
+/**
+ * Selection ranges can overlap; highlighting needs them disjoint or the same
+ * words would emit two nested marks.
+ */
+function mergeRanges(ranges: Array<{ start: number; end: number }>) {
+  const sorted = [...ranges].sort((a, b) => a.start - b.start)
+  const merged: Array<{ start: number; end: number }> = []
+  for (const range of sorted) {
+    const last = merged[merged.length - 1]
+    if (last && range.start <= last.end) last.end = Math.max(last.end, range.end)
+    else merged.push({ ...range })
+  }
+  return merged
+}
+
+/** A block's text with the given marks wrapped, so highlights render in place. */
+function renderBlock(blockIndex: number, marks: Mark[]) {
   const text = BLOCKS[blockIndex]
   const start = BLOCK_OFFSETS[blockIndex]
   const end = start + text.length
-  const overlapping = LEAK_SPANS.filter((leak) => leak.start < end && leak.end > start).sort(
-    (a, b) => a.start - b.start,
-  )
-  if (overlapping.length === 0) return [text]
 
-  const parts: Array<string | { text: string; caught: boolean; key: string }> = []
+  const local = marks
+    .filter((mark) => mark.start < end && mark.end > start)
+    .map((mark) => ({ ...mark, start: Math.max(mark.start, start), end: Math.min(mark.end, end) }))
+    .sort((a, b) => a.start - b.start)
+
+  if (local.length === 0) return [text]
+
+  const parts: Array<string | { text: string; className: string; key: string }> = []
   let cursor = start
-  for (const leak of overlapping) {
-    if (leak.start > cursor) parts.push(POST_TEXT.slice(cursor, leak.start))
+  for (const mark of local) {
+    if (mark.start > cursor) parts.push(POST_TEXT.slice(cursor, mark.start))
     parts.push({
-      text: POST_TEXT.slice(leak.start, leak.end),
-      caught: caughtIds.has(leak.id),
-      key: leak.id,
+      text: POST_TEXT.slice(mark.start, mark.end),
+      className: mark.className,
+      key: mark.key,
     })
-    cursor = leak.end
+    cursor = mark.end
   }
   if (cursor < end) parts.push(POST_TEXT.slice(cursor, end))
   return parts
@@ -54,7 +79,7 @@ function renderBlock(blockIndex: number, caughtIds: Set<string>) {
 export default function DataShadowGame() {
   const [selections, setSelections] = useState<Selection[]>([])
   const [submitted, setSubmitted] = useState(false)
-  const [hasLiveSelection, setHasLiveSelection] = useState(false)
+  const [bubble, setBubble] = useState<{ x: number; y: number; below: boolean } | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const seq = useRef(0)
 
@@ -68,10 +93,25 @@ export default function DataShadowGame() {
     () => (done ? evaluate(selections, LEAK_SPANS, POST_TEXT.length) : null),
     [done, selections],
   )
-  const caughtIds = useMemo(
-    () => new Set((result?.caught ?? []).map((leak) => leak.id)),
-    [result],
-  )
+
+  const marks: Mark[] = useMemo(() => {
+    if (done) {
+      const caught = new Set((result?.caught ?? []).map((leak) => leak.id))
+      return LEAK_SPANS.map((leak) => ({
+        start: leak.start,
+        end: leak.end,
+        className: caught.has(leak.id) ? 'is-hit' : 'is-missed',
+        key: leak.id,
+      }))
+    }
+    // Before submitting, every flagged range is just "you picked this" - showing
+    // anything more would leak the answer.
+    return mergeRanges(selections).map((range) => ({
+      ...range,
+      className: 'is-flagged',
+      key: `f-${range.start}-${range.end}`,
+    }))
+  }, [done, selections, result])
 
   /** Turn the browser's current selection into a panel entry. */
   const captureSelection = useCallback(() => {
@@ -103,41 +143,60 @@ export default function DataShadowGame() {
         ? current
         : [...current, { id: `sel-${seq.current++}`, text, start, end }],
     )
-    // Clearing the native selection is the feedback that it was taken: the words
-    // stop being highlighted in the post and appear in the panel instead.
+    // Clearing the selection is the feedback that it was taken: the highlight
+    // moves from the browser's own selection to the marker in the post.
     selection.removeAllRanges()
+    setBubble(null)
   }, [])
 
-  // A live selection enables the "Add" button. On iPad this button is the way
-  // in, because auto-capturing on touch would fight the selection handles.
+  // Park a small button next to the selection, so the next action is where the
+  // player is already looking rather than across the screen.
   useEffect(() => {
-    const onChange = () => {
+    // Nothing to attach the bubble to once the round is scored; the render also
+    // stops showing it, so the effect just stops listening.
+    if (done) return
+    const update = () => {
       const container = bodyRef.current
       const selection = window.getSelection()
-      const live =
-        !!container &&
-        !!selection &&
-        selection.rangeCount > 0 &&
-        !selection.isCollapsed &&
-        container.contains(selection.getRangeAt(0).commonAncestorContainer)
-      setHasLiveSelection(live)
+      if (!container || !selection || selection.rangeCount === 0 || selection.isCollapsed) {
+        setBubble(null)
+        return
+      }
+      const range = selection.getRangeAt(0)
+      if (!container.contains(range.commonAncestorContainer)) {
+        setBubble(null)
+        return
+      }
+      if (range.toString().trim().length < MIN_SELECTION_CHARS) {
+        setBubble(null)
+        return
+      }
+      const rect = range.getBoundingClientRect()
+      if (rect.width === 0 && rect.height === 0) {
+        setBubble(null)
+        return
+      }
+      const half = 78
+      const x = Math.min(Math.max(rect.left + rect.width / 2, half), window.innerWidth - half)
+      // Flip below when the selection is near the top edge, where the bubble
+      // would otherwise sit off-screen.
+      const below = rect.top < 72
+      setBubble({ x, y: below ? rect.bottom + 10 : rect.top - 10, below })
     }
-    document.addEventListener('selectionchange', onChange)
-    return () => document.removeEventListener('selectionchange', onChange)
-  }, [])
+    document.addEventListener('selectionchange', update)
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      document.removeEventListener('selectionchange', update)
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [done])
 
   const remove = (id: string) => {
     if (done) return
     setSelections((current) => current.filter((item) => item.id !== id))
   }
-
-  const tally = result
-    ? [
-        `${result.caught.length} caught`,
-        `${result.rejected.size} false ${result.rejected.size === 1 ? 'alarm' : 'alarms'}`,
-        `${result.missed.length} missed`,
-      ]
-    : []
 
   return (
     <div className="stage stage--game stage--data_shadow shadow">
@@ -178,20 +237,15 @@ export default function DataShadowGame() {
           <div className={`post__body ${done ? 'is-revealed' : ''}`} ref={bodyRef}>
             {BLOCKS.map((_, index) => (
               <p className="post__para" key={index}>
-                {done
-                  ? renderBlock(index, caughtIds).map((part, partIndex) =>
-                      typeof part === 'string' ? (
-                        <span key={`t-${partIndex}`}>{part}</span>
-                      ) : (
-                        <mark
-                          key={part.key}
-                          className={`post__mark ${part.caught ? 'is-hit' : 'is-missed'}`}
-                        >
-                          {part.text}
-                        </mark>
-                      ),
-                    )
-                  : BLOCKS[index]}
+                {renderBlock(index, marks).map((part, partIndex) =>
+                  typeof part === 'string' ? (
+                    <span key={`t-${partIndex}`}>{part}</span>
+                  ) : (
+                    <mark key={part.key} className={`post__mark ${part.className}`}>
+                      {part.text}
+                    </mark>
+                  ),
+                )}
               </p>
             ))}
           </div>
@@ -233,15 +287,15 @@ export default function DataShadowGame() {
 
       <aside className="report">
         <header className="report__head">
-          <h2>Your report</h2>
+          <h2 className="report__title">Your report</h2>
           <span className="report__count">{selections.length}</span>
         </header>
 
         <div className="report__list">
           {selections.length === 0 && (
             <p className="report__empty">
-              Nothing flagged yet. Drag across the post to pick out a risky phrase, then add it
-              here.
+              Nothing flagged yet. Select a risky phrase in the post, then tap the button that
+              appears beside it.
             </p>
           )}
           {selections.map((item) => {
@@ -272,48 +326,56 @@ export default function DataShadowGame() {
           })}
         </div>
 
-        {!done ? (
-          <footer className="report__foot">
-            <button
-              type="button"
-              className="report__add"
-              disabled={!hasLiveSelection}
-              // Prevent the tap from clearing the selection we are about to read.
-              onPointerDown={(event) => event.preventDefault()}
-              onClick={captureSelection}
-            >
-              {hasLiveSelection ? 'Add selected text' : 'Drag over the post first'}
-            </button>
-            <button
-              type="button"
-              className="report__submit"
-              disabled={selections.length === 0}
-              onClick={() => setSubmitted(true)}
-            >
-              Submit report
-            </button>
-            <p className="report__hint">
-              +10 per leak you catch. −10 for a flag that is mostly ordinary text, so select the
-              risky words precisely.
-            </p>
-          </footer>
-        ) : (
-          result && (
-            <footer className="report__foot report__foot--result">
+        <footer className="report__foot">
+          {done && result ? (
+            <>
               <p className="report__score">
                 {result.score > 0 ? '+' : ''}
                 {result.score}
               </p>
               <ul className="report__tally">
-                {tally.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
+                <li>{`${result.caught.length} caught`}</li>
+                <li>
+                  {`${result.rejected.size} false ${
+                    result.rejected.size === 1 ? 'alarm' : 'alarms'
+                  }`}
+                </li>
+                <li>{`${result.missed.length} missed`}</li>
                 <li className="report__best">best possible {LEAK_SPANS.length * 10}</li>
               </ul>
-            </footer>
-          )
-        )}
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="report__submit"
+                disabled={selections.length === 0}
+                onClick={() => setSubmitted(true)}
+              >
+                Submit report
+              </button>
+              <p className="report__hint">
+                +10 per leak you catch. −10 for a flag that is mostly ordinary text, so select the
+                risky words precisely.
+              </p>
+            </>
+          )}
+        </footer>
       </aside>
+
+      {!done && bubble && (
+        <button
+          type="button"
+          className={`bubble ${bubble.below ? 'is-below' : 'is-above'}`}
+          style={{ left: bubble.x, top: bubble.y }}
+          // Keeping the selection alive is the whole point: a plain tap would
+          // collapse it before the click handler runs.
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={captureSelection}
+        >
+          ＋ Add to report
+        </button>
+      )}
     </div>
   )
 }
