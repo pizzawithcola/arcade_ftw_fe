@@ -1,26 +1,34 @@
-/* The Data Shadow round. A deliberately light card on the dark stage, so it
-   reads instantly as a social network rather than as part of the game shell. */
+/* Data Shadow, laid out for a landscape iPad: the post on the left, the player's
+   report pinned on the right. The post scrolls; the report never leaves view. */
 
 .stage.shadow {
-  justify-content: flex-start;
-  gap: 0;
-  padding: 0;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  /* Bar spans both columns; the post and the report share the rest, and the
+     minmax(0, 1fr) row is what lets both scroll instead of stretching. */
+  grid-template-columns: minmax(0, 1fr) clamp(15rem, 27vw, 20rem);
+  grid-template-rows: auto minmax(0, 1fr);
+  /* .stage centres its children; in a grid that would centre the panel in the
+     row instead of letting it run the full height. */
+  align-items: stretch;
+  gap: 0 0.85rem;
+  padding: 0 0 0.9rem;
   text-align: left;
-  width: 100%;
-  max-width: 58rem;
-  margin: 0 auto;
+  overflow: hidden;
 }
 
 .shadow__bar {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.9rem 1.25rem;
+  gap: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid #1c2333;
 }
 
 .shadow__task {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #b9c1d1;
 }
 
@@ -45,7 +53,6 @@
   font-variant-numeric: tabular-nums;
   font-size: 1.3rem;
   font-weight: 700;
-  color: #8b94a8;
 }
 
 .shadow__score.is-good {
@@ -56,11 +63,15 @@
   color: #ff5c7a;
 }
 
-/* ─── the post ───────────────────────────────────────────────────────────────── */
+/* ─── left column ───────────────────────────────────────────────────────────── */
+
+.shadow__main {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 0 0 0.9rem;
+}
 
 .post {
-  width: calc(100% - 2.5rem);
-  margin: 0 1.25rem;
   border: 1px solid #d9dee6;
   border-radius: 10px;
   background: #ffffff;
@@ -71,21 +82,20 @@
 .post__head {
   display: flex;
   gap: 0.75rem;
-  padding: 1rem 1.1rem 0.6rem;
+  padding: 0.9rem 1rem 0.5rem;
 }
 
 .post__avatar {
   flex: none;
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border-radius: 50%;
   background: linear-gradient(135deg, #0a66c2, #004182);
   color: #ffffff;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
 }
 
 .post__who {
@@ -96,88 +106,60 @@
 }
 
 .post__name {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
 }
 
 .post__headline {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #5a6470;
 }
 
 .post__time {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: #7b8794;
 }
 
 .post__body {
-  padding: 0 1.1rem 0.9rem;
+  padding: 0 1rem 0.7rem;
+  /* Native selection, the way a web page behaves - this is the whole game. */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.post__body.is-revealed {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .post__para {
-  margin: 0 0 0.85rem;
-  font-size: clamp(0.95rem, 1.7vw, 1.08rem);
-  line-height: 1.9;
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
   color: #1b1f24;
 }
 
-.post__para:last-of-type {
-  margin-bottom: 0.6rem;
+.post__para:last-child {
+  margin-bottom: 0;
 }
 
-/* Inline so the post still reads as continuous prose, not as a word cloud. */
-.post__seg {
-  display: inline;
-  margin: 0;
-  padding: 0.05em 0.1em;
-  border: none;
+.post__mark {
+  padding: 0.05em 0.05em;
   border-radius: 3px;
   background: transparent;
   color: inherit;
-  font: inherit;
-  line-height: inherit;
-  text-align: left;
-  cursor: pointer;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  transition: background 0.12s ease;
 }
 
-.post__seg:hover:not(:disabled) {
-  background: #eaf2fb;
-}
-
-.post__seg:disabled {
-  cursor: default;
-}
-
-.post__seg.is-flagged {
-  background: #fff0a8;
-  box-shadow: inset 0 -2px 0 #e8c547;
-}
-
-/* After the reveal the post itself becomes the explanation. */
-.post__seg.is-hit {
+.post__mark.is-hit {
   background: #d7f5e6;
   box-shadow: inset 0 -2px 0 #34a06b;
 }
 
-.post__seg.is-missed {
+.post__mark.is-missed {
   background: #ffe6cc;
   box-shadow: inset 0 -2px 0 #d97a2b;
-}
-
-.post__seg.is-false {
-  background: #ffdfe3;
-  box-shadow: inset 0 -2px 0 #d34d63;
-  text-decoration: line-through;
-  text-decoration-color: #d34d63;
-}
-
-.post__hashtags {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #0a66c2;
 }
 
 .post__foot {
@@ -185,9 +167,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.6rem 1.1rem;
+  padding: 0.55rem 1rem;
   border-top: 1px solid #e6eaef;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #5a6470;
 }
 
@@ -197,71 +179,234 @@
   gap: 0.2rem;
 }
 
-.post__react {
-  font-size: 0.9rem;
-}
-
 .post__count {
   margin-left: 0.25rem;
 }
 
-/* ─── actions and reveal ─────────────────────────────────────────────────────── */
+/* ─── report panel ──────────────────────────────────────────────────────────── */
 
-.shadow__actions {
-  width: 100%;
-  padding: 1.1rem 1.25rem 1.4rem;
+.report {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-right: 0.9rem;
+  border: 1px solid #232a3b;
+  border-radius: 10px;
+  background: #0e1421;
+  overflow: hidden;
 }
 
-.shadow__submit {
-  padding: 0.7rem 1.6rem;
-  border: none;
-  border-radius: 6px;
-  background: #57f2c4;
-  color: #06121a;
-  font: inherit;
+.report__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid #1c2333;
+}
+
+.report__head h2 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b94a8;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.report__count {
+  margin-left: auto;
+  min-width: 1.6rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #1c2333;
+  color: #e6e9f0;
+  font-size: 0.78rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.report__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.report__empty {
+  margin: 0;
+  padding: 0.6rem 0.3rem;
+  color: #5a6478;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.report__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.5rem 0.55rem;
+  border: 1px solid #2a3242;
+  border-radius: 6px;
+  background: #131a28;
+}
+
+.report__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #dfe4ee;
+  overflow-wrap: anywhere;
+  /* A player who drags across the whole post would otherwise fill the panel
+     with one enormous entry and push everything else out of view. */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.report__remove {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #5a6478;
+  font-size: 1.05rem;
+  line-height: 1;
   cursor: pointer;
 }
 
-.shadow__hint {
-  margin: 0.7rem 0 0;
-  font-size: 0.8rem;
-  color: #5a6478;
-}
-
-.shadow__reveal {
-  width: 100%;
-  padding: 1.1rem 1.25rem 1.6rem;
-}
-
-.shadow__tally {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.2rem;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.shadow__stat {
-  color: #8b94a8;
-}
-
-.shadow__stat.is-good {
-  color: #57f2c4;
-}
-
-.shadow__stat.is-bad {
+.report__remove:hover {
+  background: #1c2333;
   color: #ff5c7a;
 }
 
-.shadow__stat.is-missed {
-  color: #ffa94d;
+.report__mark {
+  flex: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.report__item.is-counted {
+  border-color: #2f8a6a;
+}
+
+.report__item.is-counted .report__mark {
+  color: #57f2c4;
+}
+
+.report__item.is-rejected {
+  border-color: #7a3242;
+}
+
+.report__item.is-rejected .report__text {
+  text-decoration: line-through;
+  text-decoration-color: #d34d63;
+  color: #8b94a8;
+}
+
+.report__item.is-rejected .report__mark {
+  color: #ff5c7a;
+}
+
+.report__foot {
+  padding: 0.7rem;
+  border-top: 1px solid #1c2333;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.report__add,
+.report__submit {
+  width: 100%;
+  padding: 0.65rem 0.7rem;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  /* Taps should not select the button label on a tablet. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.report__add {
+  border: 1px dashed #2f8a6a;
+  background: rgba(87, 242, 196, 0.08);
+  color: #57f2c4;
+}
+
+.report__add:disabled {
+  border-color: #2a3242;
+  background: transparent;
+  color: #5a6478;
+  cursor: default;
+}
+
+.report__submit {
+  border: none;
+  background: #57f2c4;
+  color: #06121a;
+}
+
+.report__submit:disabled {
+  background: #232a3b;
+  color: #5a6478;
+  cursor: default;
+}
+
+.report__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: #5a6478;
+}
+
+.report__foot--result {
+  align-items: center;
+  text-align: center;
+}
+
+.report__score {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #57f2c4;
+}
+
+.report__tally {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.78rem;
+  color: #8b94a8;
+}
+
+.report__best {
+  color: #5a6478;
+}
+
+/* ─── reveal detail (left column, under the post) ───────────────────────────── */
+
+.shadow__reveal {
+  margin-top: 0.85rem;
+  padding-right: 0.9rem;
 }
 
 .shadow__revealtitle {
-  margin: 0 0 0.7rem;
-  font-size: 0.75rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #8b94a8;
@@ -269,27 +414,21 @@
 
 .shadow__revealtitle.is-good {
   color: #57f2c4;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: none;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .shadow__missed {
   display: grid;
-  gap: 0.6rem;
-  /* Bounded because the post above is already ~900px, which nearly fills a
-     1080p kiosk on its own. The colouring on the post is the primary reveal, so
-     the detail list scrolls inside its own box rather than pushing the page
-     past the fold. */
-  max-height: 17rem;
-  overflow-y: auto;
+  gap: 0.5rem;
   margin: 0;
-  padding: 0 0.35rem 0 0;
+  padding: 0;
   list-style: none;
 }
 
 .shadow__missed li {
-  padding: 0.7rem 0.85rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid #2a3242;
   border-left: 3px solid #ffa94d;
   border-radius: 6px;
@@ -298,26 +437,39 @@
 
 .shadow__missedtext {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
   color: #e6e9f0;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
 }
 
 .shadow__why {
   color: #9aa4b5;
-  font-size: 0.84rem;
-  line-height: 1.65;
-}
-
-.shadow__footnote {
-  margin: 1rem 0 0;
   font-size: 0.82rem;
-  color: #7b8794;
   line-height: 1.6;
 }
 
-@media (max-width: 40rem) {
-  .post__para {
-    line-height: 1.75;
+.shadow__footnote {
+  margin: 0.8rem 0 0;
+  font-size: 0.8rem;
+  color: #7b8794;
+}
+
+/* ─── narrow fallback: stack instead of squeezing two columns ───────────────── */
+
+@media (max-width: 52rem), (max-height: 30rem) and (max-width: 60rem) {
+  .stage.shadow {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+    padding: 0 0.9rem 0.9rem;
+  }
+
+  .shadow__main {
+    overflow: visible;
+    padding: 0;
+  }
+
+  .report {
+    margin-right: 0;
+    max-height: 60vh;
   }
 }
