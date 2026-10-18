@@ -169,10 +169,11 @@ export function roomAction(code: string, action: string): Promise<unknown> {
 }
 
 export interface RosterEntry {
-  player_id: number
   nickname: string
-  event: string
-  total_score: number
+  /** Only for admin/display tokens: a player sees the names and nothing else. */
+  player_id?: number
+  event?: string
+  total_score?: number
 }
 
 /**

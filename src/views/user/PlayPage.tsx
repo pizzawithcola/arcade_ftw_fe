@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { clearToken, DEFAULT_ROOM, fetchSession, joinRoom, type PlayerSession } from '../../api'
+import {
+  clearToken,
+  DEFAULT_ROOM,
+  fetchSession,
+  joinRoom,
+  roomRoster,
+  type PlayerSession,
+} from '../../api'
 import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
@@ -25,12 +32,53 @@ function ownsTimer(node: FlowNode): boolean {
   return node.game === 'hallucination' || node.game === 'data_shadow' || node.type === 'quiz'
 }
 
-function WaitingRoom({ nickname }: { nickname: string }) {
+/** How often the waiting room re-reads the roster. The socket carries the show,
+ * not the guest list, so this is a plain poll. */
+const ROSTER_POLL_MS = 3000
+
+function WaitingRoom({ nickname, code }: { nickname: string; code: string }) {
+  const [names, setNames] = useState<string[]>([])
+
+  useEffect(() => {
+    let live = true
+    const load = () => {
+      void roomRoster(code)
+        .then((entries) => {
+          if (live) setNames(entries.map((entry) => entry.nickname))
+        })
+        .catch(() => {
+          // A failed poll says nothing the connection dot is not already saying.
+        })
+    }
+    load()
+    const timer = setInterval(load, ROSTER_POLL_MS)
+    return () => {
+      live = false
+      clearInterval(timer)
+    }
+  }, [code])
+
   return (
     <div className="stage stage--waiting play__waiting">
       <span className="play__kicker">You're in</span>
       <h2 className="play__name">{nickname}</h2>
       <p className="play__note">Waiting for the host to start the show…</p>
+      {names.length > 0 && (
+        <div className="play__roster">
+          <p className="play__roster-count">
+            {names.length} {names.length === 1 ? 'player' : 'players'} in the room
+          </p>
+          {/* Nicknames are unique per room (duplicates are numbered), so the name
+              is a stable key for the lifetime of the list. */}
+          <ul className="play__roster-list">
+            {names.map((name) => (
+              <li key={name} className={name === nickname ? 'play__chip is-me' : 'play__chip'}>
+                {name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className="play__hint">Keep this screen open. The round starts on its own.</p>
     </div>
   )
@@ -131,7 +179,7 @@ export default function PlayPage() {
       </header>
 
       {phase === 'idle' ? (
-        <WaitingRoom nickname={session.nickname} />
+        <WaitingRoom nickname={session.nickname} code={code} />
       ) : (
         <NodeStage node={node} nodeIndex={index} />
       )}

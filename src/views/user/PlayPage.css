@@ -35,3 +35,43 @@
   background: #1c2333;
   color: #e6e9f0;
 }
+
+.play__roster {
+  margin-top: 1.1rem;
+  width: min(100%, 46rem);
+}
+
+.play__roster-count {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #5a6478;
+}
+
+/* Chips rather than a list: on a landscape iPad a full room is a wall of names,
+   and wrapping them keeps them all visible without scrolling. */
+.play__roster-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 26vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play__chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid #232b3d;
+  background: #141a26;
+  font-size: 0.85rem;
+  color: #b9c1d1;
+}
+
+.play__chip.is-me {
+  border-color: #57f2c4;
+  color: #e6e9f0;
+}
