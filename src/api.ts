@@ -168,6 +168,26 @@ export function roomAction(code: string, action: string): Promise<unknown> {
   return request(`/api/rooms/${code}/${action}`, { method: 'POST' })
 }
 
+export interface ScoreBreakdown {
+  player_id: number
+  hallucination_score: number
+  data_score: number
+  sabotage_score: number
+  ultimate_score: number
+  total_score: number
+}
+
+export interface PlayerRow {
+  player_id: number
+  nickname: string
+  event: string
+  room_code: string | null
+  created_at: string
+  total_score: number
+  /** Null until something writes a score - the games do not report yet. */
+  score: ScoreBreakdown | null
+}
+
 export interface RosterEntry {
   nickname: string
   /** Only for admin/display tokens: a player sees the names and nothing else. */
@@ -188,6 +208,16 @@ export function joinRoom(code: string): Promise<{ room: string; nickname: string
 
 export function roomRoster(code: string): Promise<RosterEntry[]> {
   return request<{ players: RosterEntry[] }>(`/api/rooms/${code}/players`).then(
+    (body) => body.players,
+  )
+}
+
+export function listPlayers(params: { room?: string; event?: string } = {}): Promise<PlayerRow[]> {
+  const query = new URLSearchParams()
+  if (params.room) query.set('room', params.room)
+  if (params.event) query.set('event', params.event)
+  const search = query.toString()
+  return request<{ players: PlayerRow[] }>(`/api/players${search ? `?${search}` : ''}`).then(
     (body) => body.players,
   )
 }

@@ -33,11 +33,76 @@
   cursor: pointer;
 }
 
-.admin__grid {
+.admin__shell {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Section switcher. Vertical rail on a laptop, a row of tabs when narrow. */
+.admin__side {
+  position: sticky;
+  top: 0;
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+}
+
+.admin__side button {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid transparent;
+  border-left: 2px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #8b94a8;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin__side button:hover {
+  color: #dfe4ee;
+  background: #131a28;
+}
+
+.admin__side button.is-active {
+  border-color: #232a3b;
+  border-left-color: #57f2c4;
+  background: #131a28;
+  color: #e6e9f0;
+}
+
+.admin__side-label {
+  font-size: 0.86rem;
+}
+
+.admin__side-note {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5a6478;
+}
+
+.admin__content {
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.admin__two {
   display: grid;
   grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+}
+
+.admin__stack {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
 }
 
 .admin__panel {
@@ -176,8 +241,98 @@
   font-size: 0.82rem;
 }
 
+.admin__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.7rem 1rem;
+  margin: 0 0 0.6rem;
+}
+
+.admin__facts dt {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5a6478;
+}
+
+.admin__facts dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  color: #e6e9f0;
+}
+
+.admin__table-wrap {
+  overflow-x: auto;
+}
+
+.admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin__table th {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #232a3b;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b94a8;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin__table th:first-child,
+.admin__table th:nth-child(2) {
+  text-align: left;
+}
+
+.admin__table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #1a2030;
+  color: #dfe4ee;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin__table td:first-child,
+.admin__table td:nth-child(2) {
+  text-align: left;
+}
+
+.admin__table tbody tr:hover td {
+  background: #131a28;
+}
+
+.admin__dim {
+  color: #5a6478;
+}
+
+.admin__total {
+  font-weight: 700;
+  color: #57f2c4;
+}
+
+.admin__placeholder {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  color: #b9c1d1;
+}
+
 @media (max-width: 52rem) {
-  .admin__grid {
+  .admin__shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin__side {
+    position: static;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .admin__two {
     grid-template-columns: minmax(0, 1fr);
   }
 }
