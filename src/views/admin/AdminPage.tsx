@@ -155,7 +155,6 @@ export default function AdminPage() {
           {section === 'data' && (
             <DataView
               rooms={rooms}
-              room={room}
               selected={selected}
               onSelect={setSelected}
               players={players}
@@ -166,37 +165,6 @@ export default function AdminPage() {
         </div>
       </div>
     </main>
-  )
-}
-
-function RoomsList({
-  rooms,
-  selected,
-  onSelect,
-}: {
-  rooms: RoomSnapshot[]
-  selected: string
-  onSelect: (code: string) => void
-}) {
-  return (
-    <ul className="admin__rooms">
-      {rooms.map((item) => (
-        <li key={item.code}>
-          <button
-            type="button"
-            className={item.code === selected ? 'is-current' : ''}
-            onClick={() => onSelect(item.code)}
-          >
-            <span className="admin__code">{item.code}</span>
-            <span className={`admin__phase is-${item.state.phase}`}>{item.state.phase}</span>
-            <span className="admin__meta">
-              node {item.state.index + 1}/{item.state.node_count} · {item.players} joined ·{' '}
-              {item.clients} online
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
   )
 }
 
@@ -215,134 +183,208 @@ function ConsoleView({
   onAction: (action: string) => void
   busy: boolean
 }) {
+  const phase = room?.state.phase ?? 'idle'
   return (
-    <div className="admin__two">
-      <section className="admin__panel">
-        <h2>Rooms</h2>
-        <RoomsList rooms={rooms} selected={selected} onSelect={onSelect} />
-      </section>
+    <section className="admin__panel">
+      <div className="admin__panel-head">
+        <h2>Show control</h2>
+        <label className="admin__select">
+          <span>room</span>
+          {/* A one-option list today; the picker exists so a second room does
+              not need this screen rewritten. */}
+          <select value={selected} onChange={(event) => onSelect(event.target.value)}>
+            {rooms.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.code}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
-      <section className="admin__panel admin__panel--wide">
-        <h2>{selected}</h2>
-        <p className="admin__node">{room?.state.node?.title ?? '—'}</p>
+      <p className="admin__node">{room?.state.node?.title ?? '—'}</p>
+      <p className="admin__hint">
+        <span className={`admin__phase is-${phase}`}>{phase}</span> · node{' '}
+        {room ? room.state.index + 1 : 0} / {room?.state.node_count ?? 0} ·{' '}
+        {room?.players ?? 0} joined · {room?.clients ?? 0} online
+      </p>
 
-        <div className="admin__controls">
-          {ACTIONS.map((action) => (
-            <button key={action} type="button" disabled={busy} onClick={() => onAction(action)}>
-              {action}
-            </button>
-          ))}
-        </div>
+      <div className="admin__controls">
+        {ACTIONS.map((action) => (
+          <button key={action} type="button" disabled={busy} onClick={() => onAction(action)}>
+            {action}
+          </button>
+        ))}
+      </div>
 
-        <p className="admin__hint">Jump straight to a node instead of waiting for the clock:</p>
-        <div className="admin__jumps">
-          {Array.from({ length: room?.state.node_count ?? 0 }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              disabled={busy}
-              className={i === room?.state.index ? 'is-current' : ''}
-              onClick={() => onAction(`go/${i}`)}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-      </section>
-    </div>
+      <p className="admin__hint">Jump straight to a node instead of waiting for the clock:</p>
+      <div className="admin__jumps">
+        {Array.from({ length: room?.state.node_count ?? 0 }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            disabled={busy}
+            className={i === room?.state.index ? 'is-current' : ''}
+            onClick={() => onAction(`go/${i}`)}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+    </section>
   )
 }
 
+type DataTab = 'rooms' | 'players'
+
 function DataView({
   rooms,
-  room,
   selected,
   onSelect,
   players,
 }: {
   rooms: RoomSnapshot[]
-  room: RoomSnapshot | undefined
   selected: string
   onSelect: (code: string) => void
   players: PlayerRow[]
 }) {
-  const phase = room?.state.phase ?? 'idle'
+  const [tab, setTab] = useState<DataTab>('rooms')
+
   return (
-    <div className="admin__two">
-      <section className="admin__panel">
-        <h2>Rooms</h2>
-        <RoomsList rooms={rooms} selected={selected} onSelect={onSelect} />
-      </section>
-
-      <div className="admin__stack">
-        <section className="admin__panel">
-          <h2>Room data · {selected}</h2>
-          <dl className="admin__facts">
-            <div>
-              <dt>phase</dt>
-              <dd className={`admin__phase is-${phase}`}>{phase}</dd>
-            </div>
-            <div>
-              <dt>node</dt>
-              <dd>
-                {room ? `${room.state.index + 1} / ${room.state.node_count}` : '—'}
-                {room?.state.node?.title ? ` · ${room.state.node.title}` : ''}
-              </dd>
-            </div>
-            <div>
-              <dt>joined</dt>
-              <dd>{room?.players ?? 0}</dd>
-            </div>
-            <div>
-              <dt>online</dt>
-              <dd>{room?.clients ?? 0}</dd>
-            </div>
-          </dl>
-          <p className="admin__hint">
-            Joined is what the database holds for this room; online is live connections. A
-            sleeping iPad drops the second and keeps the first.
-          </p>
-        </section>
-
-        <section className="admin__panel">
-          <h2>Players · {players.length}</h2>
-          {players.length === 0 ? (
-            <p className="admin__hint">Nobody has joined this room yet.</p>
-          ) : (
-            <div className="admin__table-wrap">
-              <table className="admin__table">
-                <thead>
-                  <tr>
-                    <th scope="col">Player</th>
-                    <th scope="col">Event</th>
-                    <th scope="col">Hallu</th>
-                    <th scope="col">Data</th>
-                    <th scope="col">Sabotage</th>
-                    <th scope="col">Ultimate</th>
-                    <th scope="col">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {players.map((player) => (
-                    <tr key={player.player_id}>
-                      <td>{player.nickname}</td>
-                      <td className="admin__dim">{player.event}</td>
-                      {/* A missing score row means no game has written one yet,
-                          which reads as zero rather than as a blank cell. */}
-                      <td>{player.score?.hallucination_score ?? 0}</td>
-                      <td>{player.score?.data_score ?? 0}</td>
-                      <td>{player.score?.sabotage_score ?? 0}</td>
-                      <td>{player.score?.ultimate_score ?? 0}</td>
-                      <td className="admin__total">{player.total_score}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+    <section className="admin__panel">
+      <div className="admin__panel-head">
+        <h2>Arcade Data</h2>
+        <div className="admin__toggle" role="tablist" aria-label="Data view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'rooms'}
+            className={tab === 'rooms' ? 'is-active' : ''}
+            onClick={() => setTab('rooms')}
+          >
+            Rooms
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'players'}
+            className={tab === 'players' ? 'is-active' : ''}
+            onClick={() => setTab('players')}
+          >
+            Players
+          </button>
+        </div>
       </div>
+
+      {tab === 'rooms' ? (
+        <RoomsTable
+          rooms={rooms}
+          selected={selected}
+          onOpenPlayers={(code) => {
+            onSelect(code)
+            setTab('players')
+          }}
+        />
+      ) : (
+        <PlayersTable players={players} room={selected} />
+      )}
+    </section>
+  )
+}
+
+function RoomsTable({
+  rooms,
+  selected,
+  onOpenPlayers,
+}: {
+  rooms: RoomSnapshot[]
+  selected: string
+  onOpenPlayers: (code: string) => void
+}) {
+  if (rooms.length === 0) return <p className="admin__hint">No rooms yet.</p>
+  return (
+    <div className="admin__table-wrap">
+      <table className="admin__table">
+        <thead>
+          <tr>
+            <th scope="col">Room</th>
+            <th scope="col">Label</th>
+            <th scope="col">Event</th>
+            <th scope="col">Phase</th>
+            <th scope="col">Node</th>
+            <th scope="col">Joined</th>
+            <th scope="col">Online</th>
+            <th scope="col">Players</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rooms.map((item) => (
+            <tr key={item.code} className={item.code === selected ? 'is-current' : ''}>
+              <td>{item.code}</td>
+              <td className="admin__dim">{item.label ?? '—'}</td>
+              <td className="admin__dim">{item.event ?? '—'}</td>
+              <td className={`admin__phase is-${item.state.phase}`}>{item.state.phase}</td>
+              <td>
+                {item.state.index + 1} / {item.state.node_count}
+              </td>
+              <td>{item.players}</td>
+              <td>{item.clients}</td>
+              {/* Opening the roster is the only reason to pick a room here, so it
+                  is a column rather than a whole row that reacts to a click. */}
+              <td>
+                <button type="button" onClick={() => onOpenPlayers(item.code)}>
+                  view
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  )
+}
+
+function PlayersTable({ players, room }: { players: PlayerRow[]; room: string }) {
+  if (players.length === 0) {
+    return <p className="admin__hint">Nobody has joined {room} yet.</p>
+  }
+  return (
+    <>
+      <p className="admin__hint">
+        Room · {room} · {players.length} {players.length === 1 ? 'player' : 'players'}, best score
+        first
+      </p>
+      <div className="admin__table-wrap">
+        <table className="admin__table">
+          <thead>
+            <tr>
+              <th scope="col">Player</th>
+              <th scope="col">Event</th>
+              <th scope="col">Hallu</th>
+              <th scope="col">Data</th>
+              <th scope="col">Sabotage</th>
+              <th scope="col">Ultimate</th>
+              <th scope="col">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {players.map((player) => (
+              <tr key={player.player_id}>
+                <td>{player.nickname}</td>
+                <td className="admin__dim">{player.event}</td>
+                {/* A missing score row means no game has written one yet, which
+                    reads as zero rather than as a blank cell. */}
+                <td>{player.score?.hallucination_score ?? 0}</td>
+                <td>{player.score?.data_score ?? 0}</td>
+                <td>{player.score?.sabotage_score ?? 0}</td>
+                <td>{player.score?.ultimate_score ?? 0}</td>
+                <td className="admin__total">{player.total_score}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 

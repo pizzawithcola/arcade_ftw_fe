@@ -43,6 +43,9 @@ export interface RoomSnapshot {
   clients: number
   /** People who joined this room, whether or not they are connected now. */
   players: number
+  /** Row metadata; null when the room has no event or label set. */
+  event: string | null
+  label: string | null
 }
 
 export function readToken(): string | null {

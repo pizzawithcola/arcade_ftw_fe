@@ -92,19 +92,6 @@
   gap: 1rem;
 }
 
-.admin__two {
-  display: grid;
-  grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
-}
-
-.admin__stack {
-  display: grid;
-  gap: 1rem;
-  min-width: 0;
-}
-
 .admin__panel {
   border: 1px solid #232a3b;
   border-radius: 10px;
@@ -120,39 +107,8 @@
   color: #8b94a8;
 }
 
-.admin__rooms {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.4rem;
-}
-
-.admin__rooms button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.2rem 0.6rem;
-  padding: 0.55rem 0.65rem;
-  border: 1px solid #2a3242;
-  border-radius: 6px;
-  background: #131a28;
-  color: #dfe4ee;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.admin__rooms button.is-current {
-  border-color: #57f2c4;
-}
-
-.admin__code {
-  font-weight: 700;
-}
-
 .admin__phase {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #8b94a8;
@@ -170,10 +126,69 @@
   color: #8b94a8;
 }
 
-.admin__meta {
-  grid-column: 1 / -1;
-  font-size: 0.72rem;
+.admin__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.admin__panel-head h2 {
+  margin: 0;
+}
+
+/* Segmented switch: Rooms | Players. Two buttons, one panel. */
+.admin__toggle {
+  display: inline-flex;
+  border: 1px solid #2a3242;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.admin__toggle button {
+  padding: 0.35rem 0.9rem;
+  border: none;
+  background: #131a28;
+  color: #8b94a8;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.admin__toggle button + button {
+  border-left: 1px solid #2a3242;
+}
+
+.admin__toggle button:hover {
+  color: #dfe4ee;
+}
+
+.admin__toggle button.is-active {
+  background: #1b2334;
+  color: #57f2c4;
+}
+
+.admin__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: #5a6478;
+}
+
+.admin__select select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #2a3242;
+  border-radius: 6px;
+  background: #131a28;
+  color: #e6e9f0;
+  font: inherit;
+  font-size: 0.82rem;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .admin__node {
@@ -241,26 +256,6 @@
   font-size: 0.82rem;
 }
 
-.admin__facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-  gap: 0.7rem 1rem;
-  margin: 0 0 0.6rem;
-}
-
-.admin__facts dt {
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #5a6478;
-}
-
-.admin__facts dd {
-  margin: 0.15rem 0 0;
-  font-size: 0.95rem;
-  color: #e6e9f0;
-}
-
 .admin__table-wrap {
   overflow-x: auto;
 }
@@ -310,6 +305,30 @@
   color: #5a6478;
 }
 
+.admin__table tbody tr.is-current td {
+  background: #131a28;
+}
+
+.admin__table tbody tr.is-current td:first-child {
+  box-shadow: inset 2px 0 0 #57f2c4;
+}
+
+.admin__table button {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #2c3549;
+  border-radius: 5px;
+  background: #131a28;
+  color: #b9c1d1;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.admin__table button:hover {
+  border-color: #57f2c4;
+  color: #e6e9f0;
+}
+
 .admin__total {
   font-weight: 700;
   color: #57f2c4;
@@ -332,7 +351,4 @@
     grid-auto-columns: minmax(0, 1fr);
   }
 
-  .admin__two {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
