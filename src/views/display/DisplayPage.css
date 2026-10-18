@@ -24,51 +24,138 @@
   color: #57f2c4;
 }
 
-.display__room {
-  letter-spacing: 0.1em;
-}
-
 .display__bar .dot {
   margin-left: auto;
 }
 
-/* ─── idle: the join screen ─────────────────────────────────────────────────── */
+/* ─── idle: the waiting room ─────────────────────────────────────────────────── */
 
-.display__join {
+.display__lobby {
   flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(2rem, 6vw, 6rem);
-  padding: clamp(1.5rem, 5vw, 4rem);
+  gap: clamp(0.6rem, 1.4vh, 1.2rem);
+  padding: clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.5rem);
+  min-height: 0;
+  text-align: center;
 }
 
-.display__joinTitle {
-  margin: 0 0 1rem;
+.display__lobbyTitle {
+  margin: 0;
   font-size: clamp(3rem, 8vw, 6.5rem);
   line-height: 1;
-  color: #e6e9f0;
+  letter-spacing: -0.02em;
+  /* A hint of depth instead of a flat white headline. */
+  background: linear-gradient(180deg, #ffffff 0%, #b9c1d1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.display__joinNote {
-  margin: 0 0 0.4rem;
-  font-size: clamp(1rem, 2vw, 1.5rem);
+.display__lobbyCount {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  letter-spacing: 0.02em;
   color: #8b94a8;
 }
 
-.display__url {
-  margin: 0 0 0.6rem;
-  font-size: clamp(1.6rem, 3.4vw, 2.8rem);
-  font-weight: 700;
+.display__lobbyCount strong {
+  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  font-variant-numeric: tabular-nums;
   color: #57f2c4;
-  word-break: break-all;
 }
 
-.display__qr {
-  padding: 1.2rem;
-  border-radius: 1.2rem;
-  background: #ffffff;
-  line-height: 0;
+/* A quiet "this is live" cue, so the wall does not look frozen. */
+.display__pulse {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #57f2c4;
+  box-shadow: 0 0 0 0 rgba(87, 242, 196, 0.6);
+  animation: display-pulse 2.4s ease-out infinite;
+}
+
+@keyframes display-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(87, 242, 196, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 0.9rem rgba(87, 242, 196, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(87, 242, 196, 0);
+  }
+}
+
+/* Names wrap into as many columns as fit, and scroll once a room gets big. */
+.display__names {
+  flex: 1;
+  width: min(100%, 78rem);
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  align-content: start;
+  gap: clamp(0.4rem, 0.9vh, 0.7rem);
+  /* auto margins centre a short list and collapse to zero once it overflows,
+     which keeps the scroll starting at the first name. */
+  margin-block: auto;
+  padding: clamp(0.5rem, 1.2vh, 1rem) 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.display__names::-webkit-scrollbar {
+  display: none;
+}
+
+.display__names li {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #1e2739;
+  border-radius: 999px;
+  background: #111826;
+  font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+  color: #dfe4ee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: display-names-in 260ms ease-out both;
+}
+
+@keyframes display-names-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.display__lobbyEmpty {
+  margin: auto 0;
+  font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+  color: #5a6478;
+}
+
+.display__lobbyNote {
+  margin: 0;
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4b5468;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .display__pulse,
+  .display__names li {
+    animation: none;
+  }
 }
 
 /* ─── a round in progress ──────────────────────────────────────────────────── */
@@ -162,14 +249,6 @@
 
 .display__post p:last-child {
   margin-bottom: 0;
-}
-
-@media (max-width: 60rem) {
-  .display__join {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    text-align: center;
-  }
 }
 
 /* The question, sized to be read from the back of the room. */

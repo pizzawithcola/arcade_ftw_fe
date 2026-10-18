@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { QRCodeSVG } from 'qrcode.react'
-import { fetchSession, isAuthError, listRooms, type Session } from '../../api'
+import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { QUIZ_QUESTIONS } from '../../games/quiz/content'
@@ -77,6 +76,7 @@ export default function DisplayPage() {
   const [session, setSession] = useState<Session | null>(null)
   const [checked, setChecked] = useState(false)
   const [current, setCurrent] = useState<string | null>(null)
+  const [joined, setJoined] = useState<string[]>([])
 
   const code = pinned ?? current ?? ''
 
@@ -122,6 +122,27 @@ export default function DisplayPage() {
     }
   }, [session, pinned])
 
+  // Who is in the room, for the lobby. Cheap enough to poll, and it is the one
+  // thing the audience looks at before the show starts.
+  useEffect(() => {
+    if (!session || !code) return
+    let live = true
+    const pull = () =>
+      roomRoster(code)
+        .then((entries) => {
+          if (live) setJoined(entries.map((entry) => entry.nickname))
+        })
+        .catch(() => {
+          // The roster is decoration; a blip just leaves the last list on screen.
+        })
+    void pull()
+    const id = window.setInterval(() => void pull(), 2000)
+    return () => {
+      live = false
+      window.clearInterval(id)
+    }
+  }, [session, code])
+
   if (!checked) return null
   if (!session) {
     return <StaffLogin scope="display" title="Arcade FTW" onSignedIn={setSession} />
@@ -133,36 +154,48 @@ export default function DisplayPage() {
         <header className="display__bar">
           <span className="display__brand">Arcade FTW</span>
         </header>
-        <section className="display__join">
-          <h1 className="display__joinTitle">Waiting for the next round</h1>
-          <p className="display__joinNote">The operator creates a room to begin.</p>
+        <section className="display__lobby">
+          <p className="display__kicker">Get ready</p>
+          <h1 className="display__lobbyTitle">Waiting Room</h1>
+          <p className="display__lobbyEmpty">The host opens the round shortly.</p>
         </section>
       </main>
     )
   }
 
-  const joinUrl = `${location.origin}/?room=${encodeURIComponent(code)}`
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
 
   return (
     <main className={`display display--${phase}`}>
       <header className="display__bar">
         <span className="display__brand">Arcade FTW</span>
-        <span className="display__room">room {code}</span>
         <span className={`dot dot--${connection}`} />
       </header>
 
       {phase === 'idle' ? (
-        <section className="display__join">
-          <div>
-            <h1 className="display__joinTitle">Join the game</h1>
-            <p className="display__joinNote">Scan the code with your iPad, or go to</p>
-            <p className="display__url">{joinUrl.replace(/^https?:\/\//, '')}</p>
-            <p className="display__joinNote">and pick a name. No password.</p>
-          </div>
-          <div className="display__qr">
-            <QRCodeSVG value={joinUrl} size={260} bgColor="#ffffff" fgColor="#0b0f1a" />
-          </div>
+        <section className="display__lobby">
+          <p className="display__kicker">Get ready</p>
+          <h1 className="display__lobbyTitle">Waiting Room</h1>
+
+          <p className="display__lobbyCount">
+            <span className="display__pulse" />
+            <strong>{joined.length}</strong>
+            {joined.length === 1 ? ' player joined' : ' players joined'}
+          </p>
+
+          {joined.length > 0 ? (
+            <ul className="display__names">
+              {joined.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="display__lobbyEmpty">Sign in on your iPad to join.</p>
+          )}
+
+          <p className="display__lobbyNote">
+            The round starts on its own — keep the iPad awake.
+          </p>
         </section>
       ) : (
         <section className="display__stage">
