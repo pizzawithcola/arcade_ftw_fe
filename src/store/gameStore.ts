@@ -3,6 +3,13 @@ import { create } from 'zustand'
 export type Phase = 'idle' | 'playing' | 'paused' | 'finished'
 export type Connection = 'connecting' | 'open' | 'closed'
 
+export interface QuestionState {
+  index: number
+  count: number
+  seconds_each: number
+  remaining_ms: number
+}
+
 export interface FlowNode {
   type: string
   title?: string
@@ -16,6 +23,7 @@ interface StateMessage {
   node_count: number
   node: FlowNode | null
   remaining_ms: number
+  question: QuestionState | null
   server_time_ms: number
 }
 
@@ -34,6 +42,15 @@ interface GameState {
   endsAt: number | null
   /** Milliseconds left, held constant while paused. */
   heldMs: number
+  /** Which question the engine says is on screen, so every screen agrees. */
+  question: QuestionState | null
+  /**
+   * True once this screen has seen the round actually running. Tells a device
+   * that was present when the round ended from one that arrived afterwards.
+   */
+  sawPlaying: boolean
+  /** Forget everything about the previous room before connecting to another. */
+  resetForRoom: () => void
   setConnection: (connection: Connection) => void
   applyMessage: (message: WsMessage) => void
 }
@@ -46,8 +63,22 @@ export const useGameStore = create<GameState>((set) => ({
   node: null,
   endsAt: null,
   heldMs: 0,
+  question: null,
+  sawPlaying: false,
 
   setConnection: (connection) => set({ connection }),
+
+  resetForRoom: () =>
+    set({
+      phase: 'idle',
+      index: 0,
+      nodeCount: 0,
+      node: null,
+      endsAt: null,
+      heldMs: 0,
+      question: null,
+      sawPlaying: false,
+    }),
 
   applyMessage: (message) => {
     if (message.type !== 'state') return
@@ -63,6 +94,11 @@ export const useGameStore = create<GameState>((set) => ({
       // display, never the length of the node.
       endsAt: state.phase === 'playing' ? Date.now() + state.remaining_ms : null,
       heldMs: state.phase === 'paused' ? state.remaining_ms : 0,
+      question: state.question ?? null,
+      sawPlaying:
+        state.phase === 'playing' || state.phase === 'paused'
+          ? true
+          : (useGameStore.getState().sawPlaying ?? false),
     })
   },
 }))

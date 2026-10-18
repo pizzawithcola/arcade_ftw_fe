@@ -410,3 +410,95 @@
   }
 
 }
+
+/* Row actions: compact, right-aligned, never the loudest thing on the row. */
+.admin__row-actions {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.admin__create {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #2c3549;
+  border-radius: 6px;
+  background: #131a28;
+  color: #57f2c4;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.admin__create:hover:not(:disabled) {
+  border-color: #57f2c4;
+}
+
+.admin__create:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Inline create/edit form: no modal, so the table stays visible behind it. */
+.admin__editor {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #2a3242;
+  border-radius: 8px;
+  background: #111826;
+}
+
+.admin__editor-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #57f2c4;
+  padding-bottom: 0.4rem;
+}
+
+.admin__editor label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a6478;
+}
+
+.admin__editor input,
+.admin__editor select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #2a3242;
+  border-radius: 6px;
+  background: #131a28;
+  color: #e6e9f0;
+  font: inherit;
+  font-size: 0.82rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.admin__editor-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.admin__editor-actions button {
+  padding: 0.38rem 0.8rem;
+  border: 1px solid #2c3549;
+  border-radius: 6px;
+  background: #131a28;
+  color: #e6e9f0;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.admin__editor-actions button[type='submit'] {
+  border-color: #57f2c4;
+  color: #57f2c4;
+}

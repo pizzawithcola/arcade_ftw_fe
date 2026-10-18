@@ -17,6 +17,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
+      <Route path="/play" element={<PlayPage />} />
       <Route path="/r/:code" element={<PlayPage />} />
       <Route path="/display" element={<DisplayPage />} />
       <Route path="/display/:code" element={<DisplayPage />} />

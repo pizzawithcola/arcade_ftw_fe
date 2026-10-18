@@ -29,6 +29,13 @@ export interface PlayerSession extends Session {
   event: string
 }
 
+export interface QuestionState {
+  index: number
+  count: number
+  seconds_each: number
+  remaining_ms: number
+}
+
 export interface RoomSnapshot {
   code: string
   state: {
@@ -37,6 +44,8 @@ export interface RoomSnapshot {
     node_count: number
     node: { type: string; title?: string; game?: string; duration_sec?: number } | null
     remaining_ms: number
+    /** Present on nodes that have a question plan; the engine owns the index. */
+    question: QuestionState | null
     server_time_ms: number
   }
   /** Live websocket connections. */
@@ -68,6 +77,21 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+/** Carries the status code, so a screen can tell "sign in again" from "no". */
+export class ApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export function isAuthError(caught: unknown): boolean {
+  return caught instanceof ApiError && caught.status === 401
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = readToken()
   const response = await fetch(path, {
@@ -89,7 +113,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     } catch {
       // Keep the raw body.
     }
-    throw new Error(detail)
+    throw new ApiError(detail, response.status)
   }
   return (text ? JSON.parse(text) : undefined) as T
 }
@@ -213,6 +237,11 @@ export interface RosterEntry {
  * Sent on every visit rather than once at login: the room lives in the URL, so a
  * player who opens a different room is genuinely in a different room now.
  */
+/** The round players join. Public: a device has no other right to ask yet. */
+export function currentRoom(): Promise<{ code: string; phase: string }> {
+  return request('/api/rooms/current')
+}
+
 export function joinRoom(code: string): Promise<{ room: string; nickname: string }> {
   return request(`/api/rooms/${code}/join`, { method: 'POST' })
 }
@@ -243,9 +272,38 @@ export function listRooms(): Promise<RoomList> {
   }))
 }
 
+export function updateRoom(
+  code: string,
+  patch: { label?: string; event?: string },
+): Promise<unknown> {
+  return request(`/api/rooms/${code}`, { method: 'PATCH', body: JSON.stringify(patch) })
+}
+
+export function deleteRoom(code: string): Promise<unknown> {
+  return request(`/api/rooms/${code}`, { method: 'DELETE' })
+}
+
+export function addPlayer(
+  room: string,
+  body: { nickname: string; event: string },
+): Promise<{ player_id: number; nickname: string }> {
+  return request(`/api/rooms/${room}/players`, { method: 'POST', body: JSON.stringify(body) })
+}
+
+export function updatePlayer(
+  playerId: number,
+  patch: { nickname?: string; event?: string; room_code?: string | null },
+): Promise<unknown> {
+  return request(`/api/players/${playerId}`, { method: 'PATCH', body: JSON.stringify(patch) })
+}
+
+export function deletePlayer(playerId: number): Promise<unknown> {
+  return request(`/api/players/${playerId}`, { method: 'DELETE' })
+}
+
 /** A new round. Omit the code and the server names it `round-N`. */
-export function createRoom(input: { code?: string; label?: string } = {}): Promise<{
-  code: string
-}> {
+export function createRoom(
+  input: { code?: string; label?: string; event?: string } = {},
+): Promise<{ code: string }> {
   return request('/api/rooms', { method: 'POST', body: JSON.stringify(input) })
 }

@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  addPlayer,
   clearToken,
   createRoom,
+  deletePlayer,
+  deleteRoom,
+  fetchEvents,
   fetchSession,
+  isAuthError,
   listPlayers,
   listRooms,
   roomAction,
+  updatePlayer,
+  updateRoom,
+  type EventOption,
   type PlayerRow,
   type RoomSnapshot,
   type Session,
@@ -17,6 +25,22 @@ const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
 
 type Section = 'console' | 'data' | 'settings'
 type DataTab = 'rooms' | 'players'
+
+interface RoomDraft {
+  /** A new room has no code yet; the server names it `round-N`. */
+  isNew: boolean
+  code: string
+  label: string
+  event: string
+}
+
+interface PlayerDraft {
+  isNew: boolean
+  playerId: number | null
+  nickname: string
+  event: string
+  room: string
+}
 
 const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
@@ -39,6 +63,9 @@ export default function AdminPage() {
   const shell = useRef<HTMLElement | null>(null)
   const [rooms, setRooms] = useState<RoomSnapshot[]>([])
   const [players, setPlayers] = useState<PlayerRow[]>([])
+  const [events, setEvents] = useState<EventOption[]>([])
+  const [roomDraft, setRoomDraft] = useState<RoomDraft | null>(null)
+  const [playerDraft, setPlayerDraft] = useState<PlayerDraft | null>(null)
   // Empty until the room list arrives: the operator works on the current round.
   const [selected, setSelected] = useState<string>('')
   const [error, setError] = useState('')
@@ -49,6 +76,10 @@ export default function AdminPage() {
       setSession(found && found.canControl ? found : null)
       setChecked(true)
     })
+  }, [])
+
+  useEffect(() => {
+    void fetchEvents().then(setEvents).catch(() => setEvents([]))
   }, [])
 
   const load = useCallback(
@@ -66,6 +97,12 @@ export default function AdminPage() {
           setError('')
         })
         .catch((caught: unknown) => {
+          // Signed out from elsewhere (or an expired token): back to the login
+          // form rather than a console that silently stops updating.
+          if (isAuthError(caught)) {
+            setSession(null)
+            return
+          }
           setError(caught instanceof Error ? caught.message : String(caught))
         }),
     [],
@@ -120,6 +157,83 @@ export default function AdminPage() {
       const created = await createRoom({ label: label.trim() || undefined })
       await load()
       setSelected(created.code)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const saveRoom = async (draft: RoomDraft) => {
+    setBusy(true)
+    try {
+      if (draft.isNew) {
+        await createRoom({
+          code: draft.code.trim() || undefined,
+          label: draft.label.trim() || undefined,
+          event: draft.event || undefined,
+        })
+      } else {
+        await updateRoom(draft.code, {
+          ...(draft.label ? { label: draft.label } : {}),
+          ...(draft.event ? { event: draft.event } : {}),
+        })
+      }
+      setRoomDraft(null)
+      await load()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeRoom = async (code: string) => {
+    if (!window.confirm(`Delete room ${code}? Players stay, their membership is cleared.`)) return
+    setBusy(true)
+    try {
+      await deleteRoom(code)
+      setRoomDraft(null)
+      await load()
+    } catch (caught) {
+      // A running room refuses to be deleted, which is worth reading out loud.
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const savePlayer = async (draft: PlayerDraft) => {
+    setBusy(true)
+    try {
+      if (draft.isNew) {
+        await addPlayer(draft.room || selected, {
+          nickname: draft.nickname,
+          event: draft.event,
+        })
+      } else if (draft.playerId !== null) {
+        await updatePlayer(draft.playerId, {
+          nickname: draft.nickname,
+          event: draft.event,
+          room_code: draft.room || null,
+        })
+      }
+      setPlayerDraft(null)
+      setPlayers(await listPlayers({ room: selected }))
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removePlayer = async (player: PlayerRow) => {
+    if (!window.confirm(`Delete ${player.nickname}? Their score goes with them.`)) return
+    setBusy(true)
+    try {
+      await deletePlayer(player.player_id)
+      setPlayerDraft(null)
+      setPlayers(await listPlayers({ room: selected }))
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught))
     } finally {
@@ -190,8 +304,18 @@ export default function AdminPage() {
               selected={selected}
               onSelect={setSelected}
               players={players}
+              events={events}
               tab={tab}
               onTab={setTab}
+              busy={busy}
+              roomDraft={roomDraft}
+              playerDraft={playerDraft}
+              onRoomDraft={setRoomDraft}
+              onPlayerDraft={setPlayerDraft}
+              onSaveRoom={(draft) => void saveRoom(draft)}
+              onDeleteRoom={(code) => void removeRoom(code)}
+              onSavePlayer={(draft) => void savePlayer(draft)}
+              onDeletePlayer={(player) => void removePlayer(player)}
             />
           )}
           {section === 'settings' && <SettingsView />}
@@ -304,72 +428,311 @@ function DataView({
   selected,
   onSelect,
   players,
+  events,
   tab,
   onTab,
+  busy,
+  roomDraft,
+  playerDraft,
+  onRoomDraft,
+  onPlayerDraft,
+  onSaveRoom,
+  onDeleteRoom,
+  onSavePlayer,
+  onDeletePlayer,
 }: {
   rooms: RoomSnapshot[]
   selected: string
   onSelect: (code: string) => void
   players: PlayerRow[]
+  events: EventOption[]
   tab: DataTab
   onTab: (next: DataTab) => void
+  busy: boolean
+  roomDraft: RoomDraft | null
+  playerDraft: PlayerDraft | null
+  onRoomDraft: (draft: RoomDraft | null) => void
+  onPlayerDraft: (draft: PlayerDraft | null) => void
+  onSaveRoom: (draft: RoomDraft) => void
+  onDeleteRoom: (code: string) => void
+  onSavePlayer: (draft: PlayerDraft) => void
+  onDeletePlayer: (player: PlayerRow) => void
 }) {
+  // A room's event is optional, so a new one starts blank rather than guessing.
+  const openNewRoom = () => onRoomDraft({ isNew: true, code: '', label: '', event: '' })
+  const openNewPlayer = () =>
+    onPlayerDraft({
+      isNew: true,
+      playerId: null,
+      nickname: '',
+      event: events[0]?.key ?? '',
+      room: selected,
+    })
+
   return (
     <section className="admin__panel">
       <div className="admin__panel-head">
         <h2>Arcade Data</h2>
-        <div className="admin__toggle" role="tablist" aria-label="Data view">
+        <div className="admin__head-tools">
+          <div className="admin__toggle" role="tablist" aria-label="Data view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'rooms'}
+              className={tab === 'rooms' ? 'is-active' : ''}
+              onClick={() => onTab('rooms')}
+            >
+              Rooms
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'players'}
+              className={tab === 'players' ? 'is-active' : ''}
+              onClick={() => onTab('players')}
+            >
+              Players
+            </button>
+          </div>
           <button
             type="button"
-            role="tab"
-            aria-selected={tab === 'rooms'}
-            className={tab === 'rooms' ? 'is-active' : ''}
-            onClick={() => onTab('rooms')}
+            className="admin__create"
+            disabled={busy}
+            onClick={tab === 'rooms' ? openNewRoom : openNewPlayer}
           >
-            Rooms
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'players'}
-            className={tab === 'players' ? 'is-active' : ''}
-            onClick={() => onTab('players')}
-          >
-            Players
+            {tab === 'rooms' ? '+ new room' : '+ new player'}
           </button>
         </div>
       </div>
+
+      {tab === 'rooms' && roomDraft && (
+        <RoomForm
+          draft={roomDraft}
+          events={events}
+          busy={busy}
+          onChange={onRoomDraft}
+          onCancel={() => onRoomDraft(null)}
+          onSave={onSaveRoom}
+        />
+      )}
+      {tab === 'players' && playerDraft && (
+        <PlayerForm
+          draft={playerDraft}
+          rooms={rooms}
+          events={events}
+          busy={busy}
+          onChange={onPlayerDraft}
+          onCancel={() => onPlayerDraft(null)}
+          onSave={onSavePlayer}
+        />
+      )}
 
       {tab === 'rooms' ? (
         <RoomsTable
           rooms={rooms}
           selected={selected}
+          busy={busy}
           onOpenPlayers={(code) => {
             onSelect(code)
             onTab('players')
           }}
+          onEdit={(room) =>
+            onRoomDraft({
+              isNew: false,
+              code: room.code,
+              label: room.label ?? '',
+              event: room.event ?? '',
+            })
+          }
+          onDelete={onDeleteRoom}
         />
       ) : (
-        <PlayersTable players={players} room={selected} />
+        <PlayersTable
+          players={players}
+          room={selected}
+          busy={busy}
+          onEdit={(player) =>
+            onPlayerDraft({
+              isNew: false,
+              playerId: player.player_id,
+              nickname: player.nickname,
+              event: player.event,
+              room: player.room_code ?? '',
+            })
+          }
+          onDelete={onDeletePlayer}
+        />
       )}
     </section>
+  )
+}
+
+function RoomForm({
+  draft,
+  events,
+  busy,
+  onChange,
+  onCancel,
+  onSave,
+}: {
+  draft: RoomDraft
+  events: EventOption[]
+  busy: boolean
+  onChange: (draft: RoomDraft) => void
+  onCancel: () => void
+  onSave: (draft: RoomDraft) => void
+}) {
+  return (
+    <form
+      className="admin__editor"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (!busy) onSave(draft)
+      }}
+    >
+      <span className="admin__editor-title">{draft.isNew ? 'New room' : `Edit ${draft.code}`}</span>
+      {draft.isNew && (
+        <label>
+          code
+          <input
+            value={draft.code}
+            placeholder="round-1 (blank = next)"
+            onChange={(event) => onChange({ ...draft, code: event.target.value })}
+          />
+        </label>
+      )}
+      <label>
+        label
+        <input
+          value={draft.label}
+          maxLength={80}
+          placeholder="optional"
+          onChange={(event) => onChange({ ...draft, label: event.target.value })}
+        />
+      </label>
+      <label>
+        event
+        <select
+          value={draft.event}
+          onChange={(event) => onChange({ ...draft, event: event.target.value })}
+        >
+          <option value="">—</option>
+          {events.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <span className="admin__editor-actions">
+        <button type="submit" disabled={busy}>
+          save
+        </button>
+        <button type="button" onClick={onCancel} disabled={busy}>
+          cancel
+        </button>
+      </span>
+    </form>
+  )
+}
+
+function PlayerForm({
+  draft,
+  rooms,
+  events,
+  busy,
+  onChange,
+  onCancel,
+  onSave,
+}: {
+  draft: PlayerDraft
+  rooms: RoomSnapshot[]
+  events: EventOption[]
+  busy: boolean
+  onChange: (draft: PlayerDraft) => void
+  onCancel: () => void
+  onSave: (draft: PlayerDraft) => void
+}) {
+  return (
+    <form
+      className="admin__editor"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (!busy && draft.nickname.trim()) onSave(draft)
+      }}
+    >
+      <span className="admin__editor-title">
+        {draft.isNew ? 'New player' : `Edit ${draft.nickname}`}
+      </span>
+      <label>
+        name
+        <input
+          value={draft.nickname}
+          maxLength={64}
+          placeholder="nickname"
+          onChange={(event) => onChange({ ...draft, nickname: event.target.value })}
+        />
+      </label>
+      <label>
+        event
+        <select
+          value={draft.event}
+          onChange={(event) => onChange({ ...draft, event: event.target.value })}
+        >
+          {events.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        room
+        <select
+          value={draft.room}
+          onChange={(event) => onChange({ ...draft, room: event.target.value })}
+        >
+          <option value="">— none —</option>
+          {rooms.map((room) => (
+            <option key={room.code} value={room.code}>
+              {room.code}
+            </option>
+          ))}
+        </select>
+      </label>
+      <span className="admin__editor-actions">
+        <button type="submit" disabled={busy}>
+          save
+        </button>
+        <button type="button" onClick={onCancel} disabled={busy}>
+          cancel
+        </button>
+      </span>
+    </form>
   )
 }
 
 function RoomsTable({
   rooms,
   selected,
+  busy,
   onOpenPlayers,
+  onEdit,
+  onDelete,
 }: {
   rooms: RoomSnapshot[]
   selected: string
+  busy: boolean
   onOpenPlayers: (code: string) => void
+  onEdit: (room: RoomSnapshot) => void
+  onDelete: (code: string) => void
 }) {
   if (rooms.length === 0) return <p className="admin__hint">No rooms yet.</p>
   return (
     <>
       <p className="admin__table-note">
-        {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} · view opens that room's players
+        {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} · newest first · view opens that
+        room's players
       </p>
       <div className="admin__table-wrap">
         <table className="admin__table">
@@ -382,7 +745,7 @@ function RoomsTable({
               <th scope="col">Node</th>
               <th scope="col">Joined</th>
               <th scope="col">Online</th>
-              <th scope="col" aria-label="Open players" />
+              <th scope="col" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
@@ -397,11 +760,15 @@ function RoomsTable({
                 </td>
                 <td>{item.players}</td>
                 <td>{item.clients}</td>
-                {/* Opening the roster is the only reason to pick a room here, so
-                    it is a column rather than a whole row that reacts to a click. */}
-                <td>
+                <td className="admin__row-actions">
                   <button type="button" onClick={() => onOpenPlayers(item.code)}>
                     view
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => onEdit(item)}>
+                    edit
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => onDelete(item.code)}>
+                    delete
                   </button>
                 </td>
               </tr>
@@ -413,7 +780,19 @@ function RoomsTable({
   )
 }
 
-function PlayersTable({ players, room }: { players: PlayerRow[]; room: string }) {
+function PlayersTable({
+  players,
+  room,
+  busy,
+  onEdit,
+  onDelete,
+}: {
+  players: PlayerRow[]
+  room: string
+  busy: boolean
+  onEdit: (player: PlayerRow) => void
+  onDelete: (player: PlayerRow) => void
+}) {
   if (players.length === 0) {
     return <p className="admin__hint">Nobody has joined {room} yet.</p>
   }
@@ -434,6 +813,7 @@ function PlayersTable({ players, room }: { players: PlayerRow[]; room: string })
               <th scope="col">Sabotage</th>
               <th scope="col">Ultimate</th>
               <th scope="col">Total</th>
+              <th scope="col" aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
@@ -448,6 +828,14 @@ function PlayersTable({ players, room }: { players: PlayerRow[]; room: string })
                 <td>{player.score?.sabotage_score ?? 0}</td>
                 <td>{player.score?.ultimate_score ?? 0}</td>
                 <td className="admin__total">{player.total_score}</td>
+                <td className="admin__row-actions">
+                  <button type="button" disabled={busy} onClick={() => onEdit(player)}>
+                    edit
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => onDelete(player)}>
+                    delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

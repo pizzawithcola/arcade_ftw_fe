@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { fetchSession, listRooms, type Session } from '../../api'
+import { fetchSession, isAuthError, listRooms, type Session } from '../../api'
 import { BLOCKS, POST_META } from '../../games/dataShadow/content'
+import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
+import { QUIZ_QUESTIONS } from '../../games/quiz/content'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
 import { useGameStore } from '../../store/gameStore'
@@ -40,6 +42,36 @@ function PostOnScreen() {
  * operator starting a new round is all it takes for the screen and its join QR
  * to move on. The URL never changes.
  */
+/**
+ * The question the whole room is answering.
+ *
+ * The engine says which one is current, so the screen and the iPads cannot
+ * disagree. Options stay on the iPad: the screen is there to be read from six
+ * metres away, and four options are not.
+ */
+function QuestionOnScreen({ kind, index }: { kind: 'hallucination' | 'quiz'; index: number }) {
+  if (kind === 'hallucination') {
+    const question = HALLUCINATION_QUESTIONS[index]
+    if (!question) return null
+    return (
+      <article className="display__question">
+        <p className="display__prompt">{question.prompt}</p>
+        <p className="display__reply">{question.reply}</p>
+        <p className="display__look">Trust it, or doubt it — on your iPad.</p>
+      </article>
+    )
+  }
+
+  const question = QUIZ_QUESTIONS[index]
+  if (!question) return null
+  return (
+    <article className="display__question">
+      <p className="display__prompt">{question.text}</p>
+      <p className="display__look">Pick A, B, C or D on your iPad.</p>
+    </article>
+  )
+}
+
 export default function DisplayPage() {
   const { code: pinned } = useParams()
   const [session, setSession] = useState<Session | null>(null)
@@ -58,6 +90,7 @@ export default function DisplayPage() {
   const endsAt = useGameStore((state) => state.endsAt)
   const heldMs = useGameStore((state) => state.heldMs)
   const connection = useGameStore((state) => state.connection)
+  const question = useGameStore((state) => state.question)
 
   useEffect(() => {
     void fetchSession().then((found) => {
@@ -75,8 +108,11 @@ export default function DisplayPage() {
         .then((list) => {
           if (live) setCurrent(list.current)
         })
-        .catch(() => {
-          // The connection dot already reports an unreachable server.
+        .catch((caught: unknown) => {
+          // A dead token must not leave the screen frozen on a stale round: the
+          // operator signs in again instead. Anything else is a blip the socket
+          // is already reporting.
+          if (isAuthError(caught) && live) setSession(null)
         })
     void pull()
     const id = window.setInterval(() => void pull(), 3000)
@@ -144,7 +180,21 @@ export default function DisplayPage() {
 
           {node?.game === 'data_shadow' && <PostOnScreen />}
 
-          {phase === 'playing' && (
+          {question &&
+            (node?.game === 'hallucination' || node?.type === 'quiz') && (
+              <QuestionOnScreen
+                kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
+                index={question.index}
+              />
+            )}
+
+          {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
+            <p className="display__kicker">
+              question {question.index + 1} / {question.count}
+            </p>
+          )}
+
+          {phase === 'playing' && !question && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (

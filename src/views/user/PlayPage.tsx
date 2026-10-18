@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   clearToken,
-  DEFAULT_ROOM,
+  currentRoom,
   fetchSession,
   joinRoom,
   roomRoster,
@@ -115,14 +115,21 @@ function NodeStage({ node, nodeIndex }: { node: FlowNode | null; nodeIndex: numb
   )
 }
 
-export default function PlayPage() {
-  const { code = DEFAULT_ROOM } = useParams()
-  useGameSocket(code)
+/** How long a finished round keeps its closing screen before signing out. */
+const WRAP_UP_MS = 8000
 
+export default function PlayPage() {
+  // A QR-scanned URL pins a device to a room; `/play` follows the current round.
+  const { code: pinned } = useParams()
   const navigate = useNavigate()
   const now = useTicker()
   const [session, setSession] = useState<PlayerSession | null>(null)
   const [checked, setChecked] = useState(false)
+  const [resolved, setResolved] = useState<string | null>(null)
+
+  const code = pinned ?? resolved ?? ''
+
+  useGameSocket(code)
 
   const phase = useGameStore((state) => state.phase)
   const node = useGameStore((state) => state.node)
@@ -131,28 +138,65 @@ export default function PlayPage() {
   const endsAt = useGameStore((state) => state.endsAt)
   const heldMs = useGameStore((state) => state.heldMs)
   const connection = useGameStore((state) => state.connection)
+  const sawPlaying = useGameStore((state) => state.sawPlaying)
 
   useEffect(() => {
-    void fetchSession().then(async (found) => {
-      if (found && !found.isAdmin && found.nickname) {
-        setSession(found as PlayerSession)
-        // Membership is stored server-side, so the roster knows this device is
-        // in the room before it has answered anything.
-        try {
-          await joinRoom(code)
-        } catch {
-          // A missing room is not fatal here: the socket reports the same
-          // problem, and the player already sees the connection indicator.
-        }
-      }
+    void fetchSession().then((found) => {
+      setSession(found && !found.isAdmin && found.nickname ? (found as PlayerSession) : null)
       setChecked(true)
     })
-  }, [code])
+  }, [])
+
+  // Nobody scans anything: the device asks which round is current, and keeps
+  // asking, so a new round picks everyone up where they are.
+  useEffect(() => {
+    if (!session || pinned) return
+    let live = true
+    const pull = () =>
+      currentRoom()
+        .then((found) => {
+          if (live) setResolved(found.code)
+        })
+        .catch(() => {
+          // No round exists yet; the connection dot already says so.
+        })
+    void pull()
+    const id = window.setInterval(() => void pull(), 3000)
+    return () => {
+      live = false
+      window.clearInterval(id)
+    }
+  }, [session, pinned])
+
+  // Membership is stored server-side, so the roster knows this device is in the
+  // room before it has answered anything.
+  useEffect(() => {
+    if (!session || !code) return
+    void joinRoom(code).catch(() => {
+      // A missing room is not fatal here: the socket reports the same problem.
+    })
+  }, [session, code])
+
+  // The round is over: show the closing screen, then come back to login so the
+  // next round starts from a clean device. A device that logs in *after* the
+  // round ended did not play it, so it waits here instead of being bounced
+  // straight back to the login page.
+  useEffect(() => {
+    if (phase !== 'finished' || !sawPlaying) return
+    const id = window.setTimeout(() => {
+      clearToken()
+      navigate('/', { replace: true })
+    }, WRAP_UP_MS)
+    return () => window.clearTimeout(id)
+  }, [phase, sawPlaying, navigate])
 
   if (!checked) return null
   if (!session) return <Navigate to="/" replace />
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
+  // A finished round is the signal that this device's round is over - the room
+  // and the player are locked together.
+  const roomMissing = !pinned && resolved === null
 
   return (
     <main className="game">
@@ -178,7 +222,25 @@ export default function PlayPage() {
         </button>
       </header>
 
-      {phase === 'idle' ? (
+      {roomMissing || (phase === 'idle' && !code) ? (
+        <div className="stage stage--waiting play__waiting">
+          <span className="play__kicker">Between rounds</span>
+          <h2 className="play__name">Waiting for the next round…</h2>
+          <p className="play__note">The host will open it shortly.</p>
+        </div>
+      ) : phase === 'finished' && sawPlaying ? (
+        <div className="stage stage--waiting play__waiting">
+          <span className="play__kicker">That's a wrap</span>
+          <h2 className="play__name">Thanks for playing</h2>
+          <p className="play__note">The round has ended. Signing you out…</p>
+        </div>
+      ) : phase === 'finished' ? (
+        <div className="stage stage--waiting play__waiting">
+          <span className="play__kicker">Between rounds</span>
+          <h2 className="play__name">Waiting for the next round…</h2>
+          <p className="play__note">The round has ended. The host will open the next one.</p>
+        </div>
+      ) : phase === 'idle' ? (
         <WaitingRoom nickname={session.nickname} code={code} />
       ) : (
         <NodeStage node={node} nodeIndex={index} />

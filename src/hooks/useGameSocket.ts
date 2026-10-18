@@ -14,8 +14,12 @@ const RETRY_MS = 2000
 export function useGameSocket(room: string): void {
   const setConnection = useGameStore((state) => state.setConnection)
   const applyMessage = useGameStore((state) => state.applyMessage)
+  const resetForRoom = useGameStore((state) => state.resetForRoom)
 
   useEffect(() => {
+    // A different room means none of the previous room's state applies.
+    resetForRoom()
+
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws'
     const url = `${scheme}://${location.host}/api/ws?room=${encodeURIComponent(room)}`
 
@@ -53,5 +57,5 @@ export function useGameSocket(room: string): void {
       if (retry !== undefined) window.clearTimeout(retry)
       socket?.close()
     }
-  }, [room, setConnection, applyMessage])
+  }, [room, setConnection, applyMessage, resetForRoom])
 }

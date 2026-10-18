@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { DEFAULT_ROOM, fetchEvents, fetchSession, loginPlayer, type EventOption } from '../../api'
+import { fetchEvents, fetchSession, loginPlayer, type EventOption } from '../../api'
 import '../auth.css'
 
 /**
@@ -11,9 +11,10 @@ import '../auth.css'
  */
 export default function LoginPage() {
   const navigate = useNavigate()
-  // A QR code points at /?room=xyz, so joining a specific room needs no typing.
+  // A QR code may point at /?room=xyz (pinned); with no room the device follows
+  // whichever round is current.
   const [params] = useSearchParams()
-  const room = params.get('room') ?? DEFAULT_ROOM
+  const room = params.get('room')
   const [nickname, setNickname] = useState('')
   const [event, setEvent] = useState('')
   const [events, setEvents] = useState<EventOption[] | null>(null)
@@ -24,7 +25,9 @@ export default function LoginPage() {
   // Already signed in as a player? Go straight back to the show.
   useEffect(() => {
     void fetchSession().then((session) => {
-      if (session && !session.isAdmin) navigate(`/r/${room}`, { replace: true })
+      if (session && !session.isAdmin) {
+        navigate(room ? `/r/${room}` : '/play', { replace: true })
+      }
     })
   }, [navigate, room])
 
@@ -53,7 +56,7 @@ export default function LoginPage() {
     setError('')
     try {
       await loginPlayer(nickname.trim(), event)
-      navigate(`/r/${room}`, { replace: true })
+      navigate(room ? `/r/${room}` : '/play', { replace: true })
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught))
     } finally {

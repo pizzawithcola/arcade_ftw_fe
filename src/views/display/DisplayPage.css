@@ -171,3 +171,24 @@
     text-align: center;
   }
 }
+
+/* The question, sized to be read from the back of the room. */
+.display__question {
+  width: min(100%, 62rem);
+  display: grid;
+  gap: 1rem;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.display__prompt {
+  margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  color: #8b94a8;
+}
+
+.display__reply {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.6vw, 2.3rem);
+  line-height: 1.35;
+  color: #e6e9f0;
+}
