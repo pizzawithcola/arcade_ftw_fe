@@ -39,7 +39,10 @@ export interface RoomSnapshot {
     remaining_ms: number
     server_time_ms: number
   }
+  /** Live websocket connections. */
   clients: number
+  /** People who joined this room, whether or not they are connected now. */
+  players: number
 }
 
 export function readToken(): string | null {
@@ -163,6 +166,29 @@ export function roomState(code: string) {
 
 export function roomAction(code: string, action: string): Promise<unknown> {
   return request(`/api/rooms/${code}/${action}`, { method: 'POST' })
+}
+
+export interface RosterEntry {
+  player_id: number
+  nickname: string
+  event: string
+  total_score: number
+}
+
+/**
+ * Record this device as a member of the room.
+ *
+ * Sent on every visit rather than once at login: the room lives in the URL, so a
+ * player who opens a different room is genuinely in a different room now.
+ */
+export function joinRoom(code: string): Promise<{ room: string; nickname: string }> {
+  return request(`/api/rooms/${code}/join`, { method: 'POST' })
+}
+
+export function roomRoster(code: string): Promise<RosterEntry[]> {
+  return request<{ players: RosterEntry[] }>(`/api/rooms/${code}/players`).then(
+    (body) => body.players,
+  )
 }
 
 export function listRooms(): Promise<RoomSnapshot[]> {

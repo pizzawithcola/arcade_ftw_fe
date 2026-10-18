@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { clearToken, DEFAULT_ROOM, fetchSession, type PlayerSession } from '../../api'
+import { clearToken, DEFAULT_ROOM, fetchSession, joinRoom, type PlayerSession } from '../../api'
 import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
@@ -85,13 +85,21 @@ export default function PlayPage() {
   const connection = useGameStore((state) => state.connection)
 
   useEffect(() => {
-    void fetchSession().then((found) => {
+    void fetchSession().then(async (found) => {
       if (found && !found.isAdmin && found.nickname) {
         setSession(found as PlayerSession)
+        // Membership is stored server-side, so the roster knows this device is
+        // in the room before it has answered anything.
+        try {
+          await joinRoom(code)
+        } catch {
+          // A missing room is not fatal here: the socket reports the same
+          // problem, and the player already sees the connection indicator.
+        }
       }
       setChecked(true)
     })
-  }, [])
+  }, [code])
 
   if (!checked) return null
   if (!session) return <Navigate to="/" replace />

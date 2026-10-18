@@ -103,7 +103,8 @@ export default function AdminPage() {
                   <span className="admin__code">{item.code}</span>
                   <span className={`admin__phase is-${item.state.phase}`}>{item.state.phase}</span>
                   <span className="admin__meta">
-                    node {item.state.index + 1}/{item.state.node_count} · {item.clients} online
+                    node {item.state.index + 1}/{item.state.node_count} ·{' '}
+                    {item.players} joined · {item.clients} online
                   </span>
                 </button>
               </li>
