@@ -7,6 +7,9 @@
   padding: 1rem 1.25rem;
   gap: 1rem;
   overflow-y: auto;
+  /* Wide tables scroll inside their own wrapper; the page itself never does,
+     otherwise a click near the edge can shift the whole console sideways. */
+  overflow-x: hidden;
 }
 
 .admin__bar {
@@ -225,6 +228,12 @@
 .admin__jumps button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.admin__table-note {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  color: #5a6478;
 }
 
 .admin__hint {

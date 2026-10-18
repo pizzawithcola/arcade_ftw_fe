@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   clearToken,
   fetchSession,
@@ -15,6 +15,7 @@ import './AdminPage.css'
 const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
 
 type Section = 'console' | 'data' | 'settings'
+type DataTab = 'rooms' | 'players'
 
 const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
@@ -33,6 +34,8 @@ export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null)
   const [checked, setChecked] = useState(false)
   const [section, setSection] = useState<Section>('console')
+  const [tab, setTab] = useState<DataTab>('rooms')
+  const shell = useRef<HTMLElement | null>(null)
   const [rooms, setRooms] = useState<RoomSnapshot[]>([])
   const [players, setPlayers] = useState<PlayerRow[]>([])
   const [selected, setSelected] = useState<string>('main')
@@ -91,6 +94,12 @@ export default function AdminPage() {
     }
   }, [session, section, selected])
 
+  useEffect(() => {
+    // Switching panels can otherwise leave the console shifted sideways, because
+    // the click that opened the next panel may have scrolled to reach a button.
+    shell.current?.scrollTo({ left: 0 })
+  }, [section, tab, selected])
+
   if (!checked) return null
   if (!session) {
     return <StaffLogin scope="full" title="Operator" onSignedIn={setSession} />
@@ -111,7 +120,7 @@ export default function AdminPage() {
   const room = rooms.find((item) => item.code === selected)
 
   return (
-    <main className="admin">
+    <main className="admin" ref={shell}>
       <header className="admin__bar">
         <h1>Arcade FTW · Operator</h1>
         <button
@@ -158,6 +167,8 @@ export default function AdminPage() {
               selected={selected}
               onSelect={setSelected}
               players={players}
+              tab={tab}
+              onTab={setTab}
             />
           )}
           {section === 'settings' && <SettingsView />}
@@ -235,21 +246,21 @@ function ConsoleView({
   )
 }
 
-type DataTab = 'rooms' | 'players'
-
 function DataView({
   rooms,
   selected,
   onSelect,
   players,
+  tab,
+  onTab,
 }: {
   rooms: RoomSnapshot[]
   selected: string
   onSelect: (code: string) => void
   players: PlayerRow[]
+  tab: DataTab
+  onTab: (next: DataTab) => void
 }) {
-  const [tab, setTab] = useState<DataTab>('rooms')
-
   return (
     <section className="admin__panel">
       <div className="admin__panel-head">
@@ -260,7 +271,7 @@ function DataView({
             role="tab"
             aria-selected={tab === 'rooms'}
             className={tab === 'rooms' ? 'is-active' : ''}
-            onClick={() => setTab('rooms')}
+            onClick={() => onTab('rooms')}
           >
             Rooms
           </button>
@@ -269,7 +280,7 @@ function DataView({
             role="tab"
             aria-selected={tab === 'players'}
             className={tab === 'players' ? 'is-active' : ''}
-            onClick={() => setTab('players')}
+            onClick={() => onTab('players')}
           >
             Players
           </button>
@@ -282,7 +293,7 @@ function DataView({
           selected={selected}
           onOpenPlayers={(code) => {
             onSelect(code)
-            setTab('players')
+            onTab('players')
           }}
         />
       ) : (
@@ -303,44 +314,49 @@ function RoomsTable({
 }) {
   if (rooms.length === 0) return <p className="admin__hint">No rooms yet.</p>
   return (
-    <div className="admin__table-wrap">
-      <table className="admin__table">
-        <thead>
-          <tr>
-            <th scope="col">Room</th>
-            <th scope="col">Label</th>
-            <th scope="col">Event</th>
-            <th scope="col">Phase</th>
-            <th scope="col">Node</th>
-            <th scope="col">Joined</th>
-            <th scope="col">Online</th>
-            <th scope="col">Players</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rooms.map((item) => (
-            <tr key={item.code} className={item.code === selected ? 'is-current' : ''}>
-              <td>{item.code}</td>
-              <td className="admin__dim">{item.label ?? '—'}</td>
-              <td className="admin__dim">{item.event ?? '—'}</td>
-              <td className={`admin__phase is-${item.state.phase}`}>{item.state.phase}</td>
-              <td>
-                {item.state.index + 1} / {item.state.node_count}
-              </td>
-              <td>{item.players}</td>
-              <td>{item.clients}</td>
-              {/* Opening the roster is the only reason to pick a room here, so it
-                  is a column rather than a whole row that reacts to a click. */}
-              <td>
-                <button type="button" onClick={() => onOpenPlayers(item.code)}>
-                  view
-                </button>
-              </td>
+    <>
+      <p className="admin__table-note">
+        {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} · view opens that room's players
+      </p>
+      <div className="admin__table-wrap">
+        <table className="admin__table">
+          <thead>
+            <tr>
+              <th scope="col">Room</th>
+              <th scope="col">Label</th>
+              <th scope="col">Event</th>
+              <th scope="col">Phase</th>
+              <th scope="col">Node</th>
+              <th scope="col">Joined</th>
+              <th scope="col">Online</th>
+              <th scope="col" aria-label="Open players" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rooms.map((item) => (
+              <tr key={item.code} className={item.code === selected ? 'is-current' : ''}>
+                <td>{item.code}</td>
+                <td className="admin__dim">{item.label ?? '—'}</td>
+                <td className="admin__dim">{item.event ?? '—'}</td>
+                <td className={`admin__phase is-${item.state.phase}`}>{item.state.phase}</td>
+                <td>
+                  {item.state.index + 1} / {item.state.node_count}
+                </td>
+                <td>{item.players}</td>
+                <td>{item.clients}</td>
+                {/* Opening the roster is the only reason to pick a room here, so
+                    it is a column rather than a whole row that reacts to a click. */}
+                <td>
+                  <button type="button" onClick={() => onOpenPlayers(item.code)}>
+                    view
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 
@@ -350,7 +366,7 @@ function PlayersTable({ players, room }: { players: PlayerRow[]; room: string })
   }
   return (
     <>
-      <p className="admin__hint">
+      <p className="admin__table-note">
         Room · {room} · {players.length} {players.length === 1 ? 'player' : 'players'}, best score
         first
       </p>
