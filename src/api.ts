@@ -46,6 +46,14 @@ export interface RoomSnapshot {
   /** Row metadata; null when the room has no event or label set. */
   event: string | null
   label: string | null
+  createdAt: string
+}
+
+export interface RoomList {
+  /** The round the screens follow: the most recently created room. */
+  current: string | null
+  /** Newest first. */
+  rooms: RoomSnapshot[]
 }
 
 export function readToken(): string | null {
@@ -225,6 +233,19 @@ export function listPlayers(params: { room?: string; event?: string } = {}): Pro
   )
 }
 
-export function listRooms(): Promise<RoomSnapshot[]> {
-  return request<{ rooms: RoomSnapshot[] }>('/api/rooms').then((body) => body.rooms)
+export function listRooms(): Promise<RoomList> {
+  return request<{
+    current: string | null
+    rooms: (Omit<RoomSnapshot, 'createdAt'> & { created_at: string })[]
+  }>('/api/rooms').then((body) => ({
+    current: body.current,
+    rooms: body.rooms.map((room) => ({ ...room, createdAt: room.created_at })),
+  }))
+}
+
+/** A new round. Omit the code and the server names it `round-N`. */
+export function createRoom(input: { code?: string; label?: string } = {}): Promise<{
+  code: string
+}> {
+  return request('/api/rooms', { method: 'POST', body: JSON.stringify(input) })
 }

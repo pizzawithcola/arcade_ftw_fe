@@ -111,7 +111,7 @@ export default function LoginPage() {
 
         {/* Staff entrances, deliberately quiet: the audience never needs them. */}
         <div className="login__staff">
-          <Link to="/display/main">display</Link>
+          <Link to="/display">display</Link>
           <Link to="/admin">admin</Link>
         </div>
       </form>

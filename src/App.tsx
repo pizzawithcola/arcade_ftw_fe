@@ -9,7 +9,8 @@ import PlayPage from './views/user/PlayPage'
  * Three views, three routes:
  *   /              player entry (nickname + event)
  *   /r/:code       the player's waiting room and the game itself
- *   /display/:code the big screen, read-only
+ *   /display       the big screen, follows the newest room
+ *   /display/:code the big screen pinned to one room
  *   /admin         the operator console
  */
 function App() {
@@ -17,6 +18,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/r/:code" element={<PlayPage />} />
+      <Route path="/display" element={<DisplayPage />} />
       <Route path="/display/:code" element={<DisplayPage />} />
       <Route path="/admin" element={<AdminPage />} />
       {/* Kept as a diagnostic page: it shows the raw API and websocket replies. */}

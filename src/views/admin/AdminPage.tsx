@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   clearToken,
+  createRoom,
   fetchSession,
   listPlayers,
   listRooms,
@@ -38,7 +39,8 @@ export default function AdminPage() {
   const shell = useRef<HTMLElement | null>(null)
   const [rooms, setRooms] = useState<RoomSnapshot[]>([])
   const [players, setPlayers] = useState<PlayerRow[]>([])
-  const [selected, setSelected] = useState<string>('main')
+  // Empty until the room list arrives: the operator works on the current round.
+  const [selected, setSelected] = useState<string>('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -53,7 +55,14 @@ export default function AdminPage() {
     () =>
       listRooms()
         .then((loaded) => {
-          setRooms(loaded)
+          setRooms(loaded.rooms)
+          // Follow the newest round, but never yank the operator off a room they
+          // picked by hand.
+          setSelected((chosen) =>
+            chosen && loaded.rooms.some((room) => room.code === chosen)
+              ? chosen
+              : (loaded.current ?? loaded.rooms[0]?.code ?? ''),
+          )
           setError('')
         })
         .catch((caught: unknown) => {
@@ -103,6 +112,19 @@ export default function AdminPage() {
   if (!checked) return null
   if (!session) {
     return <StaffLogin scope="full" title="Operator" onSignedIn={setSession} />
+  }
+
+  const startRound = async (label: string) => {
+    setBusy(true)
+    try {
+      const created = await createRoom({ label: label.trim() || undefined })
+      await load()
+      setSelected(created.code)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const run = async (action: string) => {
@@ -158,6 +180,7 @@ export default function AdminPage() {
               selected={selected}
               onSelect={setSelected}
               onAction={run}
+              onStartRound={startRound}
               busy={busy}
             />
           )}
@@ -185,6 +208,7 @@ function ConsoleView({
   selected,
   onSelect,
   onAction,
+  onStartRound,
   busy,
 }: {
   rooms: RoomSnapshot[]
@@ -192,25 +216,54 @@ function ConsoleView({
   selected: string
   onSelect: (code: string) => void
   onAction: (action: string) => void
+  onStartRound: (label: string) => void
   busy: boolean
 }) {
   const phase = room?.state.phase ?? 'idle'
+  const [label, setLabel] = useState('')
   return (
     <section className="admin__panel">
       <div className="admin__panel-head">
         <h2>Show control</h2>
-        <label className="admin__select">
-          <span>room</span>
-          {/* A one-option list today; the picker exists so a second room does
-              not need this screen rewritten. */}
-          <select value={selected} onChange={(event) => onSelect(event.target.value)}>
-            {rooms.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.code}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="admin__head-tools">
+          <label className="admin__select">
+            <span>room</span>
+            {/* One room per round, newest first, so the top of the list is the
+                round people are about to play. */}
+            <select value={selected} onChange={(event) => onSelect(event.target.value)}>
+              {rooms.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.code}
+                  {item.label ? ` · ${item.label}` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="admin__new-round">
+            <input
+              value={label}
+              placeholder="label (optional)"
+              maxLength={80}
+              onChange={(event) => setLabel(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !busy) {
+                  onStartRound(label)
+                  setLabel('')
+                }
+              }}
+            />
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                onStartRound(label)
+                setLabel('')
+              }}
+            >
+              new room
+            </button>
+          </span>
+        </div>
       </div>
 
       <p className="admin__node">{room?.state.node?.title ?? '—'}</p>

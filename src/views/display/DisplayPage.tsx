@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { DEFAULT_ROOM, fetchSession, type Session } from '../../api'
+import { fetchSession, listRooms, type Session } from '../../api'
 import { BLOCKS, POST_META } from '../../games/dataShadow/content'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
@@ -32,10 +32,21 @@ function PostOnScreen() {
   )
 }
 
+/**
+ * The big screen.
+ *
+ * With a `:code` in the URL it is pinned to that room (useful for a test screen).
+ * Without one - the way it runs at an event - it follows the newest room, so the
+ * operator starting a new round is all it takes for the screen and its join QR
+ * to move on. The URL never changes.
+ */
 export default function DisplayPage() {
-  const { code = DEFAULT_ROOM } = useParams()
+  const { code: pinned } = useParams()
   const [session, setSession] = useState<Session | null>(null)
   const [checked, setChecked] = useState(false)
+  const [current, setCurrent] = useState<string | null>(null)
+
+  const code = pinned ?? current ?? ''
 
   useGameSocket(code)
   const now = useTicker()
@@ -55,9 +66,43 @@ export default function DisplayPage() {
     })
   }, [])
 
+  // Only the unpinned screen needs to look for the current round.
+  useEffect(() => {
+    if (!session || pinned) return
+    let live = true
+    const pull = () =>
+      listRooms()
+        .then((list) => {
+          if (live) setCurrent(list.current)
+        })
+        .catch(() => {
+          // The connection dot already reports an unreachable server.
+        })
+    void pull()
+    const id = window.setInterval(() => void pull(), 3000)
+    return () => {
+      live = false
+      window.clearInterval(id)
+    }
+  }, [session, pinned])
+
   if (!checked) return null
   if (!session) {
     return <StaffLogin scope="display" title="Arcade FTW" onSignedIn={setSession} />
+  }
+
+  if (!pinned && !current) {
+    return (
+      <main className="display display--idle">
+        <header className="display__bar">
+          <span className="display__brand">Arcade FTW</span>
+        </header>
+        <section className="display__join">
+          <h1 className="display__joinTitle">Waiting for the next round</h1>
+          <p className="display__joinNote">The operator creates a room to begin.</p>
+        </section>
+      </main>
+    )
   }
 
   const joinUrl = `${location.origin}/?room=${encodeURIComponent(code)}`

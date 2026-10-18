@@ -172,6 +172,55 @@
   color: #57f2c4;
 }
 
+.admin__head-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+/* Starting a round must not require a code or a second screen. */
+.admin__new-round {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin__new-round input {
+  width: 11rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #2a3242;
+  border-radius: 6px;
+  background: #131a28;
+  color: #e6e9f0;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.admin__new-round input::placeholder {
+  color: #4b5468;
+}
+
+.admin__new-round button {
+  padding: 0.38rem 0.8rem;
+  border: 1px solid #2c3549;
+  border-radius: 6px;
+  background: #131a28;
+  color: #57f2c4;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.admin__new-round button:hover:not(:disabled) {
+  border-color: #57f2c4;
+}
+
+.admin__new-round button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .admin__select {
   display: inline-flex;
   align-items: center;
