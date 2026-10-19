@@ -29,6 +29,62 @@
   color: #5a6478;
 }
 
+/* The player's waiting room: three lines, centred, nothing to read twice. */
+
+.wait {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(1.1rem, 3.2vh, 2.2rem);
+  padding: clamp(2rem, 6vw, 5rem);
+  text-align: center;
+}
+
+.wait__title {
+  display: grid;
+  gap: clamp(0.35rem, 1vh, 0.7rem);
+  margin: 0;
+}
+
+.wait__brand {
+  font-size: clamp(0.8rem, 1.5vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #57f2c4;
+}
+
+.wait__event {
+  font-size: clamp(1.9rem, 5.4vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #e6e9f0;
+  text-wrap: balance;
+  max-width: 20ch;
+}
+
+.wait__hi {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.6vw, 2.6rem);
+  line-height: 1.15;
+  color: #b9c1d1;
+}
+
+.wait__hi strong {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.wait__note {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.7vw, 1.25rem);
+  letter-spacing: 0.04em;
+  color: #5a6478;
+}
+
 .play__who {
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
@@ -36,42 +92,125 @@
   color: #e6e9f0;
 }
 
-.play__roster {
-  margin-top: 1.1rem;
-  width: min(100%, 46rem);
+
+
+
+
+/* Chips rather than a list: on a landscape iPad a full room is a wall of names,
+   and wrapping them keeps them all visible without scrolling. */
+
+/* ─── the player shell ─────────────────────────────────────────────────────────
+   Restored from the single-page GamePage stylesheet that the three-view split
+   dropped: without these the page was an unstyled column at the top of the
+   screen, which is why the waiting room looked broken. */
+
+.game {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.play__roster-count {
-  margin: 0 0 0.5rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.18em;
+.game__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #1c2333;
+  font-size: 0.8rem;
+  color: #8b94a8;
+}
+
+.game__conn {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+
+.game__progress {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #5a6478;
 }
 
-/* Chips rather than a list: on a landscape iPad a full room is a wall of names,
-   and wrapping them keeps them all visible without scrolling. */
-.play__roster-list {
+.game__clock {
+  margin-left: auto;
+  font-size: 1.1rem;
+  color: #57f2c4;
+  font-variant-numeric: tabular-nums;
+}
+
+.game__signout {
+  border: none;
+  background: none;
+  color: #3a4358;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.game__signout:hover {
+  color: #8b94a8;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5a6478;
+}
+
+.dot--open {
+  background: #57f2c4;
+}
+
+.dot--closed {
+  background: #ff5c7a;
+}
+
+.stage {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  max-height: 26vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  /* The shell does not scroll, so a stage that outgrows the screen scrolls
+     itself rather than being clipped. */
   overflow-y: auto;
+}
+
+.stage__kind {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #8b94a8;
+}
+
+.stage h2 {
   margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.play__chip {
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid #232b3d;
-  background: #141a26;
-  font-size: 0.85rem;
-  color: #b9c1d1;
-}
-
-.play__chip.is-me {
-  border-color: #57f2c4;
+  font-size: clamp(1.6rem, 5vw, 3rem);
   color: #e6e9f0;
+}
+
+.stage__note {
+  margin: 0;
+  color: #8b94a8;
+  font-size: 0.85rem;
+}
+
+.stage--game .stage__kind {
+  color: #ffd166;
+}
+
+.stage--quiz .stage__kind {
+  color: #7cc4ff;
+}
+
+.stage--waiting {
+  color: #5a6478;
 }

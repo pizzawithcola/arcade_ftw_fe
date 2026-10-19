@@ -3,9 +3,9 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   clearToken,
   currentRoom,
+  fetchEvents,
   fetchSession,
   joinRoom,
-  roomRoster,
   type PlayerSession,
 } from '../../api'
 import DataShadowGame from '../../games/dataShadow/DataShadowGame'
@@ -32,54 +32,22 @@ function ownsTimer(node: FlowNode): boolean {
   return node.game === 'hallucination' || node.game === 'data_shadow' || node.type === 'quiz'
 }
 
-/** How often the waiting room re-reads the roster. The socket carries the show,
- * not the guest list, so this is a plain poll. */
-const ROSTER_POLL_MS = 3000
-
-function WaitingRoom({ nickname, code }: { nickname: string; code: string }) {
-  const [names, setNames] = useState<string[]>([])
-
-  useEffect(() => {
-    let live = true
-    const load = () => {
-      void roomRoster(code)
-        .then((entries) => {
-          if (live) setNames(entries.map((entry) => entry.nickname))
-        })
-        .catch(() => {
-          // A failed poll says nothing the connection dot is not already saying.
-        })
-    }
-    load()
-    const timer = setInterval(load, ROSTER_POLL_MS)
-    return () => {
-      live = false
-      clearInterval(timer)
-    }
-  }, [code])
-
+/**
+ * The player's waiting room. Three things, in this order: what this is, who they
+ * are, and that nothing is expected of them yet. No roster, no clock, no chrome -
+ * the screen is held for a minute at most.
+ */
+function WaitingRoom({ nickname, eventName }: { nickname: string; eventName: string }) {
   return (
-    <div className="stage stage--waiting play__waiting">
-      <span className="play__kicker">You're in</span>
-      <h2 className="play__name">{nickname}</h2>
-      <p className="play__note">Waiting for the host to start the show…</p>
-      {names.length > 0 && (
-        <div className="play__roster">
-          <p className="play__roster-count">
-            {names.length} {names.length === 1 ? 'player' : 'players'} in the room
-          </p>
-          {/* Nicknames are unique per room (duplicates are numbered), so the name
-              is a stable key for the lifetime of the list. */}
-          <ul className="play__roster-list">
-            {names.map((name) => (
-              <li key={name} className={name === nickname ? 'play__chip is-me' : 'play__chip'}>
-                {name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <p className="play__hint">Keep this screen open. The round starts on its own.</p>
+    <div className="wait">
+      <h1 className="wait__title">
+        <span className="wait__brand">AI Cyber Arcade</span>
+        <span className="wait__event">{eventName}</span>
+      </h1>
+      <p className="wait__hi">
+        Hi, <strong>{nickname}</strong>
+      </p>
+      <p className="wait__note">Waiting for the host to start the show…</p>
     </div>
   )
 }
@@ -126,6 +94,7 @@ export default function PlayPage() {
   const [session, setSession] = useState<PlayerSession | null>(null)
   const [checked, setChecked] = useState(false)
   const [resolved, setResolved] = useState<string | null>(null)
+  const [eventName, setEventName] = useState('')
 
   const code = pinned ?? resolved ?? ''
 
@@ -146,6 +115,24 @@ export default function PlayPage() {
       setChecked(true)
     })
   }, [])
+
+  // The event name for the heading comes from the backend's own list, so it can
+  // never disagree with the label they picked at sign-in.
+  useEffect(() => {
+    if (!session) return
+    let live = true
+    void fetchEvents()
+      .then((events) => {
+        const match = events.find((option) => option.key === session.event)
+        if (live) setEventName(match?.label ?? '')
+      })
+      .catch(() => {
+        // The heading degrades to the brand alone rather than blocking the screen.
+      })
+    return () => {
+      live = false
+    }
+  }, [session])
 
   // Nobody scans anything: the device asks which round is current, and keeps
   // asking, so a new round picks everyone up where they are.
@@ -200,6 +187,7 @@ export default function PlayPage() {
 
   return (
     <main className="game">
+      {phase !== 'idle' && (
       <header className="game__bar">
         <span className={`dot dot--${connection}`} />
         <span className="game__conn">{connection}</span>
@@ -221,27 +209,37 @@ export default function PlayPage() {
           sign out
         </button>
       </header>
+      )}
 
       {roomMissing || (phase === 'idle' && !code) ? (
-        <div className="stage stage--waiting play__waiting">
-          <span className="play__kicker">Between rounds</span>
-          <h2 className="play__name">Waiting for the next round…</h2>
-          <p className="play__note">The host will open it shortly.</p>
+        <div className="wait">
+          <h1 className="wait__title">
+            <span className="wait__brand">AI Cyber Arcade</span>
+            <span className="wait__event">{eventName}</span>
+          </h1>
+          <p className="wait__hi">Between rounds</p>
+          <p className="wait__note">Waiting for the host to open the next show…</p>
         </div>
       ) : phase === 'finished' && sawPlaying ? (
-        <div className="stage stage--waiting play__waiting">
-          <span className="play__kicker">That's a wrap</span>
-          <h2 className="play__name">Thanks for playing</h2>
-          <p className="play__note">The round has ended. Signing you out…</p>
+        <div className="wait">
+          <h1 className="wait__title">
+            <span className="wait__brand">AI Cyber Arcade</span>
+            <span className="wait__event">{eventName}</span>
+          </h1>
+          <p className="wait__hi">Thanks for playing</p>
+          <p className="wait__note">That's a wrap — signing you out…</p>
         </div>
       ) : phase === 'finished' ? (
-        <div className="stage stage--waiting play__waiting">
-          <span className="play__kicker">Between rounds</span>
-          <h2 className="play__name">Waiting for the next round…</h2>
-          <p className="play__note">The round has ended. The host will open the next one.</p>
+        <div className="wait">
+          <h1 className="wait__title">
+            <span className="wait__brand">AI Cyber Arcade</span>
+            <span className="wait__event">{eventName}</span>
+          </h1>
+          <p className="wait__hi">Between rounds</p>
+          <p className="wait__note">Waiting for the host to open the next show…</p>
         </div>
       ) : phase === 'idle' ? (
-        <WaitingRoom nickname={session.nickname} code={code} />
+        <WaitingRoom nickname={session.nickname} eventName={eventName} />
       ) : (
         <NodeStage node={node} nodeIndex={index} />
       )}
