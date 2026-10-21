@@ -1,6 +1,6 @@
 # arcade_ftw_fe
 
-Arcade FTW 前端骨架（React 19 + TypeScript + Vite）。与现有 `cyber_ai_festival` 完全隔离。
+Arcade FTW 前端（React 19 + TypeScript + Vite）。与现有 `cyber_ai_festival` 完全隔离。
 
 > 跨项目文档（系统手册 / WS 协议 / 题型契约 / AWS）见 [`../arcade_ftw_docs`](../arcade_ftw_docs)。
 
@@ -13,9 +13,13 @@ infra/
 └── cloudformation.yml   # S3（私有 + OAC）+ CloudFront + SPA 回退函数 + OIDC 部署角色
 src/
 ├── main.tsx             # 入口
-├── App.tsx              # 根组件（当前渲染状态页）
-├── pages/StatusPage.tsx # 冒烟页：/health、/health/db、/api/ws 的实时状态
-└── store/gameStore.ts   # zustand 中央 store（按 WS 消息更新 phase / current）
+├── App.tsx              # 路由：/ /play /r/:code /display /display/:code /admin /status
+├── api.ts               # 同源相对路径 API 客户端（登录、房间、玩家、分数）
+├── store/gameStore.ts   # zustand 中央 store（phase / node / question / 连接状态）
+├── hooks/               # WS 自动重连、250ms ticker、节点已用时间
+├── views/               # 玩家、大屏、管理台、员工登录
+├── games/               # Hallucination / Quiz / Data Shadow（内容 + 计分 + 界面）
+└── pages/StatusPage.tsx # 诊断页：/health、/health/db、/api/ws 的实时状态
 ```
 
 ## 同源架构
