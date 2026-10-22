@@ -32,6 +32,54 @@ export interface WsMessage {
   payload: unknown
 }
 
+export interface SabotageScenario {
+  attacker: 'red' | 'blue'
+  defender: 'red' | 'blue'
+  attack_title: string
+  attack_prompt: string
+  defence_title: string
+  defence_prompt: string
+  learning: string
+}
+
+export interface SabotageResult {
+  round: number
+  attacker: 'red' | 'blue'
+  defender: 'red' | 'blue'
+  attack_card: string
+  defence_card: string
+  outcome: 'blocked' | 'partial' | 'failed'
+  attack_delta: number
+  defence_delta: number
+  winner?: 'red' | 'blue'
+  payout?: number
+}
+
+/**
+ * The Sabotage engine's own snapshot, broadcast as its own `sabotage` message
+ * rather than folded into the main `state`. The main flow still owns the node
+ * clock; this carries the game inside the node.
+ */
+export interface SabotageState {
+  code: string
+  phase: 'setup' | 'team_reveal' | 'attack' | 'defend' | 'tie_break' | 'resolve' | 'team_result' | 'payout' | 'done'
+  paused: boolean
+  round: number
+  attacker: 'red' | 'blue' | null
+  defender: 'red' | 'blue' | null
+  remaining_ms: number
+  budgets: { red: number; blue: number }
+  scores: { red: number; blue: number }
+  spent: string[]
+  scenario: SabotageScenario | null
+  voting_team: 'red' | 'blue' | null
+  options: string[]
+  tie_candidates: string[]
+  attack_card: string | null
+  defence_card: string | null
+  last_result: SabotageResult | null
+}
+
 interface GameState {
   connection: Connection
   phase: Phase
@@ -44,6 +92,8 @@ interface GameState {
   heldMs: number
   /** Which question the engine says is on screen, so every screen agrees. */
   question: QuestionState | null
+  /** The Sabotage game state, present only while that game is running. */
+  sabotage: SabotageState | null
   /**
    * True once this screen has seen the round actually running. Tells a device
    * that was present when the round ended from one that arrived afterwards.
@@ -64,6 +114,7 @@ export const useGameStore = create<GameState>((set) => ({
   endsAt: null,
   heldMs: 0,
   question: null,
+  sabotage: null,
   sawPlaying: false,
 
   setConnection: (connection) => set({ connection }),
@@ -77,10 +128,15 @@ export const useGameStore = create<GameState>((set) => ({
       endsAt: null,
       heldMs: 0,
       question: null,
+      sabotage: null,
       sawPlaying: false,
     }),
 
   applyMessage: (message) => {
+    if (message.type === 'sabotage') {
+      set({ sabotage: message.payload as SabotageState })
+      return
+    }
     if (message.type !== 'state') return
     const state = message.payload as StateMessage
 
