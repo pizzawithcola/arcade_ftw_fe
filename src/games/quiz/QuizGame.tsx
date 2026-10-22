@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
+import { useScoreReport } from '../../hooks/useScoreReport'
 import { optionsOf, QUIZ_QUESTIONS } from './content'
 import { questionScore } from './scoring'
 import './QuizGame.css'
 
 type Picks = Record<string, string>
 
-export default function QuizGame() {
+export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex: number }) {
   const [index, setIndex] = useState(0)
   const [picks, setPicks] = useState<Picks>({})
   const [finished, setFinished] = useState(false)
+  const report = useScoreReport(room, nodeIndex)
 
   // Frozen while the operator has the show paused, so a pause stops the
   // questions too instead of letting them expire off-screen.
@@ -109,7 +111,10 @@ export default function QuizGame() {
                 type="button"
                 className={classes}
                 disabled={revealed}
-                onClick={() => setPicks((current) => ({ ...current, [question.id]: option.letter }))}
+                onClick={() => {
+                  setPicks((current) => ({ ...current, [question.id]: option.letter }))
+                  report(index, questionScore(option.letter, question.correct_option))
+                }}
               >
                 <span className="quiz__letter">{option.letter}</span>
                 <span className="quiz__optiontext">{option.text}</span>

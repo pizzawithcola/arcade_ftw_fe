@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
+import { useScoreReport } from '../../hooks/useScoreReport'
 import { HALLUCINATION_QUESTIONS } from './content'
 import { isCorrect, levelByKey, scoreFor, TRUST_LEVELS } from './scoring'
 import './HallucinationGame.css'
@@ -9,10 +10,17 @@ type Picks = Record<string, string>
 /** Each reply gets this long before the round moves on without an answer. */
 const QUESTION_SECONDS = 30
 
-export default function HallucinationGame() {
+export default function HallucinationGame({
+  room,
+  nodeIndex,
+}: {
+  room: string
+  nodeIndex: number
+}) {
   const [index, setIndex] = useState(0)
   const [picks, setPicks] = useState<Picks>({})
   const [finished, setFinished] = useState(false)
+  const report = useScoreReport(room, nodeIndex)
 
   // Frozen while the operator has the show paused, so a pause stops the
   // questions too instead of letting them expire off-screen.
@@ -133,7 +141,10 @@ export default function HallucinationGame() {
                 key={level.key}
                 type="button"
                 className={`hallu__button hallu__button--${level.key}`}
-                onClick={() => setPicks((current) => ({ ...current, [question.id]: level.key }))}
+                onClick={() => {
+                  setPicks((current) => ({ ...current, [question.id]: level.key }))
+                  report(index, scoreFor(level, question.truth))
+                }}
               >
                 {level.label}
               </button>

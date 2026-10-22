@@ -52,7 +52,15 @@ function WaitingRoom({ nickname, eventName }: { nickname: string; eventName: str
   )
 }
 
-function NodeStage({ node, nodeIndex }: { node: FlowNode | null; nodeIndex: number }) {
+function NodeStage({
+  node,
+  nodeIndex,
+  room,
+}: {
+  node: FlowNode | null
+  nodeIndex: number
+  room: string
+}) {
   if (!node) {
     return (
       <div className="stage stage--waiting">
@@ -62,9 +70,15 @@ function NodeStage({ node, nodeIndex }: { node: FlowNode | null; nodeIndex: numb
   }
 
   // The key remounts per node, so answers never carry into the next round.
-  if (node.game === 'hallucination') return <HallucinationGame key={nodeIndex} />
-  if (node.game === 'data_shadow') return <DataShadowGame key={nodeIndex} />
-  if (node.type === 'quiz') return <QuizGame key={nodeIndex} />
+  if (node.game === 'hallucination') {
+    return <HallucinationGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
+  }
+  if (node.game === 'data_shadow') {
+    return <DataShadowGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
+  }
+  if (node.type === 'quiz') {
+    return <QuizGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
+  }
 
   const kind = node.game ?? node.type
   const stageClass = node.game ? `stage--${node.type} stage--${node.game}` : `stage--${node.type}`
@@ -241,7 +255,7 @@ export default function PlayPage() {
       ) : phase === 'idle' ? (
         <WaitingRoom nickname={session.nickname} eventName={eventName} />
       ) : (
-        <NodeStage node={node} nodeIndex={index} />
+        <NodeStage node={node} nodeIndex={index} room={code} />
       )}
     </main>
   )

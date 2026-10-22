@@ -246,6 +246,31 @@ export function joinRoom(code: string): Promise<{ room: string; nickname: string
   return request(`/api/rooms/${code}/join`, { method: 'POST' })
 }
 
+/**
+ * Report the points one answer earned.
+ *
+ * The server decides which score component that is, from the node's own flow
+ * definition - the client only says which node and question. Repeats are
+ * ignored server-side, so retrying is always safe.
+ */
+export function reportScore(input: {
+  room: string
+  nodeIndex: number
+  /** Omit for a single-submission round such as Data Shadow. */
+  question?: number
+  points: number
+}): Promise<{ applied: boolean; total_score: number }> {
+  return request('/api/me/score', {
+    method: 'POST',
+    body: JSON.stringify({
+      room: input.room,
+      node_index: input.nodeIndex,
+      question: input.question ?? null,
+      points: input.points,
+    }),
+  })
+}
+
 export function roomRoster(code: string): Promise<RosterEntry[]> {
   return request<{ players: RosterEntry[] }>(`/api/rooms/${code}/players`).then(
     (body) => body.players,

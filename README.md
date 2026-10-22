@@ -16,7 +16,7 @@ src/
 ├── App.tsx              # 路由：/ /play /r/:code /display /display/:code /admin /status
 ├── api.ts               # 同源相对路径 API 客户端（登录、房间、玩家、分数）
 ├── store/gameStore.ts   # zustand 中央 store（phase / node / question / 连接状态）
-├── hooks/               # WS 自动重连、250ms ticker、节点已用时间
+├── hooks/               # WS 自动重连、250ms ticker、节点已用时间、分数上报
 ├── views/               # 玩家、大屏、管理台、员工登录
 ├── games/               # Hallucination / Quiz / Data Shadow（内容 + 计分 + 界面）
 └── pages/StatusPage.tsx # 诊断页：/health、/health/db、/api/ws 的实时状态

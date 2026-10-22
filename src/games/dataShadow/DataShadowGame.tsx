@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
+import { useScoreReport } from '../../hooks/useScoreReport'
 import { BLOCKS, LEAKS, POST_META, POST_TEXT } from './content'
 import {
   evaluate,
@@ -76,12 +77,19 @@ function renderBlock(blockIndex: number, marks: Mark[]) {
   return parts
 }
 
-export default function DataShadowGame() {
+export default function DataShadowGame({
+  room,
+  nodeIndex,
+}: {
+  room: string
+  nodeIndex: number
+}) {
   const [selections, setSelections] = useState<Selection[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [bubble, setBubble] = useState<{ x: number; y: number; below: boolean } | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const seq = useRef(0)
+  const report = useScoreReport(room, nodeIndex)
 
   const elapsed = useNodeElapsed()
   const timeLeftMs = Math.max(0, ROUND_SECONDS * 1000 - elapsed)
@@ -93,6 +101,12 @@ export default function DataShadowGame() {
     () => (done ? evaluate(selections, LEAK_SPANS, POST_TEXT.length) : null),
     [done, selections],
   )
+
+  // The round is scored once, when it is submitted or when its clock runs out.
+  // `useScoreReport` makes the second trigger harmless.
+  useEffect(() => {
+    if (result) report(null, result.score)
+  }, [result, report])
 
   const marks: Mark[] = useMemo(() => {
     if (done) {
