@@ -16,6 +16,8 @@ export interface Session {
   playerId?: number
   nickname?: string
   event?: string
+  /** Sabotage team ("red" / "blue"), only once the host has assigned teams. */
+  team?: string
 }
 
 export interface EventOption {
@@ -27,6 +29,7 @@ export interface PlayerSession extends Session {
   playerId: number
   nickname: string
   event: string
+  team?: string
 }
 
 export interface QuestionState {
@@ -268,6 +271,17 @@ export function reportScore(input: {
       question: input.question ?? null,
       points: input.points,
     }),
+  })
+}
+
+/**
+ * Cast or change the player's Sabotage card choice. The server accepts only
+ * the acting team, an available card and a running (unpaused) phase.
+ */
+export function sabotageVote(code: string, card: string): Promise<unknown> {
+  return request(`/api/sabotage/${code}/vote`, {
+    method: 'POST',
+    body: JSON.stringify({ card }),
   })
 }
 

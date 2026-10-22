@@ -1,0 +1,170 @@
+.stage--sabotage {
+  gap: 1rem;
+}
+
+.sab__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sab__phase {
+  color: var(--dim, #8b8b9e);
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.sab__timer {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.sab__reveal,
+.sab__final,
+.sab__result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.sab__teamline {
+  font-size: 1.4rem;
+}
+
+.sab__teamline .is-red {
+  color: #e5484d;
+}
+
+.sab__teamline .is-blue {
+  color: #3b82f6;
+}
+
+.sab__board {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sab__prompt {
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.sab__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.75rem;
+}
+
+.sab__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--edge, #d8d8e0);
+  border-radius: 0.75rem;
+  background: var(--panel, #fff);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.05s;
+}
+
+.sab__card:hover:not(:disabled) {
+  border-color: var(--accent, #6d5efc);
+}
+
+.sab__card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sab__card.is-picked {
+  border-color: var(--accent, #6d5efc);
+  box-shadow: 0 0 0 2px var(--accent, #6d5efc) inset;
+}
+
+.sab__cardname {
+  font-weight: 600;
+}
+
+.sab__carddesc {
+  font-size: 0.85rem;
+  color: var(--dim, #8b8b9e);
+  line-height: 1.4;
+}
+
+.sab__cardcost {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.sab__spent {
+  font-size: 0.85rem;
+  color: var(--dim, #8b8b9e);
+}
+
+.sab__spent ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sab__spent li {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px dashed var(--edge, #d8d8e0);
+  text-decoration: line-through;
+}
+
+.sab__hint {
+  color: var(--dim, #8b8b9e);
+  font-size: 0.9rem;
+}
+
+.sab__verdict {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sab__result.is-blocked .sab__verdict,
+.sab__result.is-failed .sab__verdict {
+  text-transform: uppercase;
+}
+
+.sab__result.is-blocked .sab__verdict {
+  color: #16a34a;
+}
+
+.sab__result.is-failed .sab__verdict {
+  color: #e5484d;
+}
+
+.sab__pairing {
+  font-size: 1rem;
+  color: var(--dim, #8b8b9e);
+}
+
+.sab__scoreline {
+  display: flex;
+  gap: 2rem;
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.sab__scoreline .is-red {
+  color: #e5484d;
+}
+
+.sab__scoreline .is-blue {
+  color: #3b82f6;
+}

@@ -60,6 +60,14 @@ export interface SabotageResult {
  * rather than folded into the main `state`. The main flow still owns the node
  * clock; this carries the game inside the node.
  */
+export interface SabotageCard {
+  name: string
+  description: string
+  cost: number
+  success: number
+  fail: number
+}
+
 export interface SabotageState {
   code: string
   phase: 'setup' | 'team_reveal' | 'attack' | 'defend' | 'tie_break' | 'resolve' | 'team_result' | 'payout' | 'done'
@@ -78,6 +86,7 @@ export interface SabotageState {
   attack_card: string | null
   defence_card: string | null
   last_result: SabotageResult | null
+  cards: { attack: Record<string, SabotageCard>; defence: Record<string, SabotageCard> }
 }
 
 interface GameState {
@@ -93,7 +102,7 @@ interface GameState {
   /** Which question the engine says is on screen, so every screen agrees. */
   question: QuestionState | null
   /** The Sabotage game state, present only while that game is running. */
-  sabotage: SabotageState | null
+  sabotage: (SabotageState & { endsAt: number | null; heldMs: number }) | null
   /**
    * True once this screen has seen the round actually running. Tells a device
    * that was present when the round ended from one that arrived afterwards.
@@ -134,7 +143,16 @@ export const useGameStore = create<GameState>((set) => ({
 
   applyMessage: (message) => {
     if (message.type === 'sabotage') {
-      set({ sabotage: message.payload as SabotageState })
+      const sabotage = message.payload as SabotageState
+      set({
+        sabotage: {
+          ...sabotage,
+          // Same countdown derivation as the main state: a duration anchored to
+          // this machine's clock, frozen while the operator has it paused.
+          endsAt: sabotage.paused ? null : Date.now() + sabotage.remaining_ms,
+          heldMs: sabotage.paused ? sabotage.remaining_ms : 0,
+        },
+      })
       return
     }
     if (message.type !== 'state') return

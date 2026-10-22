@@ -11,6 +11,7 @@ import {
 import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
+import SabotageGame from '../../games/sabotage/SabotageGame'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
 import { useGameStore, type FlowNode } from '../../store/gameStore'
@@ -56,10 +57,12 @@ function NodeStage({
   node,
   nodeIndex,
   room,
+  team,
 }: {
   node: FlowNode | null
   nodeIndex: number
   room: string
+  team?: string
 }) {
   if (!node) {
     return (
@@ -75,6 +78,9 @@ function NodeStage({
   }
   if (node.game === 'data_shadow') {
     return <DataShadowGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
+  }
+  if (node.game === 'sabotage') {
+    return <SabotageGame key={nodeIndex} room={room} team={team} />
   }
   if (node.type === 'quiz') {
     return <QuizGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
@@ -255,7 +261,7 @@ export default function PlayPage() {
       ) : phase === 'idle' ? (
         <WaitingRoom nickname={session.nickname} eventName={eventName} />
       ) : (
-        <NodeStage node={node} nodeIndex={index} room={code} />
+        <NodeStage node={node} nodeIndex={index} room={code} team={session.team} />
       )}
     </main>
   )

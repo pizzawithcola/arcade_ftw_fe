@@ -71,6 +71,78 @@ function QuestionOnScreen({ kind, index }: { kind: 'hallucination' | 'quiz'; ind
   )
 }
 
+/** The Sabotage big-screen view: scenario, hidden votes, the spent wall, result. */
+function SabotageOnScreen() {
+  const sabotage = useGameStore((state) => state.sabotage)
+  if (!sabotage || !sabotage.scenario) return null
+
+  const scenario = sabotage.scenario
+  const votePhase =
+    sabotage.phase === 'attack' || sabotage.phase === 'defend' || sabotage.phase === 'tie_break'
+
+  if (sabotage.phase === 'team_reveal') {
+    return (
+      <article className="display__question">
+        <p className="display__prompt">Look at your tablet. Find your team.</p>
+        <p className="display__look">Shared team budget: $100,000 each.</p>
+      </article>
+    )
+  }
+
+  if (votePhase) {
+    const attacking = sabotage.phase === 'attack'
+    return (
+      <article className="display__question">
+        <p className="display__prompt">
+          {attacking ? scenario.attack_title : scenario.defence_title}
+        </p>
+        <p className="display__reply">
+          {attacking ? scenario.attack_prompt : scenario.defence_prompt}
+        </p>
+        <p className="display__look">
+          {attacking ? 'Choose one AI capability on your iPad.' : 'Choose your response on your iPad.'}
+        </p>
+        {sabotage.spent.length > 0 && (
+          <p className="display__look">
+            Spent: {sabotage.spent.map((id) => sabotage.cards.attack[id]?.name ?? id).join(' · ')}
+          </p>
+        )}
+      </article>
+    )
+  }
+
+  if (sabotage.phase === 'resolve' && sabotage.last_result) {
+    const r = sabotage.last_result
+    return (
+      <article className="display__question">
+        <p className="display__prompt">
+          {r.outcome === 'blocked' ? 'ATTACK BLOCKED' : r.outcome === 'failed' ? 'SABOTAGE SUCCESSFUL' : 'STANDOFF'}
+        </p>
+        <p className="display__reply">
+          {sabotage.cards.attack[r.attack_card]?.name ?? r.attack_card} vs{' '}
+          {sabotage.cards.defence[r.defence_card]?.name ?? r.defence_card}
+        </p>
+        <p className="display__look">
+          Red {sabotage.scores.red} · Blue {sabotage.scores.blue}
+        </p>
+      </article>
+    )
+  }
+
+  return (
+    <article className="display__question">
+      <p className="display__prompt">
+        {sabotage.last_result?.winner
+          ? `${sabotage.last_result.winner.toUpperCase()} TEAM WINS`
+          : 'Sabotage complete'}
+      </p>
+      <p className="display__look">
+        Red {sabotage.scores.red} · Blue {sabotage.scores.blue}
+      </p>
+    </article>
+  )
+}
+
 export default function DisplayPage() {
   const { code: pinned } = useParams()
   const [session, setSession] = useState<Session | null>(null)
@@ -91,6 +163,7 @@ export default function DisplayPage() {
   const heldMs = useGameStore((state) => state.heldMs)
   const connection = useGameStore((state) => state.connection)
   const question = useGameStore((state) => state.question)
+  const sabotage = useGameStore((state) => state.sabotage)
 
   useEffect(() => {
     void fetchSession().then((found) => {
@@ -164,6 +237,15 @@ export default function DisplayPage() {
   }
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
+  // Sabotage has its own per-phase countdown; show that instead of the node's
+  // 170-second slot, which only matters for when the flow moves on.
+  const sabotageRemaining = sabotage
+    ? sabotage.paused
+      ? sabotage.heldMs
+      : sabotage.endsAt !== null
+        ? Math.max(0, sabotage.endsAt - now)
+        : sabotage.remaining_ms
+    : 0
 
   return (
     <main className={`display display--${phase}`}>
@@ -209,9 +291,13 @@ export default function DisplayPage() {
           {/* The display only ever has one clock, so it always shows the node's
               remaining time - unlike the player screen, where the game's own
               timer would otherwise compete with it. */}
-          <p className="display__clock">{formatClock(remaining)}</p>
+          <p className="display__clock">
+            {formatClock(node?.game === 'sabotage' ? sabotageRemaining : remaining)}
+          </p>
 
           {node?.game === 'data_shadow' && <PostOnScreen />}
+
+          {node?.game === 'sabotage' && <SabotageOnScreen />}
 
           {question &&
             (node?.game === 'hallucination' || node?.type === 'quiz') && (
