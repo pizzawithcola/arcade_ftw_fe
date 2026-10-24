@@ -59,12 +59,11 @@ export interface RoomSnapshot {
   }
   /** Live websocket connections. */
   clients: number
-  /** People who joined this room, whether or not they are connected now. */
+  /** Everyone who joined this room, even after it closed. */
   players: number
-  /** Row metadata; null when the room has no event or label set. */
-  event: string | null
-  label: string | null
   createdAt: string
+  /** Set once the room is finished: a closed room is history. */
+  closedAt: string | null
 }
 
 export interface RoomList {
@@ -310,18 +309,18 @@ export function listPlayers(params: { room?: string; event?: string } = {}): Pro
 export function listRooms(): Promise<RoomList> {
   return request<{
     current: string | null
-    rooms: (Omit<RoomSnapshot, 'createdAt'> & { created_at: string })[]
+    rooms: (Omit<RoomSnapshot, 'createdAt' | 'closedAt'> & {
+      created_at: string
+      closed_at: string | null
+    })[]
   }>('/api/rooms').then((body) => ({
     current: body.current,
-    rooms: body.rooms.map((room) => ({ ...room, createdAt: room.created_at })),
+    rooms: body.rooms.map((room) => ({
+      ...room,
+      createdAt: room.created_at,
+      closedAt: room.closed_at,
+    })),
   }))
-}
-
-export function updateRoom(
-  code: string,
-  patch: { label?: string; event?: string },
-): Promise<unknown> {
-  return request(`/api/rooms/${code}`, { method: 'PATCH', body: JSON.stringify(patch) })
 }
 
 export function deleteRoom(code: string): Promise<unknown> {
@@ -348,7 +347,7 @@ export function deletePlayer(playerId: number): Promise<unknown> {
 
 /** A new round. Omit the code and the server names it `round-N`. */
 export function createRoom(
-  input: { code?: string; label?: string; event?: string } = {},
+  input: { code?: string } = {},
 ): Promise<{ code: string }> {
   return request('/api/rooms', { method: 'POST', body: JSON.stringify(input) })
 }

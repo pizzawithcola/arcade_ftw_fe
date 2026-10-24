@@ -181,27 +181,6 @@
 
 /* Starting a round must not require a code or a second screen. */
 .admin__new-round {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.admin__new-round input {
-  width: 11rem;
-  padding: 0.35rem 0.55rem;
-  border: 1px solid #2a3242;
-  border-radius: 6px;
-  background: #131a28;
-  color: #e6e9f0;
-  font: inherit;
-  font-size: 0.82rem;
-}
-
-.admin__new-round input::placeholder {
-  color: #4b5468;
-}
-
-.admin__new-round button {
   padding: 0.38rem 0.8rem;
   border: 1px solid #2c3549;
   border-radius: 6px;
@@ -212,35 +191,28 @@
   cursor: pointer;
 }
 
-.admin__new-round button:hover:not(:disabled) {
+.admin__new-round:hover:not(:disabled) {
   border-color: #57f2c4;
 }
 
-.admin__new-round button:disabled {
+.admin__new-round:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-.admin__select {
+/* The room being run: there is exactly one at a time. */
+.admin__current {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #5a6478;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: #9aa4b8;
 }
 
-.admin__select select {
-  padding: 0.3rem 0.5rem;
-  border: 1px solid #2a3242;
-  border-radius: 6px;
-  background: #131a28;
-  color: #e6e9f0;
-  font: inherit;
-  font-size: 0.82rem;
-  text-transform: none;
-  letter-spacing: normal;
+.admin__current strong {
+  color: #57f2c4;
+  font-weight: 600;
 }
 
 .admin__node {
