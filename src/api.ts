@@ -1,3 +1,9 @@
+/**
+ * The token lives in sessionStorage, not localStorage: one tab is one signed-in
+ * player, so a tester can open several tabs and play as several players on one
+ * machine. The trade-off is that closing a tab signs out - acceptable because
+ * a player re-signs in by nickname on every device anyway.
+ */
 const TOKEN_KEY = 'arcade_ftw_token'
 
 /**
@@ -69,15 +75,15 @@ export interface RoomList {
 }
 
 export function readToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
+  return sessionStorage.getItem(TOKEN_KEY)
 }
 
 export function saveToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token)
+  sessionStorage.setItem(TOKEN_KEY, token)
 }
 
 export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY)
+  sessionStorage.removeItem(TOKEN_KEY)
 }
 
 /** Carries the status code, so a screen can tell "sign in again" from "no". */
