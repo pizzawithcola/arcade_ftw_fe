@@ -343,7 +343,7 @@ function ConsoleView({
   onStartRound: (label: string) => void
   busy: boolean
 }) {
-  const phase = room?.state.phase ?? 'idle'
+  const phase = room?.state.phase ?? 'waiting'
   const [label, setLabel] = useState('')
   return (
     <section className="admin__panel">

@@ -207,7 +207,7 @@ export default function PlayPage() {
 
   return (
     <main className="game">
-      {phase !== 'idle' && (
+      {phase !== 'waiting' && (
       <header className="game__bar">
         <span className={`dot dot--${connection}`} />
         <span className="game__conn">{connection}</span>
@@ -231,7 +231,7 @@ export default function PlayPage() {
       </header>
       )}
 
-      {roomMissing || (phase === 'idle' && !code) ? (
+      {roomMissing || (phase === 'waiting' && !code) ? (
         <div className="wait">
           <h1 className="wait__title">
             <span className="wait__brand">AI Cyber Arcade</span>
@@ -258,7 +258,7 @@ export default function PlayPage() {
           <p className="wait__hi">Between rounds</p>
           <p className="wait__note">Waiting for the host to open the next show…</p>
         </div>
-      ) : phase === 'idle' ? (
+      ) : phase === 'waiting' ? (
         <WaitingRoom nickname={session.nickname} eventName={eventName} />
       ) : (
         <NodeStage node={node} nodeIndex={index} room={code} team={session.team} />

@@ -254,7 +254,7 @@ export default function DisplayPage() {
         <span className={`dot dot--${connection}`} />
       </header>
 
-      {phase === 'idle' ? (
+      {phase === 'waiting' ? (
         <section className="display__lobby">
           <p className="display__kicker">Get ready</p>
           <h1 className="display__lobbyTitle">Waiting Room</h1>

@@ -48,7 +48,7 @@ export interface QuestionState {
 export interface RoomSnapshot {
   code: string
   state: {
-    phase: 'idle' | 'playing' | 'paused' | 'finished'
+    phase: 'waiting' | 'playing' | 'paused' | 'finished'
     index: number
     node_count: number
     node: { type: string; title?: string; game?: string; duration_sec?: number } | null

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type Phase = 'idle' | 'playing' | 'paused' | 'finished'
+export type Phase = 'waiting' | 'playing' | 'paused' | 'finished'
 export type Connection = 'connecting' | 'open' | 'closed'
 
 export interface QuestionState {
@@ -116,7 +116,7 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set) => ({
   connection: 'connecting',
-  phase: 'idle',
+  phase: 'waiting',
   index: 0,
   nodeCount: 0,
   node: null,
@@ -130,7 +130,7 @@ export const useGameStore = create<GameState>((set) => ({
 
   resetForRoom: () =>
     set({
-      phase: 'idle',
+      phase: 'waiting',
       index: 0,
       nodeCount: 0,
       node: null,
