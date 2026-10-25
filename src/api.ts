@@ -186,6 +186,7 @@ export async function fetchSession(): Promise<Session | null> {
       player_id?: number
       nickname?: string
       event?: string
+      team?: string
     }>('/api/auth/me')
     return {
       subject: body.subject,
@@ -195,6 +196,7 @@ export async function fetchSession(): Promise<Session | null> {
       playerId: body.player_id,
       nickname: body.nickname,
       event: body.event,
+      team: body.team,
     }
   } catch {
     clearToken()

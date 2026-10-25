@@ -178,11 +178,14 @@ export default function PlayPage() {
   // Membership is stored server-side, so the roster knows this device is in the
   // room before it has answered anything.
   useEffect(() => {
-    if (!session || !code) return
+    if (!session?.playerId || !code) return
     void joinRoom(code).catch(() => {
       // A missing room is not fatal here: the socket reports the same problem.
     })
-  }, [session, code])
+    // Depends on the player's identity, not the whole session: the team sync
+    // below updates `session.team` every second, and that must not re-join -
+    // rejoining clears the side server-side.
+  }, [session?.playerId, code])
 
   // Sabotage teams are assigned the moment the main flow reaches that node,
   // which is after this device logged in - so the team is not in the session
@@ -190,7 +193,7 @@ export default function PlayPage() {
   // the reveal so the side lands before the first card is due.
   const inSabotage = node?.game === 'sabotage'
   useEffect(() => {
-    if (!session || !inSabotage) return
+    if (!session?.playerId || !inSabotage) return
     let live = true
     const refresh = () => {
       fetchSession()
@@ -212,7 +215,7 @@ export default function PlayPage() {
       live = false
       window.clearInterval(id)
     }
-  }, [session, inSabotage])
+  }, [session?.playerId, inSabotage])
 
   // The round is over: show the closing screen, then come back to login so the
   // next round starts from a clean device. A device that logs in *after* the
