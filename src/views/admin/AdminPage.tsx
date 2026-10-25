@@ -339,6 +339,48 @@ export default function AdminPage() {
   )
 }
 
+/** What the big screen is laid out for; the preview scales this whole frame.
+ *  The matching 1920×1080 iframe size lives in AdminPage.css. */
+const SCREEN_WIDTH = 1920
+
+/**
+ * The big screen, shrunk to fit the console.
+ *
+ * The iframe is rendered at its real size (1920×1080) and then scaled by
+ * `containerWidth / SCREEN_WIDTH`, so the operator sees the actual layout
+ * squeezed down - a thumbnail of the room's screen, not a phone-sized viewport
+ * where the same text overflows. Legibility is not the point; knowing what is
+ * on screen is.
+ */
+function ScreenPreview({ code }: { code: string }) {
+  const box = useRef<HTMLDivElement | null>(null)
+  const [scale, setScale] = useState(0)
+
+  useEffect(() => {
+    const element = box.current
+    if (!element) return
+    const measure = () => {
+      const width = element.clientWidth
+      if (width > 0) setScale(width / SCREEN_WIDTH)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div className="admin__tv" ref={box}>
+      <iframe
+        src={`/display/${code}`}
+        title="Big screen preview"
+        // Hidden until measured, so the first paint is never a full-size flash.
+        style={{ transform: `scale(${scale})`, visibility: scale > 0 ? 'visible' : 'hidden' }}
+      />
+    </div>
+  )
+}
+
 function ConsoleView({
   room,
   onAction,
@@ -396,12 +438,10 @@ function ConsoleView({
               </div>
             </div>
 
-            {/* The actual big screen, live: seeing it beside the controls is how
-                the operator catches a screen that is out of step without walking
-                over to it. The iframe has its own socket and state. */}
-            <div className="admin__tv">
-              <iframe src={`/display/${room.code}`} title="Big screen preview" />
-            </div>
+            {/* The actual big screen, scaled down: seeing it beside the controls
+                is how the operator catches a screen that is out of step without
+                walking over to it. The iframe has its own socket and state. */}
+            <ScreenPreview code={room.code} />
           </div>
 
           <div className="admin__progress">
