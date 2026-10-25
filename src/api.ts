@@ -132,6 +132,18 @@ export async function fetchEvents(): Promise<EventOption[]> {
   return body.events
 }
 
+export interface LeaderboardRow {
+  rank: number
+  nickname: string
+  total_score: number
+}
+
+/** The public board: top players by total, no sign-in needed. */
+export async function fetchLeaderboard(limit = 10): Promise<LeaderboardRow[]> {
+  const body = await request<{ players: LeaderboardRow[] }>(`/api/leaderboard?limit=${limit}`)
+  return body.players
+}
+
 export async function loginPlayer(nickname: string, event: string): Promise<PlayerSession> {
   const body = await request<{
     token: string

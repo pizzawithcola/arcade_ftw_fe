@@ -104,6 +104,22 @@
   font-size: 0.8rem;
 }
 
+/* The scoreboard door: visible, but it never blocks the sign-in flow. */
+.login__leaderboard {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.login__leaderboard a {
+  color: #57f2c4;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.login__leaderboard a:hover {
+  text-decoration: underline;
+}
+
 /* Deliberately low-key: the audience never needs to notice this exists. */
 .login__admin-toggle {
   position: absolute;

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import LeaderboardPage from './pages/LeaderboardPage'
 import StatusPage from './pages/StatusPage'
 import AdminPage from './views/admin/AdminPage'
 import DisplayPage from './views/display/DisplayPage'
@@ -22,6 +23,7 @@ function App() {
       <Route path="/display" element={<DisplayPage />} />
       <Route path="/display/:code" element={<DisplayPage />} />
       <Route path="/admin" element={<AdminPage />} />
+      <Route path="/leaderboard" element={<LeaderboardPage />} />
       {/* Kept as a diagnostic page: it shows the raw API and websocket replies. */}
       <Route path="/status" element={<StatusPage />} />
       {/* Anything else is a client-side route, so send it to the entry point. */}

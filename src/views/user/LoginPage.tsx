@@ -112,6 +112,11 @@ export default function LoginPage() {
           {busy ? '…' : 'Enter'}
         </button>
 
+        {/* The public scoreboard: anyone can open it from the door. */}
+        <div className="login__leaderboard">
+          <Link to="/leaderboard">Leaderboard</Link>
+        </div>
+
         {/* Staff entrances, deliberately quiet: the audience never needs them. */}
         <div className="login__staff">
           <Link to="/display">display</Link>
