@@ -14,6 +14,7 @@ export interface FlowNode {
   type: string
   title?: string
   game?: string
+  section?: string
   duration_sec?: number
 }
 

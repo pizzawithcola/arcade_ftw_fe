@@ -40,77 +40,7 @@
   color: #8b94a8;
 }
 
-.board__list {
+/* The ranking list itself lives in components/Leaderboard.css. */
+.board .ldb {
   width: min(560px, 100%);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.board__row {
-  display: grid;
-  grid-template-columns: 3rem 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #232a3b;
-  border-radius: 8px;
-  background: #111726;
-}
-
-.board__rank {
-  width: 2.4rem;
-  height: 2.4rem;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #1b2334;
-  color: #9aa4b8;
-  font-weight: 600;
-}
-
-.board__name {
-  color: #e6e9f0;
-  font-size: 1.05rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.board__score {
-  color: #57f2c4;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  font-size: 1.15rem;
-}
-
-/* The podium reads gold / silver / bronze without any extra chrome. */
-.board__row.is-rank-1 {
-  border-color: #e6c36b;
-}
-
-.board__row.is-rank-1 .board__rank {
-  background: #e6c36b;
-  color: #111726;
-}
-
-.board__row.is-rank-2 {
-  border-color: #b8c4d6;
-}
-
-.board__row.is-rank-2 .board__rank {
-  background: #b8c4d6;
-  color: #111726;
-}
-
-.board__row.is-rank-3 {
-  border-color: #c98a5b;
-}
-
-.board__row.is-rank-3 .board__rank {
-  background: #c98a5b;
-  color: #111726;
 }

@@ -4,6 +4,7 @@ import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '
 import { BLOCKS, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { QUIZ_QUESTIONS } from '../../games/quiz/content'
+import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
 import { useGameStore } from '../../store/gameStore'
@@ -302,6 +303,10 @@ export default function DisplayPage() {
           {node?.game === 'data_shadow' && <PostOnScreen />}
 
           {node?.game === 'sabotage' && <SabotageOnScreen />}
+
+          {node?.type === 'leaderboard' && (
+            <RoomLeaderboard key={node.section} code={code} section={node.section} />
+          )}
 
           {question &&
             (node?.game === 'hallucination' || node?.type === 'quiz') && (

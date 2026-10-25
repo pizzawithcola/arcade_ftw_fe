@@ -12,6 +12,7 @@ import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
 import SabotageGame from '../../games/sabotage/SabotageGame'
+import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
 import { useGameStore, type FlowNode } from '../../store/gameStore'
@@ -81,6 +82,15 @@ function NodeStage({
   }
   if (node.game === 'sabotage') {
     return <SabotageGame key={nodeIndex} room={room} team={team} />
+  }
+  if (node.type === 'leaderboard') {
+    return (
+      <div className="stage stage--leaderboard" key={nodeIndex}>
+        <span className="stage__kind">leaderboard</span>
+        <h2>{node.title ?? 'Standings'}</h2>
+        <RoomLeaderboard code={room} section={node.section} />
+      </div>
+    )
   }
   if (node.type === 'quiz') {
     return <QuizGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />

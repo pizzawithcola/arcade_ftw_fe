@@ -144,6 +144,23 @@ export async function fetchLeaderboard(limit = 10): Promise<LeaderboardRow[]> {
   return body.players
 }
 
+export interface RoomLeaderboardRow {
+  rank: number
+  nickname: string
+  score: number
+}
+
+/** One section's in-game ranking for a room. The player tablet reads it too. */
+export async function fetchRoomLeaderboard(
+  room: string,
+  section: string,
+): Promise<RoomLeaderboardRow[]> {
+  const body = await request<{ players: RoomLeaderboardRow[] }>(
+    `/api/rooms/${room}/leaderboard?section=${encodeURIComponent(section)}`,
+  )
+  return body.players
+}
+
 export async function loginPlayer(nickname: string, event: string): Promise<PlayerSession> {
   const body = await request<{
     token: string

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchLeaderboard, type LeaderboardRow } from '../api'
+import { fetchLeaderboard } from '../api'
+import Leaderboard, { type LeaderboardEntry } from '../components/Leaderboard'
 import './LeaderboardPage.css'
 
 /**
@@ -9,7 +10,7 @@ import './LeaderboardPage.css'
  * waiting for anyone to press a button.
  */
 export default function LeaderboardPage() {
-  const [rows, setRows] = useState<LeaderboardRow[] | null>(null)
+  const [rows, setRows] = useState<LeaderboardEntry[] | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -18,7 +19,13 @@ export default function LeaderboardPage() {
       fetchLeaderboard(10)
         .then((board) => {
           if (live) {
-            setRows(board)
+            setRows(
+              board.map((row) => ({
+                rank: row.rank,
+                nickname: row.nickname,
+                score: row.total_score,
+              })),
+            )
             setError('')
           }
         })
@@ -47,18 +54,8 @@ export default function LeaderboardPage() {
 
       {rows === null && !error ? (
         <p className="board__empty">Loading…</p>
-      ) : rows !== null && rows.length === 0 ? (
-        <p className="board__empty">No scores yet.</p>
       ) : (
-        <ol className="board__list">
-          {rows?.map((row) => (
-            <li key={row.rank} className={`board__row is-rank-${row.rank}`}>
-              <span className="board__rank">{row.rank}</span>
-              <span className="board__name">{row.nickname}</span>
-              <span className="board__score">{row.total_score}</span>
-            </li>
-          ))}
-        </ol>
+        <Leaderboard title="Top players" rows={rows ?? []} />
       )}
     </main>
   )
