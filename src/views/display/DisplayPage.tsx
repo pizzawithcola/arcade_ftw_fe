@@ -322,7 +322,7 @@ export default function DisplayPage() {
             </p>
           )}
 
-          {phase === 'playing' && !question && (
+          {phase === 'playing' && !question && node?.type !== 'leaderboard' && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (

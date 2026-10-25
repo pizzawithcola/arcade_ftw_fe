@@ -373,41 +373,61 @@ function ConsoleView({
 
       {room ? (
         <>
-          <p className="admin__node">{room.state.node?.title ?? '—'}</p>
-          <p className="admin__hint">
-            <span className={`admin__phase is-${phase}`}>{phase}</span> · node{' '}
-            {room.state.index + 1} / {room.state.node_count} ·{' '}
-            {room.players} joined · {room.clients} online
-          </p>
+          <div className="admin__stage">
+            <div className="admin__state">
+              <p className="admin__node">{room.state.node?.title ?? '—'}</p>
+              <p className="admin__hint">
+                <span className={`admin__phase is-${phase}`}>{phase}</span> · node{' '}
+                {room.state.index + 1} / {room.state.node_count} ·{' '}
+                {room.players} joined · {room.clients} online
+              </p>
 
-          <div className="admin__controls">
-            {ACTIONS.map((action) => (
-              <button key={action} type="button" disabled={busy} onClick={() => onAction(action)}>
-                {action}
-              </button>
-            ))}
+              <div className="admin__controls admin__controls--stacked">
+                {ACTIONS.map((action) => (
+                  <button
+                    key={action}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onAction(action)}
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* The actual big screen, live: seeing it beside the controls is how
+                the operator catches a screen that is out of step without walking
+                over to it. The iframe has its own socket and state. */}
+            <div className="admin__tv">
+              <iframe src={`/display/${room.code}`} title="Big screen preview" />
+            </div>
           </div>
 
-          <p className="admin__hint">Jump straight to a node instead of waiting for the clock:</p>
-          <div className="admin__jumps">
-            {(room.state.flow ? jumpGroups(room.state.flow) : []).map((group) => (
-              <div key={group.key} className="admin__jumpgroup">
-                <span className="admin__jumpgroup-title">{group.title}</span>
-                <div className="admin__jumpgroup-buttons">
-                  {group.buttons.map((button) => (
-                    <button
-                      key={button.index}
-                      type="button"
-                      disabled={busy}
-                      className={button.index === room.state.index ? 'is-current' : ''}
-                      onClick={() => onAction(`go/${button.index}`)}
-                    >
-                      {button.label}
-                    </button>
-                  ))}
+          <div className="admin__progress">
+            <p className="admin__hint">
+              Jump straight to a node instead of waiting for the clock:
+            </p>
+            <div className="admin__jumps">
+              {(room.state.flow ? jumpGroups(room.state.flow) : []).map((group) => (
+                <div key={group.key} className="admin__jumpgroup">
+                  <span className="admin__jumpgroup-title">{group.title}</span>
+                  <div className="admin__jumpgroup-buttons">
+                    {group.buttons.map((button) => (
+                      <button
+                        key={button.index}
+                        type="button"
+                        disabled={busy}
+                        className={button.index === room.state.index ? 'is-current' : ''}
+                        onClick={() => onAction(`go/${button.index}`)}
+                      >
+                        {button.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </>
       ) : (
