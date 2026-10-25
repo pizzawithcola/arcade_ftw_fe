@@ -116,7 +116,11 @@ function SabotageOnScreen() {
     return (
       <article className="display__question">
         <p className="display__prompt">
-          {r.outcome === 'blocked' ? 'ATTACK BLOCKED' : r.outcome === 'failed' ? 'SABOTAGE SUCCESSFUL' : 'STANDOFF'}
+          {r.outcome === 'blocked'
+            ? `${r.defender.toUpperCase()} WINS THE ROUND`
+            : r.outcome === 'failed'
+              ? `${r.attacker.toUpperCase()} WINS THE ROUND`
+              : 'STANDOFF'}
         </p>
         <p className="display__reply">
           {sabotage.cards.attack[r.attack_card]?.name ?? r.attack_card} vs{' '}

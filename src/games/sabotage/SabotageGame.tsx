@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { sabotageVote } from '../../api'
 import { useTicker } from '../../hooks/useTicker'
-import { useGameStore, type SabotageState } from '../../store/gameStore'
+import { useGameStore, type SabotageResult, type SabotageState } from '../../store/gameStore'
 import './SabotageGame.css'
 
 function formatClock(ms: number): string {
@@ -17,6 +17,18 @@ function money(cost: number): string {
 /** A card may sit in either deck (tie-breaks can revote a defence too). */
 function lookupCard(sabotage: SabotageState, id: string) {
   return sabotage.cards.attack[id] ?? sabotage.cards.defence[id] ?? null
+}
+
+/** The player's own side of the round, spoken from their identity. */
+function resolveVerdict(result: SabotageResult, team?: string): string {
+  const mine =
+    team === result.attacker ? 'attacker' : team === result.defender ? 'defender' : null
+  if (result.outcome === 'partial') return 'Standoff — no points'
+  if (result.outcome === 'blocked') {
+    return mine === 'defender' ? 'Your defence held' : 'Your attack failed'
+  }
+  // failed: the attack landed, so the defender's side is the losing one.
+  return mine === 'attacker' ? 'Your attack succeeded' : 'Your defence was breached'
 }
 
 const PHASE_LABEL: Record<string, string> = {
@@ -139,13 +151,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
 
       {sabotage.phase === 'resolve' && sabotage.last_result && (
         <div className={`sab__result is-${sabotage.last_result.outcome}`}>
-          <p className="sab__verdict">
-            {sabotage.last_result.outcome === 'blocked'
-              ? 'ATTACK BLOCKED'
-              : sabotage.last_result.outcome === 'failed'
-                ? 'SABOTAGE SUCCESSFUL'
-                : 'STANDOFF'}
-          </p>
+          <p className="sab__verdict">{resolveVerdict(sabotage.last_result, team)}</p>
           <p className="sab__pairing">
             {sabotage.cards.attack[sabotage.last_result.attack_card]?.name ?? sabotage.last_result.attack_card}
             {' vs '}
