@@ -13,6 +13,7 @@ import {
   roomAction,
   updatePlayer,
   type EventOption,
+  type FlowNode,
   type PlayerRow,
   type RoomSnapshot,
   type Session,
@@ -21,6 +22,64 @@ import StaffLogin from '../StaffLogin'
 import './AdminPage.css'
 
 const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
+
+interface JumpButton {
+  index: number
+  label: string
+}
+
+interface JumpGroup {
+  key: string
+  /** The part of the show: a section name, or the node's own title when standalone. */
+  title: string
+  buttons: JumpButton[]
+}
+
+/** The four scored sections, in the order the show runs them. */
+const SECTION_TITLES: Record<string, string> = {
+  hallucination: 'Hallucination',
+  data: 'Data',
+  sabotage: 'Sabotage',
+  ultimate: 'Ultimate',
+  total: 'Activity',
+}
+
+/** What a node is inside its section. */
+function nodeKind(node: FlowNode): string {
+  if (node.type === 'leaderboard') return 'ranking'
+  if (node.type === 'quiz') return 'quiz'
+  if (node.type === 'game') return 'challenge'
+  return node.title?.toLowerCase() ?? node.type
+}
+
+/** A node's section: leaderboards name it, games and quizzes score into it. */
+function sectionOf(node: FlowNode): string | null {
+  return node.section ?? node.score ?? null
+}
+
+/**
+ * Groups the rundown into sections, so the operator reads
+ * `Hallucination → challenge / quiz / ranking` instead of "node 1, 2, 3".
+ * Consecutive nodes in the same section share one box; intro and outro get
+ * a box of their own.
+ */
+function jumpGroups(flow: FlowNode[]): JumpGroup[] {
+  const groups: JumpGroup[] = []
+  flow.forEach((node, index) => {
+    const section = sectionOf(node)
+    const last = groups[groups.length - 1]
+    const joinable = section !== null && last !== undefined && last.key === section
+    if (!joinable) {
+      groups.push({
+        key: section ?? `standalone-${index}`,
+        title: section ? (SECTION_TITLES[section] ?? section) : (node.title ?? 'Show'),
+        buttons: [],
+      })
+    }
+    groups[groups.length - 1].buttons.push({ index, label: nodeKind(node) })
+  })
+  return groups
+}
 
 type Section = 'console' | 'data' | 'settings'
 type DataTab = 'rooms' | 'players'
@@ -331,16 +390,23 @@ function ConsoleView({
 
           <p className="admin__hint">Jump straight to a node instead of waiting for the clock:</p>
           <div className="admin__jumps">
-            {Array.from({ length: room.state.node_count }, (_, i) => (
-              <button
-                key={i}
-                type="button"
-                disabled={busy}
-                className={i === room.state.index ? 'is-current' : ''}
-                onClick={() => onAction(`go/${i}`)}
-              >
-                {i + 1}
-              </button>
+            {(room.state.flow ? jumpGroups(room.state.flow) : []).map((group) => (
+              <div key={group.key} className="admin__jumpgroup">
+                <span className="admin__jumpgroup-title">{group.title}</span>
+                <div className="admin__jumpgroup-buttons">
+                  {group.buttons.map((button) => (
+                    <button
+                      key={button.index}
+                      type="button"
+                      disabled={busy}
+                      className={button.index === room.state.index ? 'is-current' : ''}
+                      onClick={() => onAction(`go/${button.index}`)}
+                    >
+                      {button.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </>

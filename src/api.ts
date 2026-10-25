@@ -45,13 +45,26 @@ export interface QuestionState {
   remaining_ms: number
 }
 
+export interface FlowNode {
+  type: string
+  title?: string
+  game?: string
+  /** Leaderboard nodes: which board to show. */
+  section?: string
+  /** Scored nodes: which score column they add to. */
+  score?: string
+  duration_sec?: number
+}
+
 export interface RoomSnapshot {
   code: string
   state: {
     phase: 'waiting' | 'playing' | 'paused' | 'finished'
     index: number
     node_count: number
-    node: { type: string; title?: string; game?: string; duration_sec?: number } | null
+    node: FlowNode | null
+    /** The whole rundown, so a console can label every node. */
+    flow?: FlowNode[]
     remaining_ms: number
     /** Present on nodes that have a question plan; the engine owns the index. */
     question: QuestionState | null

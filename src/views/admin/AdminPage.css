@@ -263,16 +263,41 @@
   color: #5a6478;
 }
 
+/* Jump board: one box per section, with its nodes as labelled buttons. */
 .admin__jumps {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.6rem;
+}
+
+.admin__jumpgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem 0.6rem;
+  border: 1px solid #232a3b;
+  border-radius: 8px;
+  background: #0d1420;
+}
+
+.admin__jumpgroup-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #57f2c4;
+}
+
+.admin__jumpgroup-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .admin__jumps button {
   min-width: 2.4rem;
-  padding: 0.45rem 0.6rem;
+  padding: 0.45rem 0.75rem;
   text-align: center;
+  font-size: 0.8rem;
 }
 
 .admin__jumps button.is-current {

@@ -14,10 +14,12 @@ export interface FlowNode {
   type: string
   title?: string
   game?: string
+  /** Leaderboard nodes: which board to show. */
   section?: string
+  /** Scored nodes: which score column they add to. */
+  score?: string
   duration_sec?: number
 }
-
 interface StateMessage {
   phase: Phase
   index: number
