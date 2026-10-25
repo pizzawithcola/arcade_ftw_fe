@@ -702,10 +702,7 @@ function RoomsTable({
           <tbody>
             {rooms.map((item) => (
               <tr key={item.code} className={item.code === current ? 'is-current' : ''}>
-                <td>
-                  {item.code}
-                  {item.code === current && <span className="admin__current">current</span>}
-                </td>
+                <td>{item.code}</td>
                 <td className="admin__dim">{formatWhen(item.createdAt)}</td>
                 <td>{item.players}</td>
                 <td>{item.closedAt ? 'closed' : 'open'}</td>

@@ -15,12 +15,17 @@
   text-align: center;
 }
 
+/* One column by default; `--split` only appears when the stack would overflow
+   the window, so a short board never splits on a wide screen. */
 .ldb__list {
   margin: 0;
   padding: 0;
   list-style: none;
-  column-count: 1;
   column-gap: 1rem;
+}
+
+.ldb__list--split {
+  column-count: 2;
 }
 
 .ldb__row {
@@ -87,11 +92,4 @@
 .ldb__row.is-rank-3 .ldb__rank {
   background: #c98a5b;
   color: #111726;
-}
-
-/* Landscape: two columns side by side so a wide screen stays balanced. */
-@media (orientation: landscape) {
-  .ldb__list {
-    column-count: 2;
-  }
 }
