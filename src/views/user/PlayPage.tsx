@@ -184,6 +184,36 @@ export default function PlayPage() {
     })
   }, [session, code])
 
+  // Sabotage teams are assigned the moment the main flow reaches that node,
+  // which is after this device logged in - so the team is not in the session
+  // yet. Re-read it as soon as the game is on screen, and keep asking through
+  // the reveal so the side lands before the first card is due.
+  const inSabotage = node?.game === 'sabotage'
+  useEffect(() => {
+    if (!session || !inSabotage) return
+    let live = true
+    const refresh = () => {
+      fetchSession()
+        .then((found) => {
+          if (!live || !found || found.isAdmin || !found.nickname) return
+          setSession((prev) =>
+            prev && prev.team === found.team
+              ? prev
+              : ({ ...prev, ...found } as PlayerSession),
+          )
+        })
+        .catch(() => {
+          // A transient failure just means the next poll tries again.
+        })
+    }
+    void refresh()
+    const id = window.setInterval(refresh, 1000)
+    return () => {
+      live = false
+      window.clearInterval(id)
+    }
+  }, [session, inSabotage])
+
   // The round is over: show the closing screen, then come back to login so the
   // next round starts from a clean device. A device that logs in *after* the
   // round ended did not play it, so it waits here instead of being bounced

@@ -73,7 +73,13 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
       {sabotage.phase === 'team_reveal' && (
         <div className="sab__reveal">
           <p className="sab__teamline">
-            You are <strong className={`is-${team ?? 'red'}`}>{team ?? '—'} team</strong>
+            {team ? (
+              <>
+                You are <strong className={`is-${team}`}>{team} team</strong>
+              </>
+            ) : (
+              <>Assigning your team…</>
+            )}
           </p>
           <p className="sab__hint">
             Shared team budget: {money(sabotage.budgets[team as 'red' | 'blue'] ?? 0)}
