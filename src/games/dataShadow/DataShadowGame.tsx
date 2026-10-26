@@ -95,7 +95,12 @@ export default function DataShadowGame({
   const timeLeftMs = Math.max(0, ROUND_SECONDS * 1000 - elapsed)
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
   const expired = timeLeftMs === 0
-  const done = submitted || expired
+  // The result is shown only once the round's clock runs out, so a player who
+  // submits early waits for everyone else. `locked` freezes the report once
+  // submitted (or once time runs out); `done` is what publishes the verdict.
+  const waiting = submitted && !expired
+  const locked = submitted || expired
+  const done = expired
 
   const result: Evaluation | null = useMemo(
     () => (done ? evaluate(selections, LEAK_SPANS, POST_TEXT.length) : null),
@@ -166,9 +171,9 @@ export default function DataShadowGame({
   // Park a small button next to the selection, so the next action is where the
   // player is already looking rather than across the screen.
   useEffect(() => {
-    // Nothing to attach the bubble to once the round is scored; the render also
-    // stops showing it, so the effect just stops listening.
-    if (done) return
+    // Nothing to attach the bubble to once the report is locked; the render
+    // also stops showing it, so the effect just stops listening.
+    if (locked) return
     const update = () => {
       const container = bodyRef.current
       const selection = window.getSelection()
@@ -205,10 +210,10 @@ export default function DataShadowGame({
       window.removeEventListener('scroll', update, true)
       window.removeEventListener('resize', update)
     }
-  }, [done])
+  }, [locked])
 
   const remove = (id: string) => {
-    if (done) return
+    if (locked) return
     setSelections((current) => current.filter((item) => item.id !== id))
   }
 
@@ -321,7 +326,7 @@ export default function DataShadowGame({
             return (
               <div className={`report__item ${verdict}`} key={item.id}>
                 <span className="report__text">“{item.text}”</span>
-                {!done ? (
+                {!locked ? (
                   <button
                     type="button"
                     className="report__remove"
@@ -330,11 +335,11 @@ export default function DataShadowGame({
                   >
                     ×
                   </button>
-                ) : (
+                ) : done ? (
                   <span className="report__mark" aria-hidden="true">
                     {result?.counted.has(item.id) ? '✓' : '✗'}
                   </span>
-                )}
+                ) : null}
               </div>
             )
           })}
@@ -358,6 +363,8 @@ export default function DataShadowGame({
                 <li className="report__best">best possible {LEAK_SPANS.length * 10}</li>
               </ul>
             </>
+          ) : waiting ? (
+            <p className="report__waiting">Waiting for others to answer…</p>
           ) : (
             <>
               <button
@@ -377,7 +384,7 @@ export default function DataShadowGame({
         </footer>
       </aside>
 
-      {!done && bubble && (
+      {!locked && bubble && (
         <button
           type="button"
           className={`bubble ${bubble.below ? 'is-below' : 'is-above'}`}

@@ -23,9 +23,12 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
 
   const timeLeftMs = Math.max(0, question.time_limit * 1000 - (elapsed - questionStart))
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
-  // Derived rather than stored, so expiry needs no effect and no extra render.
-  const expired = picked === undefined && timeLeftMs === 0
-  const revealed = picked !== undefined || expired
+  // Reveal only once the question's clock runs out: an early answer sits in a
+  // waiting state so everyone has their time. An unanswered question reads as
+  // wrong when the clock hits zero (it simply scored nothing).
+  const expired = timeLeftMs === 0
+  const waiting = picked !== undefined && !expired
+  const revealed = expired
 
   const total = useMemo(
     () =>
@@ -110,7 +113,7 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
                 key={option.letter}
                 type="button"
                 className={classes}
-                disabled={revealed}
+                disabled={waiting || revealed}
                 onClick={() => {
                   setPicks((current) => ({ ...current, [question.id]: option.letter }))
                   report(index, questionScore(option.letter, question.correct_option))
@@ -124,11 +127,15 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
         </div>
       </div>
 
+      {waiting && (
+        <p className="quiz__waiting">Waiting for others to answer…</p>
+      )}
+
       {revealed && (
         <div className={`quiz__reveal ${picked === question.correct_option ? 'is-good' : 'is-bad'}`}>
           <p className="quiz__explain">{question.explain}</p>
           <p className="quiz__correct">
-            {expired
+            {picked === undefined
               ? `Time's up — the answer was ${question.correct_option}.`
               : `The answer was ${question.correct_option}.`}
           </p>

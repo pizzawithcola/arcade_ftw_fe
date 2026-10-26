@@ -369,6 +369,13 @@
   color: #5a6478;
 }
 
+.report__waiting {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: #9fb0d8;
+  text-align: center;
+}
+
 .report__foot--result {
   align-items: center;
   text-align: center;

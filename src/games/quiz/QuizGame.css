@@ -90,6 +90,13 @@
   cursor: default;
 }
 
+.quiz__waiting {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: #9fb0d8;
+  text-align: center;
+}
+
 .quiz__letter {
   flex: none;
   display: grid;

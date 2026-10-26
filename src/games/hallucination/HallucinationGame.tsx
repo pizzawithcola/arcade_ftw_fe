@@ -34,10 +34,12 @@ export default function HallucinationGame({
 
   const timeLeftMs = Math.max(0, QUESTION_SECONDS * 1000 - (elapsed - questionStart))
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
-  // Derived, not stored: a show must not stall waiting for a kiosk that never
-  // picked, and the clock already lives in `elapsed`.
-  const expired = picked === undefined && timeLeftMs === 0
-  const revealed = picked !== undefined || expired
+  // The reveal happens only when the question's clock runs out: an early answer
+  // sits in a "waiting" state until everyone has had their time. A player who
+  // never picks is simply scored zero when the clock hits zero.
+  const expired = timeLeftMs === 0
+  const waiting = picked !== undefined && !expired
+  const revealed = expired
 
   const total = useMemo(
     () =>
@@ -141,6 +143,7 @@ export default function HallucinationGame({
                 key={level.key}
                 type="button"
                 className={`hallu__button hallu__button--${level.key}`}
+                disabled={waiting}
                 onClick={() => {
                   setPicks((current) => ({ ...current, [question.id]: level.key }))
                   report(index, scoreFor(level, question.truth))
@@ -150,13 +153,17 @@ export default function HallucinationGame({
               </button>
             ))}
           </div>
-          <p className="hallu__hint">Not Sure scores nothing either way. The rest are symmetric — you gain and lose the same amount.</p>
+          {waiting ? (
+            <p className="hallu__waiting">Waiting for others to answer…</p>
+          ) : (
+            <p className="hallu__hint">Not Sure scores nothing either way. The rest are symmetric — you gain and lose the same amount.</p>
+          )}
         </div>
       ) : (
-        <div className={`hallu__reveal ${expired ? '' : right ? 'is-good' : 'is-bad'}`}>
+        <div className={`hallu__reveal ${right ? 'is-good' : 'is-bad'}`}>
           <div className="hallu__verdict">
             <span className="hallu__verdictkind">
-              {expired
+              {picked === undefined
                 ? "Time's up"
                 : question.truth === 'trust'
                   ? 'This one held up'
@@ -167,9 +174,9 @@ export default function HallucinationGame({
               {points}
             </span>
             <span className="hallu__verdictpick">
-              {expired
+              {picked === undefined
                 ? 'you did not pick in time'
-                : `you chose ${picked?.label}${
+                : `you chose ${picked.label}${
                     right ? '' : ' — the sign flips when you read it backwards'
                   }`}
             </span>

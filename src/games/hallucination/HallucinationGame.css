@@ -160,6 +160,13 @@
   color: #5a6478;
 }
 
+.hallu__waiting {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: #9fb0d8;
+  text-align: center;
+}
+
 .hallu__reveal {
   width: 100%;
   padding: 1.2rem 1.25rem 1.6rem;
