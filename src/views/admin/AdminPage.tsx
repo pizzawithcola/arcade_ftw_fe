@@ -18,6 +18,7 @@ import {
   type RoomSnapshot,
   type Session,
 } from '../../api'
+import { BRIEF_LABEL } from '../../games/briefs'
 import StaffLogin from '../StaffLogin'
 import DesignPage from './DesignPage'
 import './AdminPage.css'
@@ -55,6 +56,7 @@ const SECTION_TITLES: Record<string, string> = {
 
 /** What a node is inside its section. */
 function nodeKind(node: FlowNode): string {
+  if (node.type === 'brief') return BRIEF_LABEL
   if (node.type === 'leaderboard') return 'ranking'
   if (node.type === 'quiz') return 'quiz'
   if (node.type === 'game') return 'challenge'

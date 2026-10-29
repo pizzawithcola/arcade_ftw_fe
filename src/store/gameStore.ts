@@ -18,6 +18,8 @@ export interface FlowNode {
   section?: string
   /** Scored nodes: which score column they add to. */
   score?: string
+  /** Brief nodes: which game's "how to play" copy to show. */
+  brief?: string
   duration_sec?: number
 }
 interface StateMessage {

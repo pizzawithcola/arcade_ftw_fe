@@ -12,6 +12,7 @@ import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
 import SabotageGame from '../../games/sabotage/SabotageGame'
+import { findBrief } from '../../games/briefs'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
@@ -69,6 +70,28 @@ function NodeStage({
     return (
       <div className="stage stage--waiting">
         <p>Syncing…</p>
+      </div>
+    )
+  }
+
+  // The nine seconds before a game: what it is and what to press. Rendered
+  // before the game branches so a brief never falls through to a game screen.
+  if (node.type === 'brief') {
+    const brief = findBrief(node.brief)
+    return (
+      <div className="brief" key={nodeIndex}>
+        <p className="brief__kicker">How to play</p>
+        <h1 className="brief__title">{brief?.title ?? node.title ?? 'Up next'}</h1>
+        {brief && (
+          <>
+            <p className="brief__lead">{brief.lead}</p>
+            <ul className="brief__rules">
+              {brief.rules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     )
   }

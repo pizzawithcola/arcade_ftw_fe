@@ -1,3 +1,4 @@
+import { findBrief } from '../../games/briefs'
 import DesignPage from './DesignPage'
 import './AdminPage.css'
 import '../display/DisplayPage.css'
@@ -235,6 +236,45 @@ export default function ThemePreview() {
               </table>
             </div>
           </section>
+
+          <Section title="Rules card">
+            <p className="admin__hint">
+              15s in front of each game, on the iPad and the wall screen alike.
+            </p>
+            {['hallucination', 'data_shadow', 'sabotage', 'ultimate_quiz'].map((key) => {
+              const brief = findBrief(key)
+              if (!brief) return null
+              return (
+                <div className="brief" key={key}>
+                  <p className="brief__kicker">How to play</p>
+                  <h1 className="brief__title">{brief.title}</h1>
+                  <p className="brief__lead">{brief.lead}</p>
+                  <ul className="brief__rules">
+                    {brief.rules.map((rule) => (
+                      <li key={rule}>{rule}</li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })}
+          </Section>
+
+          <Section title="Rules card · big screen">
+            {(() => {
+              const brief = findBrief('sabotage')
+              if (!brief) return null
+              return (
+                <div className="display__brief">
+                  <p className="display__briefLead">{brief.lead}</p>
+                  <ul className="display__briefRules">
+                    {brief.rules.map((rule) => (
+                      <li key={rule}>{rule}</li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })()}
+          </Section>
 
           <Section title="Game states">
             <p className="admin__hint">Hallucination · five steps from doubt to trust</p>

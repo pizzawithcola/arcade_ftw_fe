@@ -4,6 +4,7 @@ import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '
 import { BLOCKS, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { QUIZ_QUESTIONS } from '../../games/quiz/content'
+import { findBrief } from '../../games/briefs'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
@@ -14,6 +15,22 @@ import './DisplayPage.css'
 function formatClock(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000))
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
+
+/** The 15s rules card: the iPad's words, sized for the back row. */
+function BriefOnScreen({ brief: key }: { brief?: string }) {
+  const brief = findBrief(key)
+  if (!brief) return null
+  return (
+    <section className="display__brief">
+      <p className="display__briefLead">{brief.lead}</p>
+      <ul className="display__briefRules">
+        {brief.rules.map((rule) => (
+          <li key={rule}>{rule}</li>
+        ))}
+      </ul>
+    </section>
+  )
 }
 
 /** The Data Shadow post is one static page, so the big screen can show it whole. */
@@ -300,6 +317,8 @@ export default function DisplayPage() {
             {formatClock(node?.game === 'sabotage' ? sabotageRemaining : remaining)}
           </p>
 
+          {node?.type === 'brief' && <BriefOnScreen brief={node.brief} />}
+
           {node?.game === 'data_shadow' && <PostOnScreen />}
 
           {node?.game === 'sabotage' && <SabotageOnScreen />}
@@ -322,7 +341,7 @@ export default function DisplayPage() {
             </p>
           )}
 
-          {phase === 'playing' && !question && node?.type !== 'leaderboard' && (
+          {phase === 'playing' && !question && node?.type !== 'leaderboard' && node?.type !== 'brief' && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (
