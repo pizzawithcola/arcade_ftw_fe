@@ -1,10 +1,16 @@
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { findBrief } from '../../games/briefs'
+import { BLOCKS, IMAGES, LEAKS, POST_META } from '../../games/dataShadow/content'
+import { targetCount } from '../../games/dataShadow/scoring'
+import { ReportKindIcon } from '../../games/dataShadow/ReportKindIcon'
 import DesignPage from './DesignPage'
 import './AdminPage.css'
 import '../display/DisplayPage.css'
 import '../hud.css'
 import '../../games/hallucination/HallucinationGame.css'
 import '../../games/quiz/QuizGame.css'
+import '../../games/dataShadow/DataShadowGame.css'
 
 /**
  * Every console block on one page, with no sign-in and no socket.
@@ -45,6 +51,69 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </div>
       {children}
     </section>
+  )
+}
+
+/** The picture strip, with the same tap-to-enlarge behaviour as the real game. */
+function PreviewGallery() {
+  const [zoomed, setZoomed] = useState<string | null>(null)
+  const [flagged, setFlagged] = useState<string[]>([])
+  const toggle = (id: string) =>
+    setFlagged((current) =>
+      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id],
+    )
+  return (
+    <>
+      <div className="post__gallery">
+        {IMAGES.map((image) => (
+          <figure className={`post__shot ${flagged.includes(image.id) ? 'is-flagged' : ''}`} key={image.id}>
+            <button
+              type="button"
+              className="post__shotview"
+              onClick={() => setZoomed((current) => (current === image.id ? null : image.id))}
+            >
+              <img className="post__shotimg" src={image.src} alt="" loading="lazy" />
+            </button>
+            <figcaption className="post__shotcap">{image.label}</figcaption>
+            <button
+              type="button"
+              className="post__shotflag"
+              aria-pressed={flagged.includes(image.id)}
+              aria-label="Add picture to report"
+              onClick={() => toggle(image.id)}
+            >
+              {flagged.includes(image.id) ? (
+                '✓'
+              ) : (
+                <svg
+                  className="post__shoticon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M12 5.4v8.8" />
+                  <circle cx="12" cy="18.5" r="1.4" />
+                </svg>
+              )}
+            </button>
+          </figure>
+        ))}
+      </div>
+      {zoomed &&
+        createPortal(
+          <div className="shotzoom" onClick={() => setZoomed(null)}>
+            <figure className="shotzoom__frame">
+              <img
+                className="shotzoom__img"
+                src={IMAGES.find((i) => i.id === zoomed)?.src}
+                alt={IMAGES.find((i) => i.id === zoomed)?.alt}
+              />
+              <figcaption className="shotzoom__hint">tap anywhere to close</figcaption>
+            </figure>
+          </div>,
+          document.body,
+        )}
+    </>
   )
 }
 
@@ -365,6 +434,139 @@ export default function ThemePreview() {
                         Not Sure scores nothing either way. The rest are symmetric.
                       </p>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Data Shadow · readable post">
+            <p className="admin__hint">
+              Dark like the rest of the app, but the post itself stays plain: no glow, no display
+              face, no red inside the card. It has to read as an ordinary social post.
+            </p>
+            <div className="hud hud--game shadow">
+              <div className="hud__matrix" aria-hidden="true" />
+              <div className="hud__frame">
+                <div className="hud__inner">
+                  <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+                  <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+                  <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+                  <span className="hud__corner hud__corner--br" aria-hidden="true" />
+                  <div className="hud__tab">Data Shadow</div>
+                  <div className="hud__bar">
+                    <span className="hud__chevrons" aria-hidden="true" />
+                    <span className="hud__event">Find what leaked</span>
+                    <span className="shadow__timer">32s</span>
+                    <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+                  </div>
+                  <div className="hud__stage shadow__stage">
+                    <div className="shadow__main">
+                      <p className="shadow__task">
+                        Drag to select the words that should never have been posted.
+                      </p>
+                      <article className="post">
+                        <header className="post__head">
+                          <span className="post__avatar">{POST_META.initials}</span>
+                          <span className="post__who">
+                            <span className="post__name">{POST_META.author}</span>
+                            <span className="post__headline">{POST_META.headline}</span>
+                            <span className="post__time">
+                              {POST_META.ago} · <span className="post__globe">🌐</span>
+                            </span>
+                          </span>
+                        </header>
+                        <div className="post__body">
+                          {BLOCKS.slice(0, 4).map((text, index) => (
+                            <p className="post__para" key={index}>
+                              {text}
+                            </p>
+                          ))}
+                        </div>
+                        <PreviewGallery />
+                        <footer className="post__foot">
+                          <span className="post__reactions">
+                            <span>👍</span>
+                            <span>❤️</span>
+                            <span>💡</span>
+                            <span className="post__count">{POST_META.reactions}</span>
+                          </span>
+                          <span className="post__count">{POST_META.comments} comments</span>
+                        </footer>
+                      </article>
+                    </div>
+                    <aside className="report">
+                      <header className="report__head">
+                        <h2 className="report__title">Your report</h2>
+                        <span className="report__count">
+                          2<span className="report__total">/{targetCount(LEAKS, IMAGES)}</span>
+                        </span>
+                      </header>
+                      <div className="report__list">
+                        <div className="report__item">
+                          <ReportKindIcon kind="text" />
+                          <span className="report__text">“2.4 million conversations”</span>
+                          <button type="button" className="report__remove" aria-label="Remove">
+                            ×
+                          </button>
+                        </div>
+                        <div className="report__item report__item--shot">
+                          <ReportKindIcon kind="image" />
+                          <span className="report__text">Meeting Memory</span>
+                          <button type="button" className="report__remove" aria-label="Remove">
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                      <footer className="report__foot">
+                        <button type="button" className="report__submit">
+                          Submit report
+                        </button>
+                      </footer>
+                    </aside>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Data Shadow · on the wall">
+            <p className="admin__hint">
+              The wall uses the same dark card and puts it straight under the bar, so a long post
+              is never pushed out of the panel.
+            </p>
+            <div className="hud hud--display hud--stage">
+              <div className="hud__matrix" aria-hidden="true" />
+              <div className="hud__frame">
+                <div className="hud__inner">
+                  <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+                  <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+                  <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+                  <span className="hud__corner hud__corner--br" aria-hidden="true" />
+                  <div className="hud__tab">Arcade FTW</div>
+                  <div className="hud__bar">
+                    <span className="hud__chevrons" aria-hidden="true" />
+                    <span className="hud__event">Data Shadow</span>
+                    <span className="hud__status">
+                      <span className="hud__dot" aria-hidden="true" />
+                      live
+                    </span>
+                    <span className="display__clock">0:41</span>
+                    <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+                  </div>
+                  <div className="hud__stage display__stage" data-screen="data_shadow">
+                    <article className="display__post">
+                      <header className="display__posthead">
+                        <span className="display__avatar">{POST_META.initials}</span>
+                        <span>
+                          <strong>{POST_META.author}</strong>
+                          <em>{POST_META.headline}</em>
+                        </span>
+                      </header>
+                      {BLOCKS.slice(0, 5).map((text, index) => (
+                        <p key={index}>{text}</p>
+                      ))}
+                    </article>
                   </div>
                 </div>
               </div>

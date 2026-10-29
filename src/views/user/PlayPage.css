@@ -86,6 +86,9 @@
 }
 
 .play__who {
+  font-size: 14px;
+  /* One line: a wrapped nickname doubles the height of the bar. */
+  white-space: nowrap;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   background: var(--c-surface-raised);
@@ -114,8 +117,10 @@
 .game__bar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.55rem clamp(0.8rem, 2.4vw, 1.6rem);
+  gap: 0.6rem;
+  /* Tighter sides than the rest of the page: the track should reach almost the
+     full width of the bar, and the two labels on the right still need room. */
+  padding: 0.55rem clamp(0.6rem, 1.8vw, 1.2rem);
   font-size: 0.8rem;
   color: var(--c-text-muted);
 }
@@ -123,10 +128,11 @@
 /* Four bars across 75% of the bar, each with slanted ends: a parallelogram,
    not a diamond. Filled = behind you, red = the game on screen now. */
 .game__track {
-  flex: 0 1 75%;
+  flex: 1 1 90%;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(0.35rem, 1vw, 0.7rem);
+  gap: clamp(0.25rem, 0.7vw, 0.5rem);
   align-items: center;
 }
 
@@ -163,7 +169,7 @@
   background: none;
   color: var(--c-text-dim);
   font: inherit;
-  font-size: 0.7rem;
+  font-size: 14px;
   cursor: pointer;
 }
 

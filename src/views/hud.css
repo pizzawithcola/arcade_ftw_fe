@@ -328,6 +328,12 @@
   align-self: center;
 }
 
+/* The wall's game screen is not a lobby card: it holds a whole post or a
+   conversation, so the lobby's 46rem cap would clip it. */
+.hud--display.hud--stage .hud__frame {
+  height: min(100%, 78rem);
+}
+
 /* Centred in the remaining height: a two-player room should not float below a
    huge empty panel, and a full room grows until the list scrolls instead. */
 .hud--display .hud__stage {
@@ -841,7 +847,7 @@
    plain fade instead. */
 
 .hud--game .hud__frame {
-  width: min(100%, 82rem);
+  width: min(96%, 1500px);
   max-height: 100%;
   animation: hud-boot-fade-up 320ms ease-out both;
 }

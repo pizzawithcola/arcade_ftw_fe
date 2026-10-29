@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
-import { BLOCKS, POST_META } from '../../games/dataShadow/content'
+import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { QUIZ_QUESTIONS } from '../../games/quiz/content'
 import { findBrief } from '../../games/briefs'
@@ -113,9 +113,18 @@ function PostOnScreen() {
           <em>{POST_META.headline}</em>
         </span>
       </header>
-      {BLOCKS.slice(0, -1).map((block, index) => (
+      {BLOCKS.map((block, index) => (
         <p key={index}>{block}</p>
       ))}
+      {/* The wall shows the same pictures the players are judging. Read-only:
+          nobody taps a projector, and the flag control stays on the iPad. */}
+      <div className="display__postshots">
+        {IMAGES.map((image) => (
+          <figure className="display__postshot" key={image.id}>
+            <img src={image.src} alt={image.alt} loading="lazy" />
+          </figure>
+        ))}
+      </div>
     </article>
   )
 }
@@ -390,7 +399,7 @@ export default function DisplayPage() {
                 <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
               </div>
 
-              <div className="hud__stage display__stage">
+              <div className="hud__stage display__stage" data-screen={node?.game ?? node?.type ?? 'none'}>
 
           {node?.type === 'brief' && <BriefOnScreen brief={node.brief} />}
 

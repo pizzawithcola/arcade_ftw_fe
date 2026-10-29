@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
-import { BLOCKS, LEAKS, POST_META, POST_TEXT } from './content'
+import { BLOCKS, IMAGES, LEAKS, POST_META, POST_TEXT } from './content'
+import { ReportKindIcon } from './ReportKindIcon'
 import {
   evaluate,
+  maxScore,
   MIN_SELECTION_CHARS,
   resolveLeaks,
+  targetCount,
   type Evaluation,
   type LeakSpan,
   type Selection,
@@ -85,6 +89,10 @@ export default function DataShadowGame({
   nodeIndex: number
 }) {
   const [selections, setSelections] = useState<Selection[]>([])
+  /** Image ids added to the report, kept apart from text ranges. */
+  const [imageFlags, setImageFlags] = useState<string[]>([])
+  /** The picture being looked at full size, if any. */
+  const [zoomed, setZoomed] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [bubble, setBubble] = useState<{ x: number; y: number; below: boolean } | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -103,8 +111,8 @@ export default function DataShadowGame({
   const done = expired
 
   const result: Evaluation | null = useMemo(
-    () => (done ? evaluate(selections, LEAK_SPANS, POST_TEXT.length) : null),
-    [done, selections],
+    () => (done ? evaluate(selections, LEAK_SPANS, POST_TEXT.length, IMAGES, imageFlags) : null),
+    [done, selections, imageFlags],
   )
 
   // The round is scored once, when it is submitted or when its clock runs out.
@@ -116,11 +124,13 @@ export default function DataShadowGame({
   const marks: Mark[] = useMemo(() => {
     if (done) {
       const caught = new Set((result?.caught ?? []).map((leak) => leak.id))
+      // A leak can name more than one anchor; both are revealed together, and
+      // the key has to carry the offset because the id repeats.
       return LEAK_SPANS.map((leak) => ({
         start: leak.start,
         end: leak.end,
         className: caught.has(leak.id) ? 'is-hit' : 'is-missed',
-        key: leak.id,
+        key: `${leak.id}-${leak.start}`,
       }))
     }
     // Before submitting, every flagged range is just "you picked this" - showing
@@ -217,28 +227,52 @@ export default function DataShadowGame({
     setSelections((current) => current.filter((item) => item.id !== id))
   }
 
-  return (
-    <div className="stage stage--game stage--data_shadow shadow">
-      <header className="shadow__bar">
-        <span className="stage__kind">Data Shadow</span>
-        <span className="shadow__task">
-          Drag to select the words that should never have been posted
-        </span>
-        {!done ? (
-          <span className={`shadow__timer ${secondsLeft <= 10 ? 'is-urgent' : ''}`}>
-            {secondsLeft}s
-          </span>
-        ) : (
-          result && (
-            <span className={`shadow__score ${result.score < 0 ? 'is-bad' : 'is-good'}`}>
-              {result.score > 0 ? '+' : ''}
-              {result.score}
-            </span>
-          )
-        )}
-      </header>
+  /** Add or drop a picture from the report. The click target is small and
+      separate from the picture itself, so looking at a photo never flags it. */
+  const toggleImage = (id: string) => {
+    if (locked) return
+    setImageFlags((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    )
+  }
 
+  const flaggedCount = selections.length + imageFlags.length
+
+  return (
+    <div className="hud hud--game shadow">
+      <div className="hud__matrix" aria-hidden="true" />
+      <div className="hud__frame">
+        <div className="hud__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
+
+          <div className="hud__tab">Data Shadow</div>
+
+          <div className="hud__bar">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="hud__event">Find what leaked</span>
+            {!done ? (
+              <span className={`shadow__timer ${secondsLeft <= 10 ? 'is-urgent' : ''}`}>
+                {secondsLeft}s
+              </span>
+            ) : (
+              result && (
+                <span className={`shadow__score ${result.score < 0 ? 'is-bad' : 'is-good'}`}>
+                  {result.score > 0 ? '+' : ''}
+                  {result.score}
+                </span>
+              )
+            )}
+            <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+          </div>
+
+          <div className="hud__stage shadow__stage">
       <div className="shadow__main">
+        <p className="shadow__task">
+          Drag to select the words that should never have been posted.
+        </p>
         {/* The light card is deliberate: it reads instantly as a social network,
             which is the context the player is being asked to judge in. */}
         <article className="post">
@@ -269,6 +303,61 @@ export default function DataShadowGame({
             ))}
           </div>
 
+          {/* Screenshots leak more than sentences do, so they are judged the
+              same way: tap to look at one, and use the corner button to put it
+              in the report. The two actions are deliberately separate. */}
+          <div className="post__gallery">
+            {IMAGES.map((image) => {
+              const flagged = imageFlags.includes(image.id)
+              const verdict = result
+                ? image.weight > 0
+                  ? flagged
+                    ? 'is-counted'
+                    : 'is-missed'
+                  : flagged
+                    ? 'is-rejected'
+                    : ''
+                : flagged
+                  ? 'is-flagged'
+                  : ''
+              return (
+                <figure className={`post__shot ${verdict}`} key={image.id}>
+                  <button
+                    type="button"
+                    className="post__shotview"
+                    onClick={() => setZoomed((current) => (current === image.id ? null : image.id))}
+                    aria-label={`${image.alt} — open full size`}
+                  >
+                    <img className="post__shotimg" src={image.src} alt="" loading="lazy" />
+                  </button>
+                  <button
+                    type="button"
+                    className="post__shotflag"
+                    disabled={locked}
+                    aria-pressed={flagged}
+                    aria-label={flagged ? 'Remove picture from report' : 'Add picture to report'}
+                    onClick={() => toggleImage(image.id)}
+                  >
+                    {flagged ? (
+                      '✓'
+                    ) : (
+                      <svg
+                        className="post__shoticon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path d="M12 5.4v8.8" />
+                        <circle cx="12" cy="18.5" r="1.4" />
+                      </svg>
+                    )}
+                  </button>
+                  <figcaption className="post__shotcap">{image.label}</figcaption>
+                </figure>
+              )
+            })}
+          </div>
+
           <footer className="post__foot">
             <span className="post__reactions">
               <span>👍</span>
@@ -282,7 +371,7 @@ export default function DataShadowGame({
 
         {done && result && (
           <section className="shadow__reveal">
-            {result.missed.length > 0 ? (
+            {result.missed.length + result.missedImages.length > 0 ? (
               <>
                 <p className="shadow__revealtitle">What you let through</p>
                 <ul className="shadow__missed">
@@ -290,6 +379,18 @@ export default function DataShadowGame({
                     <li key={leak.id}>
                       <span className="shadow__missedtext">“{leak.text}”</span>
                       <span className="shadow__why">{leak.why}</span>
+                    </li>
+                  ))}
+                  {result.missedImages.map((image) => (
+                    <li key={image.id}>
+                      <span className="shadow__missedtext">[{image.label}]</span>
+                      <span className="shadow__why">{image.why}</span>
+                    </li>
+                  ))}
+                  {result.rejectedImages.map((image) => (
+                    <li key={image.id}>
+                      <span className="shadow__missedtext is-safe">[{image.label}] — safe</span>
+                      <span className="shadow__why">{image.why}</span>
                     </li>
                   ))}
                 </ul>
@@ -307,14 +408,19 @@ export default function DataShadowGame({
       <aside className="report">
         <header className="report__head">
           <h2 className="report__title">Your report</h2>
-          <span className="report__count">{selections.length}</span>
+          {/* Out of the total to find, so the rail says how much work is left
+              rather than just how much has been typed in so far. */}
+          <span className="report__count">
+            {flaggedCount}
+            <span className="report__total">/{targetCount(LEAKS, IMAGES)}</span>
+          </span>
         </header>
 
         <div className="report__list">
-          {selections.length === 0 && (
+          {flaggedCount === 0 && (
             <p className="report__empty">
-              Nothing flagged yet. Select a risky phrase in the post, then tap the button that
-              appears beside it.
+              Nothing flagged yet. Select a risky phrase, or use ＋ on a picture, then tap the
+              button that appears beside the text.
             </p>
           )}
           {selections.map((item) => {
@@ -325,6 +431,7 @@ export default function DataShadowGame({
               : ''
             return (
               <div className={`report__item ${verdict}`} key={item.id}>
+                <ReportKindIcon kind="text" />
                 <span className="report__text">“{item.text}”</span>
                 {!locked ? (
                   <button
@@ -343,6 +450,33 @@ export default function DataShadowGame({
               </div>
             )
           })}
+          {IMAGES.filter((image) => imageFlags.includes(image.id)).map((image) => {
+            const verdict = result
+              ? image.weight > 0
+                ? 'is-counted'
+                : 'is-rejected'
+              : ''
+            return (
+              <div className={`report__item report__item--shot ${verdict}`} key={image.id}>
+                <ReportKindIcon kind="image" />
+                <span className="report__text">{image.label}</span>
+                {!locked ? (
+                  <button
+                    type="button"
+                    className="report__remove"
+                    onClick={() => toggleImage(image.id)}
+                    aria-label={`Remove ${image.label}`}
+                  >
+                    ×
+                  </button>
+                ) : done ? (
+                  <span className="report__mark" aria-hidden="true">
+                    {image.weight > 0 ? '✓' : '✗'}
+                  </span>
+                ) : null}
+              </div>
+            )
+          })}
         </div>
 
         <footer className="report__foot">
@@ -353,14 +487,16 @@ export default function DataShadowGame({
                 {result.score}
               </p>
               <ul className="report__tally">
-                <li>{`${result.caught.length} caught`}</li>
+                <li>{`${result.caught.length + result.caughtImages.length} caught`}</li>
                 <li>
-                  {`${result.rejected.size} false ${
-                    result.rejected.size === 1 ? 'alarm' : 'alarms'
+                  {`${result.rejected.size + result.rejectedImages.length} false ${
+                    result.rejected.size + result.rejectedImages.length === 1
+                      ? 'alarm'
+                      : 'alarms'
                   }`}
                 </li>
-                <li>{`${result.missed.length} missed`}</li>
-                <li className="report__best">best possible {LEAK_SPANS.length * 10}</li>
+                <li>{`${result.missed.length + result.missedImages.length} missed`}</li>
+                <li className="report__best">best possible {maxScore(LEAKS, IMAGES)}</li>
               </ul>
             </>
           ) : waiting ? (
@@ -370,19 +506,43 @@ export default function DataShadowGame({
               <button
                 type="button"
                 className="report__submit"
-                disabled={selections.length === 0}
+                disabled={flaggedCount === 0}
                 onClick={() => setSubmitted(true)}
               >
                 Submit report
               </button>
-              <p className="report__hint">
-                +10 per leak you catch. −10 for a flag that is mostly ordinary text, so select the
-                risky words precisely.
-              </p>
             </>
           )}
         </footer>
       </aside>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Full size, and one tap anywhere closes it: the same gesture that
+          opened it. */}
+      {/* Portalled to the body: the chassis clips its own overflow, so a fixed
+          overlay inside it would be cut off at the frame edge. */}
+      {zoomed &&
+        createPortal(
+          <div
+            className="shotzoom"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setZoomed(null)}
+          >
+            <figure className="shotzoom__frame">
+              <img
+                className="shotzoom__img"
+                src={IMAGES.find((image) => image.id === zoomed)?.src}
+                alt={IMAGES.find((image) => image.id === zoomed)?.alt}
+              />
+              <figcaption className="shotzoom__hint">tap anywhere to close</figcaption>
+            </figure>
+          </div>,
+          document.body,
+        )}
 
       {!locked && bubble && (
         <button

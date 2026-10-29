@@ -1,4 +1,4 @@
-import type { LeakSpec } from './scoring'
+import type { ImageSpec, LeakSpec } from './scoring'
 
 /**
  * The Data Shadow post.
@@ -35,64 +35,114 @@ export const POST_META: PostMeta = {
 
 /** Paragraphs, in order. Joined with no separator to form the selectable text. */
 export const BLOCKS: string[] = [
-  '🚀 Exciting progress from our Customer Experience team!',
-  "Over the past few months, we've been piloting a new AI-powered customer service capability designed to help our teams respond to customers faster and more effectively.",
-  'The pilot is currently running across 19 markets, supporting approximately 2.4 million customer interactions each month.',
-  'Early internal results show a 37% reduction in average handling time, with customer satisfaction also increasing by 12% during the pilot.',
-  "We're now preparing for the next phase of the programme, which will launch across Asia in November, bringing the technology to thousands more colleagues.",
-  'The team is aiming for full regional deployment by Q2 next year.',
-  'A huge thank you to Sarah Chen and everyone in Project Nova who has worked incredibly hard behind the scenes to make this happen.',
-  'The project has also been testing the technology using real customer conversation data to make the experience more relevant and effective.',
-  "It's exciting to see how AI can help us deliver better experiences for our customers — and there's much more to come!",
-  '#AI #CustomerExperience #Innovation #Teamwork',
+  '🚀 Eight months in, our AI service pilot is heading into full production!',
+  'As our financial report shows, we serve around 41 million customers worldwide.',
+  'We are now scaling the pilot across 19 markets, and our internal forecasting puts it at 2.4 million conversations a month.',
+  'We cut handling time by 35.65% and satisfaction held steady. The design work was shaped by a top-3 HK retail bank that let us test against their live queue.',
+  'Clearance came faster than expected: the regulator verbally approved it last week, and formal notice will be announced soon!',
+  'That followed months of testing on real customer conversations, using the Azure OpenAI stack we already run. The approach also follows the AI principles we published last year.',
+  'None of it happens without people. Amy Lau and the team worked nights on this — thank you.',
 ]
 
 export const POST_TEXT = BLOCKS.join('')
 
+/**
+ * Six leaks and four decoys.
+ *
+ * Two rules the list is built on:
+ *   1. A name or a codename on its own is not a leak - people thank colleagues
+ *      on LinkedIn all day. What leaks is a name *plus* a role, a permission or
+ *      a way around a control.
+ *   2. Every strong signal is paired with a decoy that looks the same. The four
+ *      decoys below (public customer count, published principles, a public
+ *      vendor, a colleague's name) are what stop "select every number" from
+ *      being a winning strategy.
+ *
+ * `weight` is the severity of the leak: 20 for the two that carry legal or
+ * regulatory exposure, 10 for commercial and personal ones. A decoy is worth
+ * nothing to catch and -10 to flag, so the two sides are not symmetric on
+ * purpose.
+ *
+ * `alt` holds second anchors for the same mistake. Either anchor counts, and
+ * catching both does not double the score - they are one error seen from two
+ * sides, and paying twice would reward splitting one correct sentence into two
+ * selections.
+ */
 export const LEAKS: LeakSpec[] = [
   {
-    id: 'markets',
-    text: '19 markets',
-    why: 'Exact operational footprint. How many markets you cover, and where, is competitive intelligence — a rival reads this and knows your rollout shape without doing any work.',
+    id: 'customer-data',
+    text: 'real customer conversations',
+    weight: 15,
+    why: 'Training on real customer conversations is a regulatory matter, not an achievement. Said publicly, with no mention of consent or legal basis, it invites the privacy regulator to ask how those conversations were obtained.',
   },
   {
-    id: 'volume',
-    text: '2.4 million customer interactions',
-    why: 'Internal volume. Interaction volume is commercially sensitive: it exposes scale, capacity and cost base, and it has never been published.',
+    id: 'regulator',
+    text: 'the regulator verbally approved it',
+    alt: ['formal notice will be announced soon'],
+    weight: 15,
+    why: 'Verbal approval has no legal force, and the formal notice is not out yet. Saying "approved" before the regulator says it is selective disclosure - the timing of the gap is the violation, not the information.',
+  },
+  {
+    id: 'forecast',
+    text: 'our internal forecasting',
+    alt: ['2.4 million conversations'],
+    weight: 10,
+    why: 'The volume is sensitive, but the method is worse: this tells the market the bank runs its own demand model. That is a capability disclosure, and it is the line a competitor reads twice.',
   },
   {
     id: 'aht',
-    text: '37% reduction in average handling time',
-    why: '"Early internal results" is the tell — the words say the number is not public. An unpublished efficiency metric is exactly what a competitor or an investor would pay for.',
+    text: '35.65%',
+    weight: 10,
+    why: 'Two decimal places is not a marketing number - it is a figure lifted straight from an internal dashboard. The precision is the tell that this was never meant to be published.',
   },
   {
-    id: 'csat',
-    text: 'increasing by 12%',
-    why: 'A second unreleased internal metric. Performance claims that have not been audited or published should never leave the building as a brag.',
+    id: 'markets',
+    text: '19 markets',
+    weight: 10,
+    why: 'How many markets the group operates in is in the annual report. How far this particular pilot has spread is not: it hands a competitor the rollout shape without them doing any work.',
   },
   {
-    id: 'asia',
-    text: 'launch across Asia in November',
-    why: 'Unannounced roadmap with a date and a region. Unreleased expansion plans are market-moving information; posting them is effectively a public disclosure.',
+    id: 'client',
+    text: 'a top-3 HK retail bank',
+    weight: 10,
+    why: 'A sector, a rank and a city narrow a client down to a handful of names. Naming a client alongside how you tested on them needs their consent, and this post does not suggest anyone asked.',
+  },
+]
+
+/**
+ * Three pictures under the post.
+ *
+ * Screenshots are the most common leak on a professional feed, and the most
+ * persuasive: text gets skimmed, a picture gets believed. Two of these give away
+ * something real; the third is a photo that was already public, which is exactly
+ * why it is here.
+ *
+ * `weight` is signed - a leak pays, a decoy costs - so the whole value table
+ * lives in this file.
+ */
+export const IMAGES: ImageSpec[] = [
+  {
+    id: 'img-team',
+    label: 'Team Photo',
+    src: '/data_shadow/not_risk_group_photo.JPG',
+    alt: 'Photo attached to the post: Team Photo.',
+    weight: -10,
+    why: 'Safe. It is a team photo with no screen, no badge and no document in frame - nothing here was not already visible to anyone who walked past the room.',
   },
   {
-    id: 'q2',
-    text: 'full regional deployment by Q2 next year',
-    why: 'Forward-looking schedule for an unannounced programme. Even framed as an "aim", it commits the company publicly to a timeline nobody approved.',
+    id: 'img-badge',
+    label: 'Meeting Memory',
+    src: '/data_shadow/risk_id_card.JPG',
+    alt: 'Photo attached to the post: Meeting Memory.',
+    weight: 15,
+    why: 'The badges are the leak, not the people. A readable pass shows the naming convention, the access level and often a QR code - which is the first thing anyone needs to walk in behind you.',
   },
   {
-    id: 'sarah',
-    text: 'Sarah Chen',
-    why: 'Names a colleague and ties them publicly to an unreleased programme. It exposes an individual to recruiters, journalists and competitors without their consent.',
-  },
-  {
-    id: 'nova',
-    text: 'Project Nova',
-    why: 'An internal codename. Meaningless to the audience and useful to anyone watching — it hands them the keyword to search, social-engineer or phish with.',
-  },
-  {
-    id: 'data',
-    text: 'real customer conversation data',
-    why: 'The most serious one. It discloses that real customer conversations were used for training, publicly, with no mention of consent or legal basis. That is a privacy and regulatory exposure, not a brag.',
+    id: 'img-dashboard',
+    label: 'Sprint Review',
+    src: '/data_shadow/risk_dashboard_leak.JPG',
+    alt: 'Photo attached to the post: Sprint Review.',
+    weight: 15,
+    why: 'Nobody redacts a screen before taking the photo. Volume, handling time and unit cost in one frame is the operating picture of the business, and it stays legible at full size forever.',
   },
 ]

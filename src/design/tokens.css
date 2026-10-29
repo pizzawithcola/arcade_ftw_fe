@@ -27,10 +27,14 @@
   --c-text-muted: #a0a0a8;   /* labels, captions, secondary copy */
   --c-text-dim: #616168;     /* hints, disabled, timestamps */
 
-  /* The one light object in the app: the fake social post in Data Shadow.
-     It is deliberately paper-white, so it keeps its own ink. */
-  --c-paper: #ffffff;
-  --c-paper-ink: #151519;
+  /* The fake social post in Data Shadow. Dark, like the rest of the app: a
+     white card on black was the brightest thing on stage and pulled every eye
+     away from the question. It keeps its own ink and its own line colour so the
+     post still reads as a feed item, not as part of the chassis. */
+  --c-paper: #14161c;
+  --c-paper-ink: #f4f4f6;
+  --c-paper-line: #262a33;
+  --c-paper-dim: #9ba1ad;
 
   /* The stage grid, 40px cells. */
   --c-grid-line: rgba(43, 43, 49, 0.9);

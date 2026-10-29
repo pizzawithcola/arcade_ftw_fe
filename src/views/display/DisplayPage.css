@@ -166,10 +166,12 @@
    the iPads look like one system. Type stays large: this is read from five
    metres, not from a chair. */
 
+/* `safe` matters: plain `center` on an overflowing child clips the top and the
+   scrollbar cannot reach it, which is how the post lost its header. */
 .display__stage {
   display: grid;
   justify-items: center;
-  align-content: center;
+  align-content: safe center;
   gap: clamp(0.6rem, 1.8vh, 1.2rem);
   text-align: center;
   overflow-y: auto;
@@ -215,14 +217,18 @@
   color: var(--c-text-muted);
 }
 
-/* The post, sized for reading at distance while players work on their iPads. */
+/* The post, sized for reading at distance while players work on their iPads.
+   Dark, like the player's card, so the wall does not flash a white block at the
+   room - and bounded in height, because the cards are already the brightest
+   thing on that wall. */
 .display__post {
-  width: min(56rem, 100%);
-  margin-top: 0.5rem;
-  padding: clamp(1rem, 2.5vw, 2rem);
+  width: min(64rem, 100%);
+  margin-top: 0.4rem;
+  padding: clamp(0.9rem, 2vw, 1.6rem);
+  border: 1px solid var(--c-paper-line);
   border-radius: 14px;
-  background: var(--c-text);
-  color: var(--c-surface-raised);
+  background: var(--c-paper);
+  color: var(--c-paper-ink);
   text-align: left;
 }
 
@@ -230,40 +236,50 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
 }
 
 .display__avatar {
   display: grid;
   place-items: center;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: clamp(2.2rem, 3vw, 3rem);
+  height: clamp(2.2rem, 3vw, 3rem);
   border-radius: 50%;
   background: linear-gradient(135deg, #0a66c2, #004182);
-  color: var(--c-text);
+  color: #fff;
+  font-size: clamp(0.8rem, 1.3vw, 1rem);
   font-weight: 700;
 }
 
 .display__posthead strong {
   display: block;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
 }
 
 .display__posthead em {
   display: block;
-  font-size: 0.85rem;
+  font-size: clamp(0.75rem, 1.2vw, 0.95rem);
   font-style: normal;
-  color: var(--c-text-dim);
+  color: var(--c-paper-dim);
 }
 
 .display__post p {
-  margin: 0 0 0.7rem;
-  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+  margin: 0 0 0.6rem;
+  font-size: clamp(0.85rem, 1.25vw, 1.1rem);
   line-height: 1.6;
 }
 
 .display__post p:last-child {
   margin-bottom: 0;
+}
+
+/* A post starts under the bar and runs down, like a feed. Centring it left a
+   band of empty panel above the first line, which read as a loading state. */
+/* Three classes: `.hud--display .hud__stage` sets `align-content: center` too,
+   and which one lands later depends on import order. */
+.hud--display .display__stage[data-screen='data_shadow'] {
+  align-content: start;
+  padding-top: clamp(0.4rem, 1.2vh, 0.8rem);
 }
 
 /* The question, sized to be read from the back of the room. */
@@ -405,4 +421,29 @@
 .hud--stage .chat__avatar-body {
   width: 1.6rem;
   height: 0.8rem;
+}
+
+/* The post's pictures on the wall: same three frames, no controls. */
+.display__postshots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--c-paper-line);
+}
+
+.display__postshot {
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--c-paper-line);
+  border-radius: 6px;
+  background: var(--c-black, #000);
+}
+
+.display__postshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
