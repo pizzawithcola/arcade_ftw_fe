@@ -119,7 +119,6 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
                 {secondsLeft}s
               </span>
             )}
-            <span className="quiz__score">{total}</span>
           </div>
 
           <div className="hud__stage quiz__stage">

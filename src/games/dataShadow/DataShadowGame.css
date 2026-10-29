@@ -14,7 +14,7 @@
   /* The report is a fixed rail; the post takes what is left and scrolls. The
      row has to be bounded, or the column grows to its content and the stage
      simply clips the tail of the post instead of scrolling it. */
-  grid-template-columns: minmax(0, 1fr) clamp(18.5rem, 32.3vw, 23.1rem);
+  grid-template-columns: minmax(0, 1fr) clamp(15rem, 30vw, 23rem);
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   gap: 0.85rem;
@@ -22,8 +22,35 @@
   padding-bottom: 0.2rem;
 }
 
+/* Nameplate sits between the chevrons, with the clock on its right: one row
+   instead of two, which is 58px the post gets to keep. */
+.shadow__head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(0.4rem, 1vw, 0.8rem);
+}
+
+.shadow__headright {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.shadow__inner {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+/* Fill the screen rather than the content: without a definite height the two
+   rows below size to the post and the chassis pushes past the bottom edge. */
+.shadow__frame {
+  height: 100%;
+  max-height: 100%;
+}
+
 .shadow__timer {
-  margin-left: auto;
   padding: 0.1rem 0.55rem;
   border: 1px solid var(--c-border);
   border-radius: 999px;
@@ -39,7 +66,6 @@
 }
 
 .shadow__score {
-  margin-left: auto;
   font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   font-size: 1.05rem;
@@ -66,16 +92,16 @@
 /* Its own line above the post card, not part of the chassis bar. */
 .shadow__task {
   margin: 0 0 0 0.35rem;
-  font-size: 0.95rem;
+  font-size: clamp(0.8rem, 0.3vw + 0.5vh, 0.95rem);
   line-height: 1.35;
   letter-spacing: 0.04em;
   color: var(--c-text-muted);
 }
 
 .post {
-  /* Fills the column so the card's height matches the report rail beside it;
-     the body takes the slack and the reaction bar stays on the floor. */
-  flex: 1 1 auto;
+  /* Natural height, never squeezed: the column scrolls, so a shorter screen
+     loses nothing. Squeezing the card is what used to cut the pictures off. */
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -144,7 +170,9 @@
 
 .post__para {
   margin: 0 0 0.7rem;
-  font-size: 0.95rem;
+  /* Follows the screen instead of a fixed pixel size: an iPad in landscape has
+     far less height than a desktop, and the post has to fit in it. */
+  font-size: clamp(0.84rem, 0.5vw + 0.6vh, 1rem);
   line-height: 1.7;
   color: var(--c-paper-ink);
 }
@@ -548,8 +576,7 @@
    pictures used to leave empty on the right. */
 .post__gallery {
   display: grid;
-  /* 20.8 + the body's own 11.2 = 32px of air above the row. */
-  padding: 1.3rem 1rem 0.7rem;
+  padding: clamp(1rem, 2.6vh, 1.6rem) 1rem 0.7rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   /* Proportional, not a fixed px gap: the pictures keep the same size-to-gap
      ratio whether the card is an iPad wide or a desktop wide. */
@@ -710,4 +737,39 @@
 
 .shadow__missedtext.is-safe {
   color: var(--c-text-dim);
+}
+
+/* ─── short screens ───────────────────────────────────────────────────────────
+   An iPad in landscape is 820px tall, which is not enough for a full post plus
+   the pictures. Tighter leading and margins, and the reaction bar - decoration,
+   not content - steps aside so the whole question fits without scrolling. */
+
+@media (max-height: 52rem) {
+  .post__para {
+    line-height: 1.5;
+    margin-bottom: 0.45rem;
+    /* One step smaller than the fluid minimum, which was tuned on a desktop. */
+    font-size: clamp(0.8rem, 0.5vw + 0.55vh, 0.92rem);
+  }
+
+  .post__head {
+    padding-top: 0.6rem;
+  }
+
+  .post__gallery {
+    /* Wider gaps here buy height, not air: each frame is a third of a narrower
+       column, so the row gets shorter. The captions step aside for the same
+       reason - the pictures are the question, the labels are decoration. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9%;
+    padding: 0.9rem 1rem 0.2rem;
+  }
+
+  .post__shotcap {
+    display: none;
+  }
+
+  .post__foot {
+    display: none;
+  }
 }

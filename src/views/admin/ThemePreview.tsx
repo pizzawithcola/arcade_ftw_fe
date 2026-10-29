@@ -365,7 +365,6 @@ export default function ThemePreview() {
                     <span className="hud__event">Ask the model</span>
                     <span className="hallu__count">1 / 2</span>
                     <span className="hallu__timer">28s</span>
-                    <span className="hallu__score">+20</span>
                   </div>
                   <div className="hud__stage hallu__stage">
                     <div className="chat">
@@ -447,18 +446,19 @@ export default function ThemePreview() {
             </p>
             <div className="hud hud--game shadow">
               <div className="hud__matrix" aria-hidden="true" />
-              <div className="hud__frame">
-                <div className="hud__inner">
+              <div className="hud__frame shadow__frame">
+                <div className="hud__inner shadow__inner">
                   <span className="hud__corner hud__corner--tl" aria-hidden="true" />
                   <span className="hud__corner hud__corner--tr" aria-hidden="true" />
                   <span className="hud__corner hud__corner--bl" aria-hidden="true" />
                   <span className="hud__corner hud__corner--br" aria-hidden="true" />
-                  <div className="hud__tab">Data Shadow</div>
-                  <div className="hud__bar">
+                  <div className="shadow__head">
                     <span className="hud__chevrons" aria-hidden="true" />
-                    <span className="hud__event">Find what leaked</span>
-                    <span className="shadow__timer">32s</span>
-                    <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+                    <div className="hud__tab">Data Shadow</div>
+                    <div className="shadow__headright">
+                      <span className="shadow__timer">32s</span>
+                      <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+                    </div>
                   </div>
                   <div className="hud__stage shadow__stage">
                     <div className="shadow__main">
@@ -588,7 +588,6 @@ export default function ThemePreview() {
                     <span className="hud__event">Pick one</span>
                     <span className="quiz__count">1 / 2</span>
                     <span className="quiz__timer">18s</span>
-                    <span className="quiz__score">40</span>
                   </div>
                   <div className="hud__stage quiz__stage">
                     <p className="quiz__question">

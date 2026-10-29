@@ -148,10 +148,6 @@ export default function HallucinationGame({
                 {secondsLeft}s
               </span>
             )}
-            <span className={`hallu__score ${total < 0 ? 'is-bad' : total > 0 ? 'is-good' : ''}`}>
-              {total > 0 ? '+' : ''}
-              {total}
-            </span>
           </div>
 
           <div className="hud__stage hallu__stage">

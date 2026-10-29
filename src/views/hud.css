@@ -849,6 +849,9 @@
 .hud--game .hud__frame {
   width: min(96%, 1500px);
   max-height: 100%;
+  /* Without this a frame whose content is taller than the screen keeps its
+     min-content height, overflows both ways and is simply clipped. */
+  min-height: 0;
   animation: hud-boot-fade-up 320ms ease-out both;
 }
 

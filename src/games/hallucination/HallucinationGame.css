@@ -35,15 +35,6 @@
   color: var(--c-text);
 }
 
-.hallu__score {
-  min-width: 3.2rem;
-  text-align: right;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--c-text);
-}
-
 /* ─── the conversation ────────────────────────────────────────────────────────
    A normal chat transcript, stacked top to bottom: your message on the right
    with the avatar, the model's answer on the left without one. The asymmetry is

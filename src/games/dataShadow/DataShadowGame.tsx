@@ -241,31 +241,34 @@ export default function DataShadowGame({
   return (
     <div className="hud hud--game shadow">
       <div className="hud__matrix" aria-hidden="true" />
-      <div className="hud__frame">
-        <div className="hud__inner">
+      <div className="hud__frame shadow__frame">
+        <div className="hud__inner shadow__inner">
           <span className="hud__corner hud__corner--tl" aria-hidden="true" />
           <span className="hud__corner hud__corner--tr" aria-hidden="true" />
           <span className="hud__corner hud__corner--bl" aria-hidden="true" />
           <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-          <div className="hud__tab">Data Shadow</div>
-
-          <div className="hud__bar">
+          {/* One row instead of a nameplate plus an event bar: on an iPad the
+              post needs every pixel of height, and "find what leaked" was
+              saying the same thing as the task line below it. */}
+          <div className="shadow__head">
             <span className="hud__chevrons" aria-hidden="true" />
-            <span className="hud__event">Find what leaked</span>
-            {!done ? (
-              <span className={`shadow__timer ${secondsLeft <= 10 ? 'is-urgent' : ''}`}>
-                {secondsLeft}s
-              </span>
-            ) : (
-              result && (
-                <span className={`shadow__score ${result.score < 0 ? 'is-bad' : 'is-good'}`}>
-                  {result.score > 0 ? '+' : ''}
-                  {result.score}
+            <div className="hud__tab">Data Shadow</div>
+            <div className="shadow__headright">
+              {!done ? (
+                <span className={`shadow__timer ${secondsLeft <= 10 ? 'is-urgent' : ''}`}>
+                  {secondsLeft}s
                 </span>
-              )
-            )}
-            <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+              ) : (
+                result && (
+                  <span className={`shadow__score ${result.score < 0 ? 'is-bad' : 'is-good'}`}>
+                    {result.score > 0 ? '+' : ''}
+                    {result.score}
+                  </span>
+                )
+              )}
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
           </div>
 
           <div className="hud__stage shadow__stage">

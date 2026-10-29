@@ -32,15 +32,6 @@
   background: color-mix(in srgb, var(--c-brand-deep) 16%, transparent);
 }
 
-.quiz__score {
-  min-width: 2.6rem;
-  text-align: right;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--c-text);
-}
-
 .quiz__question {
   margin: 0;
   padding-left: 0.6rem;
