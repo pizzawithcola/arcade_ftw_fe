@@ -171,7 +171,7 @@
 
 .sab__stage {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: var(--sab-gap);
   min-height: 0;
 }
@@ -216,6 +216,12 @@
   background: color-mix(in srgb, var(--c-brand-deep) 20%, transparent);
 }
 
+.sab__spectator {
+  margin: 0;
+  font-size: clamp(0.66rem, 1.4vw, 0.8rem);
+  color: var(--c-warning);
+}
+
 .sab__prompt {
   margin: 0;
   font-size: clamp(0.78rem, 1.7vw, 0.92rem);
@@ -228,8 +234,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   /* Six cards, so three rows. Capped rather than stretched: a card the height
      of a hand's span leaves a hole between its blurb and its numbers. */
-  grid-template-rows: repeat(3, minmax(0, 7.5rem));
-  align-content: center;
+  grid-template-rows: repeat(3, minmax(0, 7.4rem));
+  /* Spread rather than centre: the hand fills the space under the build panel
+     instead of leaving one band of nothing between the two. */
+  align-content: space-between;
   gap: clamp(0.35rem, 0.9vh, 0.55rem);
   min-height: 0;
   overflow-y: auto;
@@ -238,8 +246,11 @@
 
 .sab__card {
   display: grid;
-  grid-template-rows: auto auto 1fr;
-  gap: 0.25rem;
+  /* Content rows only: a flexible spacer left a hole between the blurb and the
+     pips, because the card was taller than anything it had to say. */
+  grid-template-rows: repeat(3, auto);
+  align-content: start;
+  gap: 0.3rem;
   min-height: 0;
   padding: clamp(0.35rem, 1vh, 0.55rem) clamp(0.45rem, 1.2vw, 0.7rem);
   border: 1px solid var(--c-border);
@@ -300,71 +311,95 @@
   color: var(--c-text-dim);
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 
 .sab__vec {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
+  display: grid;
+  gap: 0.1rem;
   align-self: end;
 }
 
-.sab__vecitem {
-  display: inline-flex;
+.sab__vecrow {
+  display: grid;
+  grid-template-columns: 3.1rem auto 0.9rem;
   align-items: center;
-  gap: 0.12rem;
-  padding: 0.05rem 0.3rem;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--c-text) 7%, transparent);
-  font-size: clamp(0.66rem, 1.5vw, 0.8rem);
-  font-variant-numeric: tabular-nums;
-  color: var(--c-text);
-}
-
-.sab__vecitem b {
-  font-weight: 700;
-  color: var(--c-text-muted);
-}
-
-.sab__vecitem.is-zero {
+  gap: 0.35rem;
+  font-size: clamp(0.58rem, 1.25vw, 0.7rem);
+  letter-spacing: 0.06em;
+  line-height: 1.15;
   color: var(--c-text-dim);
 }
 
-/* The target column is the only one that decides the round, so it is the only
-   one that carries the brand. */
-.sab__vecitem.is-target {
-  background: var(--c-brand-deep);
-  color: var(--c-text);
+.sab__vecrow b {
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-.sab__vecitem.is-target b {
-  color: var(--c-text);
-}
-
-.sab__vecitem.is-target.is-zero {
-  background: color-mix(in srgb, var(--c-brand-deep) 35%, transparent);
+.sab__vecrow em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
   color: var(--c-text-muted);
+}
+
+.sab__pips {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* Three pips is the full scale: an empty pip is the count you did not get. */
+.sab__pips i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--c-text) 20%, transparent);
+}
+
+.sab__pips i.is-on {
+  background: color-mix(in srgb, var(--c-text) 62%, transparent);
+}
+
+/* The target row is the only one that decides the round, so it is the only
+   one that carries the brand. */
+.sab__vecrow.is-target {
+  color: var(--c-text);
+}
+
+.sab__vecrow.is-target em {
+  color: var(--c-text);
+}
+
+.sab__vecrow.is-target .sab__pips i.is-on {
+  background: var(--c-brand);
 }
 
 /* ─── the build so far ────────────────────────────────────────────────────── */
 
-.sab__foot {
+.sab__build {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-items: center;
-  gap: 0.2rem clamp(0.6rem, 2vw, 1.2rem);
-  padding-top: clamp(0.3rem, 0.9vh, 0.5rem);
-  border-top: 1px solid var(--c-border);
+  gap: 0.25rem;
+  padding: clamp(0.35rem, 1vh, 0.55rem) clamp(0.5rem, 1.4vw, 0.8rem);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-brand-deep);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
 }
 
-.sab__budget {
+.sab__buildhead {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  grid-row: 1 / 3;
+  gap: 0.4rem;
+}
+
+.sab__buildlabel {
+  margin-right: 0.2rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.58rem, 1.3vw, 0.72rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
 }
 
 .sab__budgetnum {
@@ -443,13 +478,24 @@
 }
 
 .sab__tally {
-  grid-column: 2;
-  margin: 0;
+  margin-left: auto;
   font-size: clamp(0.6rem, 1.3vw, 0.72rem);
   color: var(--c-text-dim);
+  white-space: nowrap;
 }
 
 .sab__refused {
+  margin: 0;
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
+  color: var(--c-warning);
+}
+
+.sab__nobid {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.7rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--c-warning);
 }
 

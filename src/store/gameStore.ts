@@ -67,7 +67,9 @@ export interface SabotageRoundResult {
   defence: string[]
   attack_vector: number[]
   defence_vector: number[]
-  winner: SabotageTeam
+  /** null when neither side bought anything: the round scores nothing. */
+  winner: SabotageTeam | null
+  void: boolean
   points: Record<SabotageTeam, number>
   broke_target: boolean
   flanks: number
@@ -118,6 +120,8 @@ export interface SabotageState {
   vectors: Partial<Record<SabotageTeam, number[]>>
   votes: Partial<Record<SabotageTeam, Record<string, number>>>
   dropped: Partial<Record<SabotageTeam, { card: string; reason: string }[]>>
+  /** A side that put nothing in: it forfeits the round. */
+  no_bid: Partial<Record<SabotageTeam, boolean>>
   cards: Record<string, SabotageCard>
   domains: SabotageDomain[]
   last_result: SabotageRoundResult | null

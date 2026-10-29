@@ -30,25 +30,39 @@ function teamName(team: SabotageTeam | undefined): string {
 }
 
 function roleName(role: string | undefined): string {
-  return role === 'attacker' ? 'ATTACKER' : role === 'defender' ? 'DEFENDER' : '—'
+  if (role === 'attacker') return 'ATTACKER'
+  if (role === 'defender') return 'DEFENDER'
+  // A device that signed in after the draw is in no team: say so instead of
+  // leaving a dash where the player's job should be.
+  return 'SPECTATOR'
 }
 
-/** Three pips per card, so a card reads as a shape before it reads as numbers.
- *  The round's target is marked: that column is the only one that decides who
- *  wins, and losing track of it is the one mistake that ruins a round. */
-function Vector({ vector, target }: { vector: [number, number, number]; target: SabotageDomain }) {
-  const domains: SabotageDomain[] = ['data', 'people', 'infra']
+const DOMAINS: SabotageDomain[] = ['data', 'people', 'infra']
+
+/** One domain on a card: a label, three pips and the number.
+ *
+ *  Three pips is the whole scale, so the shape of a card reads before the
+ *  numbers do - a card that is all pips in one column is a specialist, one
+ *  spread over three is a compromise. The round's target row is the only one
+ *  that carries the brand, because it is the only one that decides the round. */
+function CardVector({
+  vector,
+  target,
+}: {
+  vector: [number, number, number]
+  target: SabotageDomain
+}) {
   return (
     <span className="sab__vec">
-      {domains.map((domain, index) => (
-        <span
-          key={domain}
-          className={`sab__vecitem ${domain === target ? 'is-target' : ''} ${
-            vector[index] === 0 ? 'is-zero' : ''
-          }`}
-        >
-          <b>{DOMAIN_LABEL[domain][0]}</b>
-          {vector[index]}
+      {DOMAINS.map((domain, index) => (
+        <span key={domain} className={`sab__vecrow ${domain === target ? 'is-target' : ''}`}>
+          <b>{DOMAIN_LABEL[domain]}</b>
+          <span className="sab__pips" aria-hidden="true">
+            {[0, 1, 2].map((pip) => (
+              <i key={pip} className={pip < vector[index] ? 'is-on' : ''} />
+            ))}
+          </span>
+          <em>{vector[index]}</em>
         </span>
       ))}
     </span>
@@ -220,8 +234,40 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                 </span>
               </div>
               <p className="sab__prompt">
-                {myRole === 'attacker' ? sabotage.attack_brief : sabotage.defence_brief}
+                {myRole === 'attacker'
+                  ? sabotage.attack_brief
+                  : myRole === 'defender'
+                    ? sabotage.defence_brief
+                    : sabotage.attack_brief}
               </p>
+              {!myTeam && (
+                <p className="sab__spectator">
+                  You signed in after the teams were drawn, so you are watching this round.
+                </p>
+              )}
+
+              {/* The build sits above the hand, not below it: the numbers a
+                  player needs while choosing are the ones the hand adds up to,
+                  and at the bottom of the screen they were off the eye line. */}
+              <div className="sab__build">
+                <div className="sab__buildhead">
+                  <span className="sab__buildlabel">Your build</span>
+                  <span className={`sab__budgetnum ${budgetLeft < 0 ? 'is-over' : ''}`}>
+                    {budgetLeft}
+                  </span>
+                  <span className="sab__budgetlabel">points left</span>
+                  <span className="sab__picked">
+                    {mine.length} card{mine.length === 1 ? '' : 's'} of 4
+                  </span>
+                  <span className="sab__tally">
+                    {build
+                      ? `${build.voters}/${build.members} voted`
+                      : 'collecting votes'}
+                  </span>
+                </div>
+                <Bars vector={teamVector} target={sabotage.target} />
+                {refused && <p className="sab__refused">{refused}</p>}
+              </div>
 
               <div className="sab__cards">
                 {deck.map((id) => {
@@ -241,30 +287,12 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                         <span className="sab__cardcost">{card.cost}</span>
                       </span>
                       <span className="sab__cardblurb">{card.blurb}</span>
-                      <Vector vector={card.vector} target={sabotage.target} />
+                      <CardVector vector={card.vector} target={sabotage.target} />
                     </button>
                   )
                 })}
               </div>
 
-              <footer className="sab__foot">
-                <div className="sab__budget">
-                  <span className={`sab__budgetnum ${budgetLeft < 0 ? 'is-over' : ''}`}>
-                    {budgetLeft}
-                  </span>
-                  <span className="sab__budgetlabel">points left</span>
-                  <span className="sab__picked">
-                    {mine.length} card{mine.length === 1 ? '' : 's'}
-                  </span>
-                </div>
-                <Bars vector={teamVector} target={sabotage.target} />
-                <p className="sab__tally">
-                  {build
-                    ? `${build.voters}/${build.members} on your team have voted`
-                    : 'Collecting votes'}
-                  {refused && <span className="sab__refused"> · {refused}</span>}
-                </p>
-              </footer>
             </div>
           )}
 
@@ -319,7 +347,7 @@ function Reveal({
 }) {
   const result = sabotage.last_result
   if (!result) return null
-  const iWon = result.winner === myTeam
+  const iWon = result.winner !== null && result.winner === myTeam
   const attacker = result.attacker
   const defender = result.defender
   const rows: SabotageDomain[] = ['data', 'people', 'infra']
@@ -361,8 +389,20 @@ function Reveal({
         </span>
       </div>
       <p className="sab__verdictsub">
-        {myTeam ? (iWon ? 'Your side won the round' : 'Your side lost the round') : ''}
+        {result.void
+          ? 'Neither side bought a card, so the round scores nothing'
+          : myTeam
+            ? iWon
+              ? 'Your side won the round'
+              : 'Your side lost the round'
+            : ''}
       </p>
+      {sabotage.no_bid?.[result.attacker] && (
+        <p className="sab__nobid">{result.attacker.toUpperCase()} bought no cards</p>
+      )}
+      {sabotage.no_bid?.[result.defender] && (
+        <p className="sab__nobid">{result.defender.toUpperCase()} bought no cards</p>
+      )}
     </div>
   )
 }
@@ -391,7 +431,7 @@ function Final({
       </p>
       <ol className="sab__recap">
         {sabotage.history.map((entry) => (
-          <li key={entry.round} className={entry.winner === myTeam ? 'is-mine' : ''}>
+          <li key={entry.round} className={entry.winner && entry.winner === myTeam ? 'is-mine' : ''}>
             <span className="sab__recapround">R{entry.round}</span>
             <span className="sab__recaptheme">{entry.theme}</span>
             <span className="sab__recapout">{entry.outcome}</span>
