@@ -44,17 +44,8 @@ const BRIEFS: Brief[] = [
       'Every leak you find scores. Flagging innocent text costs you, so read before you drag.',
     ],
   },
-  {
-    key: 'sabotage',
-    title: 'Sabotage',
-    lead: 'Four rounds, one target each. Buy the cards that beat the other team in that one column.',
-    rules: [
-      'Every card scores in Data, People and Infra. The round names one target; only that column decides who wins it.',
-      'You get 100 points and up to 4 cards. A dearer card is not a stronger one.',
-      'Your team votes - the most-voted cards get bought. Talk to each other.',
-      'Four rounds: attack, defend, attack, defend.',
-    ],
-  },
+  // Sabotage has no entry: it draws its teams and then shows its own rules card
+  // inside the node, so the flow has no brief node in front of it.
   {
     key: 'ultimate_quiz',
     title: 'Ultimate Quiz',
