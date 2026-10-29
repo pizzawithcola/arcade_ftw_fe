@@ -1,64 +1,142 @@
-import { useState } from 'react'
-import { sabotageVote } from '../../api'
+import { useCallback, useEffect, useState } from 'react'
+import { sabotageTeam, sabotageVote } from '../../api'
 import { useTicker } from '../../hooks/useTicker'
-import { useGameStore, type SabotageResult, type SabotageState } from '../../store/gameStore'
+import {
+  useGameStore,
+  type SabotageBuild,
+  type SabotageDomain,
+  type SabotageState,
+  type SabotageTeam,
+} from '../../store/gameStore'
 import './SabotageGame.css'
 
-function formatClock(ms: number): string {
+const DOMAIN_LABEL: Record<SabotageDomain, string> = {
+  data: 'Data',
+  people: 'People',
+  infra: 'Infra',
+}
+
+/** How wide a bar is at full strength. Three cards at 3 plus a fourth at 3 is
+ *  the theoretical ceiling, so the scale runs to 12. */
+const BAR_FULL = 12
+
+function clock(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000))
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
-function money(cost: number): string {
-  const k = cost / 1000
-  return Number.isInteger(k) ? `$${k}k` : `$${k.toFixed(1)}k`
+function teamName(team: SabotageTeam | undefined): string {
+  return team === 'red' ? 'RED' : team === 'blue' ? 'BLUE' : '—'
 }
 
-/** A card may sit in either deck (tie-breaks can revote a defence too). */
-function lookupCard(sabotage: SabotageState, id: string) {
-  return sabotage.cards.attack[id] ?? sabotage.cards.defence[id] ?? null
+function roleName(role: string | undefined): string {
+  return role === 'attacker' ? 'ATTACKER' : role === 'defender' ? 'DEFENDER' : '—'
 }
 
-/** The player's own side of the round, spoken from their identity. */
-function resolveVerdict(result: SabotageResult, team?: string): string {
-  const mine =
-    team === result.attacker ? 'attacker' : team === result.defender ? 'defender' : null
-  if (result.outcome === 'partial') return 'Standoff — no points'
-  if (result.outcome === 'blocked') {
-    return mine === 'defender' ? 'Your defence held' : 'Your attack failed'
-  }
-  // failed: the attack landed, so the defender's side is the losing one.
-  return mine === 'attacker' ? 'Your attack succeeded' : 'Your defence was breached'
+/** Three pips per card, so a card reads as a shape before it reads as numbers.
+ *  The round's target is marked: that column is the only one that decides who
+ *  wins, and losing track of it is the one mistake that ruins a round. */
+function Vector({ vector, target }: { vector: [number, number, number]; target: SabotageDomain }) {
+  const domains: SabotageDomain[] = ['data', 'people', 'infra']
+  return (
+    <span className="sab__vec">
+      {domains.map((domain, index) => (
+        <span
+          key={domain}
+          className={`sab__vecitem ${domain === target ? 'is-target' : ''} ${
+            vector[index] === 0 ? 'is-zero' : ''
+          }`}
+        >
+          <b>{DOMAIN_LABEL[domain][0]}</b>
+          {vector[index]}
+        </span>
+      ))}
+    </span>
+  )
 }
 
-const PHASE_LABEL: Record<string, string> = {
-  team_reveal: 'Find your team',
-  attack: 'Choose your attack',
-  defend: 'Choose your defence',
-  tie_break: 'Revote',
-  resolve: 'Round result',
-  team_result: 'Team result',
-  payout: 'Payout',
-  done: 'Complete',
+function Bars({ vector, target }: { vector: number[]; target: SabotageDomain }) {
+  const domains: SabotageDomain[] = ['data', 'people', 'infra']
+  return (
+    <div className="sab__bars">
+      {domains.map((domain, index) => (
+        <div key={domain} className={`sab__bar ${domain === target ? 'is-target' : ''}`}>
+          <span className="sab__barlabel">{DOMAIN_LABEL[domain]}</span>
+          <span className="sab__bartrack">
+            <span
+              className="sab__barfill"
+              style={{ width: `${Math.min(100, ((vector[index] ?? 0) / BAR_FULL) * 100)}%` }}
+            />
+          </span>
+          <span className="sab__barnum">{vector[index] ?? 0}</span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function SabotageGame({ room, team }: { room: string; team?: string }) {
   const sabotage = useGameStore((state) => state.sabotage)
   const now = useTicker()
-  // Remember which vote phase the pick belonged to, so a new phase reads as
-  // unpicked without an effect resetting state.
-  const [picked, setPicked] = useState<{ key: string; card: string } | null>(null)
+
+  // My own hand for this round. The team's build comes from the server, which
+  // is the only place that knows what everyone voted. The round number is kept
+  // beside the cards rather than reset in an effect: a stale hand from the
+  // previous round simply does not match, so it reads as empty.
+  const round = sabotage?.round ?? 0
+  const [hand, setHand] = useState<{ round: number; cards: string[] }>({
+    round: -1,
+    cards: [],
+  })
+  const mine = hand.round === round ? hand.cards : []
+  const setMine = (cards: string[]) => setHand({ round, cards })
+  const [build, setBuild] = useState<SabotageBuild | null>(null)
+  const [refused, setRefused] = useState<string | null>(null)
+
+  const phase = sabotage?.phase
+  const selecting = phase === 'select'
+  // The three phases where the player needs their own side: the draw (which
+  // team am I), the rules, and the picks. Outside those, nothing changes.
+  const needsTeam = phase === 'team_reveal' || phase === 'brief' || selecting
+
+  const refresh = useCallback(async () => {
+    try {
+      setBuild(await sabotageTeam(room))
+    } catch {
+      // Not in the game yet, or the engine is mid-restart: the poll retries.
+    }
+  }, [room])
+
+  // Polled rather than pushed: the broadcast is public, so a live build on it
+  // would hand the other team the answer. This keeps the two sides blind until
+  // the reveal, and doubles as the retry when the first ask lands too early.
+  useEffect(() => {
+    if (!needsTeam) return
+    // Prime out of band: a fetch on the effect's synchronous path lands a
+    // setState in the same commit, which React asks us not to do.
+    const prime = window.setTimeout(() => void refresh(), 200)
+    const id = window.setInterval(() => void refresh(), 2000)
+    return () => {
+      window.clearTimeout(prime)
+      window.clearInterval(id)
+    }
+  }, [needsTeam, refresh, phase])
+
+  const myTeam = (team as SabotageTeam | undefined) ?? build?.team
+  const myRole = build && build.team === myTeam ? build.role : undefined
 
   if (!sabotage) {
     return (
-      <div className="stage stage--sabotage">
-        <p>Syncing…</p>
+      <div className="hud hud--game">
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame sab__frame">
+          <div className="hud__inner sab__inner">
+            <p className="sab__syncing">Setting the board…</p>
+          </div>
+        </div>
       </div>
     )
   }
-
-  const voteKey = `${sabotage.phase}-${sabotage.round}-${sabotage.voting_team}`
-  const pickedCard = picked?.key === voteKey ? picked.card : null
 
   const remaining = sabotage.paused
     ? sabotage.heldMs
@@ -66,130 +144,264 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
       ? Math.max(0, sabotage.endsAt - now)
       : sabotage.remaining_ms
 
-  const myTurn = sabotage.voting_team === team && !sabotage.paused
-  const scenario = sabotage.scenario
-  const isAttack = sabotage.phase === 'attack'
-  const isVote = sabotage.phase === 'attack' || sabotage.phase === 'defend' || sabotage.phase === 'tie_break'
+  const deck = build?.deck ?? (sabotage.decks[myTeam ?? 'red'] ?? [])
+  const mineCost = mine.reduce((sum, id) => sum + (sabotage.cards[id]?.cost ?? 0), 0)
+  const budgetLeft = 100 - mineCost
+  const teamVector = build?.vector ?? [0, 0, 0]
+
+  const toggle = (id: string) => {
+    if (!selecting) return
+    const next = mine.includes(id) ? mine.filter((entry) => entry !== id) : [...mine, id]
+    const before = mine
+    setMine(next)
+    setRefused(null)
+    void sabotageVote(room, next)
+      .then(() => refresh())
+      .catch((error: unknown) => {
+        // Put the hand back: a refused vote must not leave the card looking
+        // bought while the team's build says otherwise.
+        setMine(before)
+        setRefused(error instanceof Error ? error.message : 'That hand was refused')
+      })
+  }
+
+  const fits = (id: string) =>
+    mine.includes(id) || (mine.length < 4 && mineCost + (sabotage.cards[id]?.cost ?? 0) <= 100)
 
   return (
-    <div className={`stage stage--game stage--sabotage is-${sabotage.phase}`}>
-      <header className="sab__bar">
-        <span className="stage__kind">Sabotage</span>
-        <span className="sab__phase">
-          {PHASE_LABEL[sabotage.phase] ?? sabotage.phase}
-          {sabotage.paused && ' · paused'}
-        </span>
-        <span className="sab__timer">{formatClock(remaining)}</span>
-      </header>
+    <div className={`hud hud--game sab is-${sabotage.phase}`}>
+      <div className="hud__matrix" aria-hidden="true" />
+      <div className="hud__frame sab__frame">
+        <div className="hud__inner sab__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-      {sabotage.phase === 'team_reveal' && (
-        <div className="sab__reveal">
-          <p className="sab__teamline">
-            {team ? (
-              <>
-                You are <strong className={`is-${team}`}>{team} team</strong>
-              </>
-            ) : (
-              <>Assigning your team…</>
-            )}
-          </p>
-          <p className="sab__hint">
-            Shared team budget: {money(sabotage.budgets[team as 'red' | 'blue'] ?? 0)}
-          </p>
-        </div>
-      )}
-
-      {isVote && scenario && (
-        <div className="sab__board">
-          <p className="sab__prompt">
-            {isAttack ? scenario.attack_prompt : scenario.defence_prompt}
-          </p>
-          <div className="sab__cards">
-            {sabotage.options.map((id) => {
-              const card = lookupCard(sabotage, id)
-              if (!card) return null
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  className={`sab__card ${pickedCard === id ? 'is-picked' : ''}`}
-                  disabled={!myTurn}
-                  onClick={() => {
-                    setPicked({ key: voteKey, card: id })
-                    void sabotageVote(room, id).catch(() => {
-                      // A refused vote just leaves the previous choice in place.
-                    })
-                  }}
-                >
-                  <span className="sab__cardname">{card.name}</span>
-                  <span className="sab__carddesc">{card.description}</span>
-                  <span className="sab__cardcost">{money(card.cost)}</span>
-                </button>
-              )
-            })}
+          <div className="sab__head">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <div className="hud__tab">Sabotage</div>
+            <div className="sab__headright">
+              <span className="sab__round">
+                R{sabotage.round}/{sabotage.rounds}
+              </span>
+              <span className={`sab__timer ${remaining <= 10_000 ? 'is-urgent' : ''}`}>
+                {clock(remaining)}
+              </span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
           </div>
 
-          {sabotage.spent.length > 0 && (
-            <div className="sab__spent">
-              <p className="sab__spentlabel">Used this round</p>
-              <ul>
-                {sabotage.spent.map((id) => {
-                  const card = sabotage.cards.attack[id]
-                  return (
-                    <li key={id} className="is-spent">
-                      {card?.name ?? id} — spent
-                    </li>
-                  )
-                })}
-              </ul>
+          {sabotage.phase === 'team_reveal' && (
+            <div className="sab__intro">
+              <p className="sab__kicker">You are</p>
+              <p className={`sab__teamname is-${myTeam ?? 'red'}`}>{teamName(myTeam)}</p>
+              <p className="sab__role">
+                {roleName(myRole)} in round {sabotage.round}
+              </p>
+              <p className="sab__sidenote">
+                {build ? `${build.members} on your side` : 'Finding your side'} · sit with
+                your team
+              </p>
             </div>
           )}
 
-          {!myTurn && <p className="sab__hint">Waiting for your team…</p>}
-        </div>
-      )}
+          {sabotage.phase === 'brief' && <Rules sabotage={sabotage} />}
 
-      {sabotage.phase === 'resolve' && sabotage.last_result && (
-        <div className={`sab__result is-${sabotage.last_result.outcome}`}>
-          <p className="sab__verdict">{resolveVerdict(sabotage.last_result, team)}</p>
-          <p className="sab__pairing">
-            {sabotage.cards.attack[sabotage.last_result.attack_card]?.name ?? sabotage.last_result.attack_card}
-            {' vs '}
-            {sabotage.cards.defence[sabotage.last_result.defence_card]?.name ?? sabotage.last_result.defence_card}
-          </p>
-          <div className="sab__scoreline">
-            <span className="is-red">Red {sabotage.scores.red}</span>
-            <span className="is-blue">Blue {sabotage.scores.blue}</span>
-          </div>
-        </div>
-      )}
+          {selecting && (
+            <div className="sab__stage">
+              <div className="sab__targetline">
+                <span className={`sab__targetbadge is-${sabotage.target}`}>
+                  TARGET · {DOMAIN_LABEL[sabotage.target].toUpperCase()}
+                </span>
+                <span className="sab__theme">{sabotage.theme}</span>
+                <span className={`sab__myrole is-${myTeam ?? 'red'}`}>
+                  YOU ARE {roleName(myRole)}
+                </span>
+              </div>
+              <p className="sab__prompt">
+                {myRole === 'attacker' ? sabotage.attack_brief : sabotage.defence_brief}
+              </p>
 
-      {(sabotage.phase === 'team_result' || sabotage.phase === 'payout') && (
-        <div className="sab__final">
-          <p className="sab__verdict">
-            {sabotage.last_result?.winner
-              ? `${sabotage.last_result.winner.toUpperCase()} TEAM WINS`
-              : 'Final scores'}
-          </p>
-          <div className="sab__scoreline">
-            <span className="is-red">Red {sabotage.scores.red}</span>
-            <span className="is-blue">Blue {sabotage.scores.blue}</span>
-          </div>
-          <p className="sab__hint">
-            Your team scored {sabotage.scores[team as 'red' | 'blue'] ?? 0} points.
-          </p>
-        </div>
-      )}
+              <div className="sab__cards">
+                {deck.map((id) => {
+                  const card = sabotage.cards[id]
+                  if (!card) return null
+                  const on = mine.includes(id)
+                  const allowed = fits(id)
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`sab__card ${on ? 'is-on' : ''} ${allowed ? '' : 'is-locked'}`}
+                      onClick={() => toggle(id)}
+                    >
+                      <span className="sab__cardtop">
+                        <span className="sab__cardname">{card.name}</span>
+                        <span className="sab__cardcost">{card.cost}</span>
+                      </span>
+                      <span className="sab__cardblurb">{card.blurb}</span>
+                      <Vector vector={card.vector} target={sabotage.target} />
+                    </button>
+                  )
+                })}
+              </div>
 
-      {sabotage.phase === 'done' && (
-        <div className="sab__final">
-          <p className="sab__verdict">Sabotage complete</p>
-          <div className="sab__scoreline">
-            <span className="is-red">Red {sabotage.scores.red}</span>
-            <span className="is-blue">Blue {sabotage.scores.blue}</span>
-          </div>
+              <footer className="sab__foot">
+                <div className="sab__budget">
+                  <span className={`sab__budgetnum ${budgetLeft < 0 ? 'is-over' : ''}`}>
+                    {budgetLeft}
+                  </span>
+                  <span className="sab__budgetlabel">points left</span>
+                  <span className="sab__picked">
+                    {mine.length} card{mine.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <Bars vector={teamVector} target={sabotage.target} />
+                <p className="sab__tally">
+                  {build
+                    ? `${build.voters}/${build.members} on your team have voted`
+                    : 'Collecting votes'}
+                  {refused && <span className="sab__refused"> · {refused}</span>}
+                </p>
+              </footer>
+            </div>
+          )}
+
+          {sabotage.phase === 'reveal' && sabotage.last_result && (
+            <Reveal sabotage={sabotage} myTeam={myTeam} />
+          )}
+
+          {(sabotage.phase === 'final' || sabotage.phase === 'done') && (
+            <Final sabotage={sabotage} myTeam={myTeam} />
+          )}
         </div>
-      )}
+      </div>
+    </div>
+  )
+}
+
+/** The rules, on one screen, readable in twenty seconds. */
+function Rules({ sabotage }: { sabotage: SabotageState & { endsAt: number | null; heldMs: number } }) {
+  return (
+    <div className="sab__rules">
+      <h2 className="sab__rulestitle">Four rounds. One target each.</h2>
+      <ul className="sab__rulelist">
+        <li>
+          Every card scores in three areas: <b>Data</b>, <b>People</b>, <b>Infra</b>.
+        </li>
+        <li>
+          Each round names <b>one target</b>. Only that column decides who wins the round.
+        </li>
+        <li>
+          You have <b>100 points</b> and may buy <b>up to 4 cards</b>. A dearer card is not
+          a stronger one.
+        </li>
+        <li>
+          Your team votes; the most-voted cards get bought. <b>Talk to each other.</b>
+        </li>
+        <li>Four rounds: attack, defend, attack, defend.</li>
+      </ul>
+      <p className="sab__rulesfoot">
+        Round 1 is <b>{sabotage.theme}</b> · target{' '}
+        <b>{DOMAIN_LABEL[sabotage.target]}</b> · {sabotage.attacker.toUpperCase()} attacks
+      </p>
+    </div>
+  )
+}
+
+function Reveal({
+  sabotage,
+  myTeam,
+}: {
+  sabotage: SabotageState & { endsAt: number | null; heldMs: number }
+  myTeam: SabotageTeam | undefined
+}) {
+  const result = sabotage.last_result
+  if (!result) return null
+  const iWon = result.winner === myTeam
+  const attacker = result.attacker
+  const defender = result.defender
+  const rows: SabotageDomain[] = ['data', 'people', 'infra']
+  return (
+    <div className={`sab__reveal ${result.broke_target ? 'is-breached' : 'is-held'}`}>
+      <p className="sab__verdict">{result.outcome.toUpperCase()}</p>
+      <p className="sab__verdictsub">
+        {attacker.toUpperCase()} attacked {defender.toUpperCase()} on{' '}
+        {DOMAIN_LABEL[result.target].toUpperCase()}
+      </p>
+
+      <div className="sab__dims">
+        {rows.map((domain, index) => {
+          const dim = result.dims.find((entry) => entry.domain === domain)
+          if (!dim) return null
+          return (
+            <div
+              key={domain}
+              className={`sab__dim is-${dim.result} ${dim.target ? 'is-target' : ''}`}
+            >
+              <span className="sab__dimname">{DOMAIN_LABEL[rows[index]]}</span>
+              <span className="sab__dimnum">{dim.attack}</span>
+              <span className="sab__dimvs">vs</span>
+              <span className="sab__dimnum">{dim.defence}</span>
+              <span className="sab__dimmark">
+                {dim.result === 'break' ? 'BREACH' : dim.result === 'tie' ? 'TIE' : 'HELD'}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="sab__points">
+        <span className={attacker === myTeam ? 'is-me' : ''}>
+          {attacker.toUpperCase()} +{result.points[attacker]}
+        </span>
+        <span className={defender === myTeam ? 'is-me' : ''}>
+          {defender.toUpperCase()} +{result.points[defender]}
+        </span>
+      </div>
+      <p className="sab__verdictsub">
+        {myTeam ? (iWon ? 'Your side won the round' : 'Your side lost the round') : ''}
+      </p>
+    </div>
+  )
+}
+
+function Final({
+  sabotage,
+  myTeam,
+}: {
+  sabotage: SabotageState & { endsAt: number | null; heldMs: number }
+  myTeam: SabotageTeam | undefined
+}) {
+  const red = sabotage.scores.red ?? 0
+  const blue = sabotage.scores.blue ?? 0
+  const leader = red === blue ? null : red > blue ? 'red' : 'blue'
+  const mine = myTeam ? sabotage.scores[myTeam] : 0
+  return (
+    <div className="sab__finale">
+      <p className="sab__kicker">Final score</p>
+      <div className="sab__finalscore">
+        <span className={`is-red ${leader === 'red' ? 'is-ahead' : ''}`}>{red}</span>
+        <span className="sab__finaldash">—</span>
+        <span className={`is-blue ${leader === 'blue' ? 'is-ahead' : ''}`}>{blue}</span>
+      </div>
+      <p className="sab__role">
+        {leader ? `${leader.toUpperCase()} wins` : 'Drawn'} · your side scored {mine}
+      </p>
+      <ol className="sab__recap">
+        {sabotage.history.map((entry) => (
+          <li key={entry.round} className={entry.winner === myTeam ? 'is-mine' : ''}>
+            <span className="sab__recapround">R{entry.round}</span>
+            <span className="sab__recaptheme">{entry.theme}</span>
+            <span className="sab__recapout">{entry.outcome}</span>
+            <span className="sab__recappts">
+              {entry.points.red}—{entry.points.blue}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="sab__sidenote">Your team score is already on the board.</p>
     </div>
   )
 }

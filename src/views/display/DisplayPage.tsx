@@ -190,61 +190,76 @@ function QuestionOnScreen({ kind, index }: { kind: 'hallucination' | 'quiz'; ind
   )
 }
 
-/** The Sabotage big-screen view: scenario, hidden votes, the spent wall, result. */
+/** The Sabotage wall: the target, the clock, and nothing that would tell
+ *  either team what the other is buying. */
+const SAB_DOMAIN: Record<string, string> = { data: 'Data', people: 'People', infra: 'Infra' }
+
 function SabotageOnScreen() {
   const sabotage = useGameStore((state) => state.sabotage)
-  if (!sabotage || !sabotage.scenario) return null
-
-  const scenario = sabotage.scenario
-  const votePhase =
-    sabotage.phase === 'attack' || sabotage.phase === 'defend' || sabotage.phase === 'tie_break'
+  if (!sabotage) return null
 
   if (sabotage.phase === 'team_reveal') {
     return (
       <article className="display__question">
         <p className="display__prompt">Look at your tablet. Find your team.</p>
-        <p className="display__look">Shared team budget: $100,000 each.</p>
+        <p className="display__look">
+          {sabotage.teams.red?.length ?? 0} on Red · {sabotage.teams.blue?.length ?? 0} on Blue
+          · sit with them
+        </p>
       </article>
     )
   }
 
-  if (votePhase) {
-    const attacking = sabotage.phase === 'attack'
+  if (sabotage.phase === 'brief') {
+    return (
+      <article className="display__question">
+        <p className="display__prompt">Four rounds. One target each.</p>
+        <p className="display__reply">
+          Every card scores in Data, People and Infra. Only the round's target decides who
+          wins it.
+        </p>
+        <p className="display__look">
+          100 points · up to 4 cards · the dearest card is not the strongest
+        </p>
+      </article>
+    )
+  }
+
+  if (sabotage.phase === 'select') {
     return (
       <article className="display__question">
         <p className="display__prompt">
-          {attacking ? scenario.attack_title : scenario.defence_title}
+          Round {sabotage.round} · {sabotage.theme}
         </p>
         <p className="display__reply">
-          {attacking ? scenario.attack_prompt : scenario.defence_prompt}
+          TARGET · {SAB_DOMAIN[sabotage.target]?.toUpperCase()} — {sabotage.attacker.toUpperCase()}{' '}
+          attacks
         </p>
         <p className="display__look">
-          {attacking ? 'Choose one AI capability on your iPad.' : 'Choose your response on your iPad.'}
+          {sabotage.attacker === 'red' ? sabotage.attack_brief : sabotage.defence_brief}
         </p>
-        {sabotage.spent.length > 0 && (
-          <p className="display__look">
-            Spent: {sabotage.spent.map((id) => sabotage.cards.attack[id]?.name ?? id).join(' · ')}
-          </p>
-        )}
       </article>
     )
   }
 
-  if (sabotage.phase === 'resolve' && sabotage.last_result) {
+  if (sabotage.phase === 'reveal' && sabotage.last_result) {
     const r = sabotage.last_result
     return (
       <article className="display__question">
         <p className="display__prompt">
-          {r.outcome === 'blocked'
-            ? `${r.defender.toUpperCase()} WINS THE ROUND`
-            : r.outcome === 'failed'
-              ? `${r.attacker.toUpperCase()} WINS THE ROUND`
-              : 'STANDOFF'}
+          Round {r.round} · {r.outcome.toUpperCase()}
         </p>
-        <p className="display__reply">
-          {sabotage.cards.attack[r.attack_card]?.name ?? r.attack_card} vs{' '}
-          {sabotage.cards.defence[r.defence_card]?.name ?? r.defence_card}
-        </p>
+        <ul className="display__dims">
+          {r.dims.map((dim) => (
+            <li key={dim.domain} className={`is-${dim.result} ${dim.target ? 'is-target' : ''}`}>
+              <span>{SAB_DOMAIN[dim.domain]}</span>
+              <b>{dim.attack}</b>
+              <span>vs</span>
+              <b>{dim.defence}</b>
+              <em>{dim.result === 'break' ? 'BREACH' : dim.result === 'tie' ? 'TIE' : 'HELD'}</em>
+            </li>
+          ))}
+        </ul>
         <p className="display__look">
           Red {sabotage.scores.red} · Blue {sabotage.scores.blue}
         </p>
@@ -252,16 +267,16 @@ function SabotageOnScreen() {
     )
   }
 
+  const red = sabotage.scores.red ?? 0
+  const blue = sabotage.scores.blue ?? 0
+  const leader = red === blue ? null : red > blue ? 'RED' : 'BLUE'
   return (
     <article className="display__question">
-      <p className="display__prompt">
-        {sabotage.last_result?.winner
-          ? `${sabotage.last_result.winner.toUpperCase()} TEAM WINS`
-          : 'Sabotage complete'}
+      <p className="display__prompt">{leader ? `${leader} TEAM WINS` : 'DRAWN'}</p>
+      <p className="display__reply">
+        Red {red} · Blue {blue}
       </p>
-      <p className="display__look">
-        Red {sabotage.scores.red} · Blue {sabotage.scores.blue}
-      </p>
+      <p className="display__look">{sabotage.rounds} rounds played</p>
     </article>
   )
 }

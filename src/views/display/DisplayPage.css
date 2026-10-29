@@ -447,3 +447,50 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* The Sabotage wall: one row per domain, the target row marked. */
+.display__dims {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+  width: min(100%, 34rem);
+}
+
+.display__dims li {
+  display: grid;
+  grid-template-columns: 6rem 2rem 2rem 2rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface-raised);
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  color: var(--c-text-muted);
+}
+
+.display__dims li.is-target {
+  border-color: var(--c-text-muted);
+}
+
+.display__dims b {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+.display__dims em {
+  text-align: right;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  color: var(--c-text-muted);
+}
+
+.display__dims li.is-break em {
+  color: var(--c-brand);
+}
+
+.display__dims li.is-hold em {
+  color: var(--c-text);
+}

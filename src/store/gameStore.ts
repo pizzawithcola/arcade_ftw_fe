@@ -37,27 +37,57 @@ export interface WsMessage {
   payload: unknown
 }
 
-export interface SabotageScenario {
-  attacker: 'red' | 'blue'
-  defender: 'red' | 'blue'
-  attack_title: string
-  attack_prompt: string
-  defence_title: string
-  defence_prompt: string
-  learning: string
+export type SabotageTeam = 'red' | 'blue'
+export type SabotageDomain = 'data' | 'people' | 'infra'
+
+/** A card is three numbers and a price. The price is not a power ranking: a
+ *  cheap card can be the strongest thing in the deck. */
+export interface SabotageCard {
+  name: string
+  blurb: string
+  cost: number
+  vector: [number, number, number]
 }
 
-export interface SabotageResult {
+export interface SabotageDim {
+  domain: SabotageDomain
+  attack: number
+  defence: number
+  result: 'break' | 'hold' | 'tie'
+  target: boolean
+}
+
+export interface SabotageRoundResult {
   round: number
-  attacker: 'red' | 'blue'
-  defender: 'red' | 'blue'
-  attack_card: string
-  defence_card: string
-  outcome: 'blocked' | 'partial' | 'failed'
-  attack_delta: number
-  defence_delta: number
-  winner?: 'red' | 'blue'
-  payout?: number
+  theme: string
+  target: SabotageDomain
+  attacker: SabotageTeam
+  defender: SabotageTeam
+  attack: string[]
+  defence: string[]
+  attack_vector: number[]
+  defence_vector: number[]
+  winner: SabotageTeam
+  points: Record<SabotageTeam, number>
+  broke_target: boolean
+  flanks: number
+  outcome: string
+  dims: SabotageDim[]
+}
+
+export interface SabotageBuild {
+  team: SabotageTeam
+  role: 'attacker' | 'defender'
+  round: number
+  target: SabotageDomain
+  deck: string[]
+  build: string[]
+  budget: number
+  vector: number[]
+  votes: Record<string, number>
+  dropped: { card: string; reason: 'budget' | 'slots' }[]
+  voters: number
+  members: number
 }
 
 /**
@@ -65,33 +95,33 @@ export interface SabotageResult {
  * rather than folded into the main `state`. The main flow still owns the node
  * clock; this carries the game inside the node.
  */
-export interface SabotageCard {
-  name: string
-  description: string
-  cost: number
-  success: number
-  fail: number
-}
-
 export interface SabotageState {
   code: string
-  phase: 'setup' | 'team_reveal' | 'attack' | 'defend' | 'tie_break' | 'resolve' | 'team_result' | 'payout' | 'done'
+  phase: 'setup' | 'team_reveal' | 'brief' | 'select' | 'reveal' | 'final' | 'done'
   paused: boolean
   round: number
-  attacker: 'red' | 'blue' | null
-  defender: 'red' | 'blue' | null
+  rounds: number
   remaining_ms: number
-  budgets: { red: number; blue: number }
-  scores: { red: number; blue: number }
-  spent: string[]
-  scenario: SabotageScenario | null
-  voting_team: 'red' | 'blue' | null
-  options: string[]
-  tie_candidates: string[]
-  attack_card: string | null
-  defence_card: string | null
-  last_result: SabotageResult | null
-  cards: { attack: Record<string, SabotageCard>; defence: Record<string, SabotageCard> }
+  target: SabotageDomain
+  theme: string
+  attacker: SabotageTeam
+  defender: SabotageTeam
+  attack_brief: string
+  defence_brief: string
+  teams: Record<SabotageTeam, number[]>
+  scores: Record<SabotageTeam, number>
+  rounds_won: Record<SabotageTeam, number>
+  decks: Record<SabotageTeam, string[]>
+  /** Empty while selecting: both sides commit at the same time. */
+  builds: Partial<Record<SabotageTeam, string[]>>
+  budget: Partial<Record<SabotageTeam, number>>
+  vectors: Partial<Record<SabotageTeam, number[]>>
+  votes: Partial<Record<SabotageTeam, Record<string, number>>>
+  dropped: Partial<Record<SabotageTeam, { card: string; reason: string }[]>>
+  cards: Record<string, SabotageCard>
+  domains: SabotageDomain[]
+  last_result: SabotageRoundResult | null
+  history: SabotageRoundResult[]
 }
 
 interface GameState {

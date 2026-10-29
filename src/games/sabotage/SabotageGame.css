@@ -1,178 +1,646 @@
-.stage--sabotage {
-  gap: 1rem;
+/* Sabotage v2 on the iPad: a card game inside the same chassis as every other
+   screen. Three things have to be readable at a glance, because a round is 30
+   seconds long and the player is also talking to their team:
+
+     the round's target, what the hand is worth so far, and the points left.
+
+   Red is the mark for anything targeting or urgent; the second team is white,
+   never a different hue, so the board stays red/black/white. */
+
+.sab {
+  --sab-gap: clamp(0.4rem, 1vh, 0.7rem);
 }
 
-.sab__bar {
+.sab__frame {
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Two classes: hud.css sets three rows (tab, bar, stage) for the other games,
+   and without this the stage lands in the middle row and is sized to its
+   content, leaving the bottom third of the chassis empty. */
+.hud--game .hud__inner.sab__inner {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.sab__syncing {
+  align-self: center;
+  justify-self: center;
+  color: var(--c-text-dim);
+}
+
+/* ─── header ──────────────────────────────────────────────────────────────── */
+
+.sab__head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(0.4rem, 1vw, 0.8rem);
+}
+
+.sab__headright {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
-.sab__phase {
-  color: var(--dim, var(--c-text-muted));
-  font-size: 0.9rem;
-  text-transform: capitalize;
+.sab__round {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  letter-spacing: 0.1em;
+  color: var(--c-text-muted);
+  white-space: nowrap;
 }
 
 .sab__timer {
-  margin-left: auto;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
   font-variant-numeric: tabular-nums;
+  font-size: clamp(0.8rem, 1.8vw, 0.95rem);
   font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
 }
 
-.sab__reveal,
-.sab__final,
-.sab__result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
+.sab__timer.is-urgent {
+  border-color: var(--c-brand-deep);
+  background: color-mix(in srgb, var(--c-brand-deep) 18%, transparent);
+}
+
+/* ─── intro: the team draw ────────────────────────────────────────────────── */
+
+.sab__intro {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(0.3rem, 1.2vh, 0.8rem);
   text-align: center;
 }
 
-.sab__teamline {
-  font-size: 1.4rem;
+.sab__kicker {
+  margin: 0;
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
 }
 
-.sab__teamline .is-red {
+.sab__teamname {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(3rem, 13vw, 7rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0.06em;
   color: var(--c-text);
-  border-bottom: 2px solid var(--c-brand-deep);
 }
 
-.sab__teamline .is-blue {
+.sab__teamname.is-red {
+  color: var(--c-brand);
+  text-shadow: 0 0 40px color-mix(in srgb, var(--c-brand) 55%, transparent);
+}
+
+.sab__role {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.85rem, 2vw, 1.15rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--c-text);
-  border-bottom: 2px solid var(--c-team-alt);
 }
 
-.sab__board {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.sab__sidenote {
+  margin: 0;
+  font-size: clamp(0.72rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.06em;
+  color: var(--c-text-dim);
+}
+
+/* ─── rules ───────────────────────────────────────────────────────────────── */
+
+.sab__rules {
+  /* Stretch to the row and centre its own rows: `align-self: center` on a grid
+     item left the copy pinned to the top of the chassis. */
+  align-self: stretch;
+  align-content: center;
+  justify-self: center;
+  width: min(100%, 46rem);
+  display: grid;
+  gap: clamp(0.5rem, 1.4vh, 1rem);
+}
+
+.sab__rulestitle {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.1rem, 2.8vw, 1.7rem);
+  letter-spacing: 0.06em;
+  color: var(--c-text);
+}
+
+.sab__rulelist {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: clamp(0.3rem, 0.9vh, 0.55rem);
+  font-size: clamp(0.82rem, 1.9vw, 1rem);
+  line-height: 1.45;
+  color: var(--c-text-muted);
+}
+
+.sab__rulelist b {
+  color: var(--c-text);
+}
+
+.sab__rulesfoot {
+  margin: 0;
+  padding-top: clamp(0.4rem, 1vh, 0.7rem);
+  border-top: 1px solid var(--c-border);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.75rem, 1.7vw, 0.92rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-text);
+}
+
+/* ─── select ──────────────────────────────────────────────────────────────── */
+
+.sab__stage {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: var(--sab-gap);
   min-height: 0;
-  overflow-y: auto;
+}
+
+.sab__targetline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.sab__targetbadge {
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  background: var(--c-brand-deep);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.68rem, 1.5vw, 0.82rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--c-text);
+}
+
+.sab__theme {
+  font-size: clamp(0.78rem, 1.7vw, 0.92rem);
+  color: var(--c-text-muted);
+}
+
+.sab__myrole {
+  margin-left: auto;
+  padding: 0.12rem 0.55rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.65rem, 1.4vw, 0.78rem);
+  letter-spacing: 0.12em;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+.sab__myrole.is-red {
+  border-color: var(--c-brand-deep);
+  background: color-mix(in srgb, var(--c-brand-deep) 20%, transparent);
 }
 
 .sab__prompt {
-  font-size: 1.05rem;
-  line-height: 1.5;
+  margin: 0;
+  font-size: clamp(0.78rem, 1.7vw, 0.92rem);
+  line-height: 1.4;
+  color: var(--c-text-muted);
 }
 
 .sab__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Six cards, so three rows. Capped rather than stretched: a card the height
+     of a hand's span leaves a hole between its blurb and its numbers. */
+  grid-template-rows: repeat(3, minmax(0, 7.5rem));
+  align-content: center;
+  gap: clamp(0.35rem, 0.9vh, 0.55rem);
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .sab__card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 0.25rem;
+  min-height: 0;
+  padding: clamp(0.35rem, 1vh, 0.55rem) clamp(0.45rem, 1.2vw, 0.7rem);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
   text-align: left;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--edge, var(--c-border));
-  border-radius: 0.75rem;
-  background: var(--panel, var(--c-text));
+  font: inherit;
+  color: var(--c-text);
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.05s;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.12s ease;
 }
 
-.sab__card:hover:not(:disabled) {
-  border-color: var(--accent, var(--c-brand-deep));
+.sab__card:active {
+  transform: scale(0.985);
 }
 
-.sab__card:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.sab__card.is-on {
+  border-color: var(--c-brand);
+  background: color-mix(in srgb, var(--c-brand-deep) 22%, var(--c-surface-raised));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-brand) 45%, transparent);
 }
 
-.sab__card.is-picked {
-  border-color: var(--accent, var(--c-brand-deep));
-  box-shadow: 0 0 0 2px var(--accent, var(--c-brand-deep)) inset;
+.sab__card.is-locked {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sab__cardtop {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
 }
 
 .sab__cardname {
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(0.76rem, 1.7vw, 0.92rem);
   font-weight: 600;
-}
-
-.sab__carddesc {
-  font-size: 0.85rem;
-  color: var(--dim, var(--c-text-muted));
-  line-height: 1.4;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sab__cardcost {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  flex: none;
+  font-size: clamp(0.78rem, 1.8vw, 0.95rem);
+  font-weight: 700;
+  color: var(--c-text);
 }
 
-.sab__spent {
-  font-size: 0.85rem;
-  color: var(--dim, var(--c-text-muted));
+.sab__cardblurb {
+  font-size: clamp(0.66rem, 1.4vw, 0.78rem);
+  line-height: 1.3;
+  color: var(--c-text-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.sab__spent ul {
-  list-style: none;
-  padding: 0;
-  margin: 0.25rem 0 0;
+.sab__vec {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: end;
 }
 
-.sab__spent li {
-  padding: 0.2rem 0.6rem;
+.sab__vecitem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c-text) 7%, transparent);
+  font-size: clamp(0.66rem, 1.5vw, 0.8rem);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+.sab__vecitem b {
+  font-weight: 700;
+  color: var(--c-text-muted);
+}
+
+.sab__vecitem.is-zero {
+  color: var(--c-text-dim);
+}
+
+/* The target column is the only one that decides the round, so it is the only
+   one that carries the brand. */
+.sab__vecitem.is-target {
+  background: var(--c-brand-deep);
+  color: var(--c-text);
+}
+
+.sab__vecitem.is-target b {
+  color: var(--c-text);
+}
+
+.sab__vecitem.is-target.is-zero {
+  background: color-mix(in srgb, var(--c-brand-deep) 35%, transparent);
+  color: var(--c-text-muted);
+}
+
+/* ─── the build so far ────────────────────────────────────────────────────── */
+
+.sab__foot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 0.2rem clamp(0.6rem, 2vw, 1.2rem);
+  padding-top: clamp(0.3rem, 0.9vh, 0.5rem);
+  border-top: 1px solid var(--c-border);
+}
+
+.sab__budget {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  grid-row: 1 / 3;
+}
+
+.sab__budgetnum {
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-text);
+}
+
+.sab__budgetnum.is-over {
+  color: var(--c-warning);
+}
+
+.sab__budgetlabel {
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-dim);
+}
+
+.sab__picked {
+  margin-left: 0.3rem;
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
+  color: var(--c-text-muted);
+}
+
+.sab__bars {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.sab__bar {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr) 1.1rem;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sab__barlabel {
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-text-dim);
+}
+
+.sab__bartrack {
+  height: 0.42rem;
   border-radius: 999px;
-  border: 1px dashed var(--edge, var(--c-border));
-  text-decoration: line-through;
+  background: color-mix(in srgb, var(--c-text) 10%, transparent);
+  overflow: hidden;
 }
 
-.sab__hint {
-  color: var(--dim, var(--c-text-muted));
-  font-size: 0.9rem;
+.sab__barfill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-text) 55%, transparent);
+  transition: width 0.25s ease;
+}
+
+.sab__bar.is-target .sab__barfill {
+  background: var(--c-brand);
+}
+
+.sab__bar.is-target .sab__barlabel,
+.sab__bar.is-target .sab__barnum {
+  color: var(--c-text);
+}
+
+.sab__barnum {
+  font-size: clamp(0.7rem, 1.5vw, 0.82rem);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--c-text-muted);
+}
+
+.sab__tally {
+  grid-column: 2;
+  margin: 0;
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
+  color: var(--c-text-dim);
+}
+
+.sab__refused {
+  color: var(--c-warning);
+}
+
+/* ─── reveal ──────────────────────────────────────────────────────────────── */
+
+.sab__reveal {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(0.4rem, 1.2vh, 0.8rem);
+  text-align: center;
 }
 
 .sab__verdict {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.sab__result.is-blocked .sab__verdict,
-.sab__result.is-failed .sab__verdict {
-  text-transform: uppercase;
-}
-
-/* Blocked reads white, broken through reads red: the same two signals the
-   rest of the show uses. */
-.sab__result.is-blocked .sab__verdict {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.3rem, 4.6vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
   color: var(--c-text);
 }
 
-.sab__result.is-failed .sab__verdict {
-  padding-left: 0.5rem;
-  border-left: 3px solid var(--c-brand-deep);
-  color: var(--c-text);
+.sab__reveal.is-breached .sab__verdict {
+  color: var(--c-brand);
+  text-shadow: 0 0 30px color-mix(in srgb, var(--c-brand) 50%, transparent);
 }
 
-.sab__pairing {
-  font-size: 1rem;
-  color: var(--dim, var(--c-text-muted));
+.sab__verdictsub {
+  margin: 0;
+  font-size: clamp(0.72rem, 1.6vw, 0.86rem);
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
 }
 
-.sab__scoreline {
-  display: flex;
-  gap: 2rem;
-  font-size: 1.3rem;
+.sab__dims {
+  display: grid;
+  gap: 0.25rem;
+  width: min(100%, 30rem);
+}
+
+.sab__dim {
+  display: grid;
+  grid-template-columns: 4rem 1.6rem 1.4rem 1.6rem 1fr;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface-raised);
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+}
+
+.sab__dim.is-target {
+  border-color: var(--c-text-muted);
+}
+
+.sab__dimname {
+  text-align: left;
+  letter-spacing: 0.1em;
+  color: var(--c-text-muted);
+}
+
+.sab__dimnum {
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  text-align: right;
+  color: var(--c-text);
 }
 
-.sab__scoreline .is-red {
-  color: var(--c-text);
-  border-bottom: 2px solid var(--c-brand-deep);
+.sab__dimvs {
+  font-size: 0.7em;
+  color: var(--c-text-dim);
 }
 
-.sab__scoreline .is-blue {
+.sab__dimmark {
+  text-align: right;
+  font-size: 0.82em;
+  letter-spacing: 0.1em;
+  color: var(--c-text-muted);
+}
+
+.sab__dim.is-break .sab__dimmark {
+  color: var(--c-brand);
+}
+
+.sab__dim.is-hold .sab__dimmark {
   color: var(--c-text);
-  border-bottom: 2px solid var(--c-team-alt);
+}
+
+.sab__points {
+  display: flex;
+  gap: clamp(0.8rem, 3vw, 2rem);
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
+}
+
+.sab__points .is-me {
+  color: var(--c-text);
+}
+
+/* ─── final ───────────────────────────────────────────────────────────────── */
+
+.sab__finale {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(0.35rem, 1vh, 0.7rem);
+  text-align: center;
+}
+
+.sab__finalscore {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: clamp(2rem, 8vw, 3.6rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sab__finalscore .is-red {
+  color: var(--c-brand);
+}
+
+.sab__finalscore .is-blue {
+  color: var(--c-team-alt);
+}
+
+.sab__finalscore .is-ahead {
+  text-shadow: 0 0 28px color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.sab__finaldash {
+  color: var(--c-text-dim);
+}
+
+.sab__recap {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.2rem;
+  width: min(100%, 30rem);
+  font-size: clamp(0.66rem, 1.4vw, 0.78rem);
+}
+
+.sab__recap li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  background: var(--c-surface-raised);
+  color: var(--c-text-muted);
+}
+
+.sab__recap li.is-mine {
+  color: var(--c-text);
+}
+
+.sab__recapround {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  color: var(--c-text-dim);
+}
+
+.sab__recaptheme {
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sab__recapout {
+  color: var(--c-text);
+}
+
+.sab__recappts {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── tight screens ───────────────────────────────────────────────────────── */
+
+@media (max-height: 46rem) {
+  .sab__cardblurb {
+    display: none;
+  }
+
+  .sab__card {
+    grid-template-rows: auto 1fr;
+  }
+
+  .sab__bars {
+    gap: 0.1rem;
+  }
 }

@@ -47,11 +47,12 @@ const BRIEFS: Brief[] = [
   {
     key: 'sabotage',
     title: 'Sabotage',
-    lead: 'Two teams, one shared budget. Attack hard, or hold what you cannot afford to lose.',
+    lead: 'Four rounds, one target each. Buy the cards that beat the other team in that one column.',
     rules: [
-      'Three rounds of attack and defence, alternating sides.',
-      'Attack with a card from the market; defend with cards you can reuse.',
-      'Each card tells you the odds and the price. Read them before you commit.',
+      'Every card scores in Data, People and Infra. The round names one target; only that column decides who wins it.',
+      'You get 100 points and up to 4 cards. A dearer card is not a stronger one.',
+      'Your team votes - the most-voted cards get bought. Talk to each other.',
+      'Four rounds: attack, defend, attack, defend.',
     ],
   },
   {

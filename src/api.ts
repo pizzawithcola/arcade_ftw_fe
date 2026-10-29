@@ -1,3 +1,5 @@
+import type { SabotageBuild } from './store/gameStore'
+
 /**
  * The token lives in sessionStorage, not localStorage: one tab is one signed-in
  * player, so a tester can open several tabs and play as several players on one
@@ -327,11 +329,18 @@ export function reportScore(input: {
  * Cast or change the player's Sabotage card choice. The server accepts only
  * the acting team, an available card and a running (unpaused) phase.
  */
-export function sabotageVote(code: string, card: string): Promise<unknown> {
+/** The whole hand, not one card: a team's build is a set of up to four. */
+export function sabotageVote(code: string, cards: string[]): Promise<unknown> {
   return request(`/api/sabotage/${code}/vote`, {
     method: 'POST',
-    body: JSON.stringify({ card }),
+    body: JSON.stringify({ cards }),
   })
+}
+
+/** This player's own side of the round, including the live team build. The
+ *  broadcast cannot carry it: the other team reads the same message. */
+export function sabotageTeam(code: string): Promise<SabotageBuild> {
+  return request<SabotageBuild>(`/api/sabotage/${code}/team`)
 }
 
 export function roomRoster(code: string): Promise<RosterEntry[]> {
