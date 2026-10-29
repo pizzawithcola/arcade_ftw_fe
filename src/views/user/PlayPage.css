@@ -114,32 +114,49 @@
 .game__bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.7rem 1rem;
-  border-bottom: 1px solid var(--c-surface-raised);
+  gap: 1rem;
+  padding: 0.55rem clamp(0.8rem, 2.4vw, 1.6rem);
   font-size: 0.8rem;
   color: var(--c-text-muted);
 }
 
-.game__conn {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.7rem;
+/* Four bars across 75% of the bar, each with slanted ends: a parallelogram,
+   not a diamond. Filled = behind you, red = the game on screen now. */
+.game__track {
+  flex: 0 1 75%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.35rem, 1vw, 0.7rem);
+  align-items: center;
 }
 
-.game__progress {
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--c-text-dim);
+.game__seg {
+  height: clamp(0.45rem, 1.1vh, 0.6rem);
+  background: color-mix(in srgb, var(--c-text) 28%, transparent);
+  /* The two ends lean the same way, so the row reads as one instrument. */
+  clip-path: polygon(0.65rem 0, 100% 0, calc(100% - 0.65rem) 100%, 0 100%);
+  transition: background 0.2s ease;
 }
 
-.game__clock {
+.game__seg.is-done {
+  background: color-mix(in srgb, var(--c-text) 52%, transparent);
+}
+
+.game__seg.is-now {
+  background: var(--c-brand);
+  filter: drop-shadow(0 0 8px rgba(219, 0, 17, 0.85));
+}
+
+/* Name and the way out, together on the right. */
+.game__right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   margin-left: auto;
-  font-size: 1.1rem;
-  color: var(--c-text);
-  font-variant-numeric: tabular-nums;
 }
+
+
+
 
 .game__signout {
   border: none;
@@ -215,85 +232,4 @@
 
 .stage--waiting {
   color: var(--c-text-dim);
-}
-
-/* ─── the 15s rules card ───────────────────────────────────────────────────────
-   Reads like the waiting room: one column, nothing to press, and the shell's
-   clock is the only thing moving. Sits in front of each game, never inside it. */
-
-/* Fills the player shell, which is a flex column; in a plain panel (the theme
-   preview) it simply takes its content height. */
-.brief {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  display: grid;
-  place-content: center;
-  justify-items: start;
-  gap: clamp(0.7rem, 1.8vh, 1.2rem);
-  padding: clamp(1.6rem, 5vw, 3.2rem);
-  max-width: 42rem;
-  margin: 0 auto;
-}
-
-.brief__kicker {
-  margin: 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-}
-
-.brief__title {
-  margin: 0;
-  padding-left: 0.7rem;
-  border-left: 4px solid var(--c-brand-deep);
-  font-size: clamp(1.9rem, 5.4vw, 3rem);
-  line-height: 1.1;
-  color: var(--c-text);
-}
-
-.brief__lead {
-  margin: 0;
-  font-size: clamp(0.95rem, 1.9vw, 1.15rem);
-  line-height: 1.65;
-  color: var(--c-text);
-}
-
-.brief__rules {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.55rem;
-  counter-reset: brief;
-}
-
-/* A number rail instead of bullets: the order is the instruction. */
-.brief__rules li {
-  display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr);
-  gap: 0.6rem;
-  align-items: start;
-  font-size: clamp(0.85rem, 1.6vw, 1rem);
-  line-height: 1.55;
-  color: var(--c-text-muted);
-  counter-increment: brief;
-}
-
-.brief__rules li::before {
-  content: counter(brief);
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--c-text);
-}
-
-.brief__rules li:last-child {
-  color: var(--c-text);
 }

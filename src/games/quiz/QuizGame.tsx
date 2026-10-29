@@ -55,8 +55,21 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   if (finished) {
     const perfect = QUIZ_QUESTIONS.length * 20
     return (
-      <div className="stage stage--quiz quiz">
-        <span className="stage__kind">Quiz</span>
+      <div className="hud hud--game quiz">
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame">
+          <div className="hud__inner">
+            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--br" aria-hidden="true" />
+            <div className="hud__tab">Quiz</div>
+            <div className="hud__bar">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <span className="hud__event">Round complete</span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
+            <div className="hud__stage quiz__stage">
         <div className="quiz__final">
           <p className="quiz__finallabel">Final score</p>
           <p className="quiz__finalscore">
@@ -76,26 +89,42 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
             })}
           </ul>
         </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="stage stage--quiz quiz">
-      <header className="quiz__bar">
-        <span className="stage__kind">Quiz</span>
-        <span className="quiz__count">
-          {index + 1} / {QUIZ_QUESTIONS.length}
-        </span>
-        {!revealed && (
-          <span className={`quiz__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>{secondsLeft}s</span>
-        )}
-        <span className="quiz__score">{total}</span>
-      </header>
+    <div className="hud hud--game quiz">
+      <div className="hud__matrix" aria-hidden="true" />
+      <div className="hud__frame">
+        <div className="hud__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-      <div className="quiz__board">
-        <p className="quiz__question">{question.text}</p>
-        <div className="quiz__options">
+          <div className="hud__tab">Quiz</div>
+
+          <div className="hud__bar">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="hud__event">Pick one</span>
+            <span className="quiz__count">
+              {index + 1} / {QUIZ_QUESTIONS.length}
+            </span>
+            {!revealed && (
+              <span className={`quiz__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
+                {secondsLeft}s
+              </span>
+            )}
+            <span className="quiz__score">{total}</span>
+          </div>
+
+          <div className="hud__stage quiz__stage">
+            <p className="quiz__question">{question.text}</p>
+            <div className="quiz__options">
           {optionsOf(question).map((option) => {
             const isPicked = picked === option.letter
             const isAnswer = revealed && option.letter === question.correct_option
@@ -124,26 +153,30 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
               </button>
             )
           })}
+            </div>
+
+            {waiting && (
+              <p className="quiz__waiting">Waiting for others to answer…</p>
+            )}
+
+            {revealed && (
+              <div
+                className={`quiz__reveal ${picked === question.correct_option ? 'is-good' : 'is-bad'}`}
+              >
+                <p className="quiz__explain">{question.explain}</p>
+                <p className="quiz__correct">
+                  {picked === undefined
+                    ? `Time's up — the answer was ${question.correct_option}.`
+                    : `The answer was ${question.correct_option}.`}
+                </p>
+                <button type="button" className="quiz__next" onClick={next}>
+                  {isLast ? 'See final score' : 'Next'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {waiting && (
-        <p className="quiz__waiting">Waiting for others to answer…</p>
-      )}
-
-      {revealed && (
-        <div className={`quiz__reveal ${picked === question.correct_option ? 'is-good' : 'is-bad'}`}>
-          <p className="quiz__explain">{question.explain}</p>
-          <p className="quiz__correct">
-            {picked === undefined
-              ? `Time's up — the answer was ${question.correct_option}.`
-              : `The answer was ${question.correct_option}.`}
-          </p>
-          <button type="button" className="quiz__next" onClick={next}>
-            {isLast ? 'See final score' : 'Next'}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

@@ -55,6 +55,25 @@ export const COLOR_GROUPS: TokenGroup[] = [
   },
 ]
 
+/** A display face the show may use for headings. */
+export interface FontToken {
+  name: string
+  /** CSS font-family stack, quoted for names with spaces. */
+  stack: string
+  /** Where it belongs, so nobody picks Monoton for body copy. */
+  role: string
+}
+
+export const FONT_TOKENS: FontToken[] = [
+  { name: 'Press Start 2P', stack: '"Press Start 2P", monospace', role: '8-bit cabinet marquee - short words only, it is very wide' },
+  { name: 'Silkscreen', stack: '"Silkscreen", monospace', role: 'Pixel type that stays legible small: labels, score digits' },
+  { name: 'Kumar One Outline', stack: '"Kumar One Outline", cursive', role: 'Outlined display face - one big word, never a sentence' },
+  { name: 'Monoton', stack: '"Monoton", cursive', role: 'Neon tube lettering: the word "LIVE", section numbers' },
+  { name: 'Orbitron', stack: '"Orbitron", sans-serif', role: 'Sci-fi UI face: headings, timers, the safest of the seven' },
+  { name: 'Audiowide', stack: '"Audiowide", sans-serif', role: 'Arcade-tech headings, softer than Orbitron' },
+  { name: 'Electrolize', stack: '"Electrolize", sans-serif', role: 'Digital/LCD feel with full legibility: works as body copy' },
+]
+
 /** The current value of a token, as the browser resolved it (e.g. `#af000e`). */
 export function resolveColor(cssVar: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()

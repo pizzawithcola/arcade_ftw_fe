@@ -13,27 +13,11 @@ import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
 import SabotageGame from '../../games/sabotage/SabotageGame'
 import { findBrief } from '../../games/briefs'
+import '../hud.css'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
-import { useTicker } from '../../hooks/useTicker'
 import { useGameStore, type FlowNode } from '../../store/gameStore'
 import './PlayPage.css'
-
-function formatClock(ms: number): string {
-  const total = Math.max(0, Math.ceil(ms / 1000))
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
-}
-
-/**
- * Game screens that run their own countdown.
- *
- * The shell clock shows the node's remaining time, which for these screens is a
- * different number from the timer the player is acting on. Two disagreeing
- * countdowns on one screen is simply confusing.
- */
-function ownsTimer(node: FlowNode): boolean {
-  return node.game === 'hallucination' || node.game === 'data_shadow' || node.type === 'quiz'
-}
 
 /**
  * The player's waiting room. Three things, in this order: what this is, who they
@@ -42,15 +26,46 @@ function ownsTimer(node: FlowNode): boolean {
  */
 function WaitingRoom({ nickname, eventName }: { nickname: string; eventName: string }) {
   return (
-    <div className="wait">
-      <h1 className="wait__title">
-        <span className="wait__brand">AI Cyber Arcade</span>
-        <span className="wait__event">{eventName}</span>
-      </h1>
-      <p className="wait__hi">
-        Hi, <strong>{nickname}</strong>
-      </p>
-      <p className="wait__note">Waiting for the host to start the show…</p>
+    <div className="hud">
+      {/* Dot matrix behind everything: reads as a projection surface rather than
+          a web page, which is what the room is. */}
+      <div className="hud__matrix" aria-hidden="true" />
+
+      <div className="hud__frame">
+        <div className="hud__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
+
+          <div className="hud__tab">Waiting Room</div>
+
+          <div className="hud__bar">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="hud__event">{eventName || 'AI Cyber Arcade'}</span>
+            <span className="hud__status">
+              <span className="hud__dot" aria-hidden="true" />
+              get ready
+            </span>
+            <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+          </div>
+
+          <div className="hud__stage">
+            <div className="hud__rings" aria-hidden="true">
+              <span className="hud__ring hud__ring--outer" />
+              <span className="hud__ring hud__ring--mid" />
+              <span className="hud__ring hud__ring--inner" />
+              <span className="hud__avatar">
+                <span className="hud__avatar-head" />
+                <span className="hud__avatar-body" />
+              </span>
+            </div>
+
+            <p className="hud__label">You are in as</p>
+            <p className="hud__name">{nickname}</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -79,19 +94,41 @@ function NodeStage({
   if (node.type === 'brief') {
     const brief = findBrief(node.brief)
     return (
-      <div className="brief" key={nodeIndex}>
-        <p className="brief__kicker">How to play</p>
-        <h1 className="brief__title">{brief?.title ?? node.title ?? 'Up next'}</h1>
-        {brief && (
-          <>
-            <p className="brief__lead">{brief.lead}</p>
-            <ul className="brief__rules">
-              {brief.rules.map((rule) => (
-                <li key={rule}>{rule}</li>
-              ))}
-            </ul>
-          </>
-        )}
+      <div className="hud hud--brief" key={nodeIndex}>
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame">
+          <div className="hud__inner">
+            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--br" aria-hidden="true" />
+
+            <div className="hud__tab">How to play</div>
+
+            <div className="hud__bar">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <span className="hud__event">{brief?.title ?? node.title ?? 'Up next'}</span>
+              <span className="hud__status">
+                <span className="hud__dot" aria-hidden="true" />
+                briefing
+              </span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
+
+            <div className="hud__stage hud__stage--brief">
+              {brief && (
+                <>
+                  <p className="brief__lead">{brief.lead}</p>
+                  <ul className="brief__rules">
+                    {brief.rules.map((rule) => (
+                      <li key={rule}>{rule}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -139,6 +176,20 @@ function NodeStage({
 /** How long a finished round keeps its closing screen before signing out. */
 const WRAP_UP_MS = 8000
 
+/** The four scored games, in the order the show runs them. */
+const GAME_STAGES = ['hallucination', 'data', 'sabotage', 'ultimate'] as const
+
+/**
+ * Which game the show is on, 1-4, or null outside the games (welcome, briefs,
+ * the activity board, the wrap-up). Briefs name their section, so a rules card
+ * already counts as being in its game.
+ */
+function gameStage(node: FlowNode | null): number | null {
+  const section = node?.section ?? node?.score
+  const at = GAME_STAGES.indexOf((section ?? '') as (typeof GAME_STAGES)[number])
+  return at === -1 ? null : at + 1
+}
+
 /**
  * What the operator console's player preview runs as.
  *
@@ -160,7 +211,6 @@ export default function PlayPage() {
   // A QR-scanned URL pins a device to a room; `/play` follows the current round.
   const { code: pinned } = useParams()
   const navigate = useNavigate()
-  const now = useTicker()
   // `?preview=1` is the console's mirror of this screen: same layout, no player.
   const [query] = useSearchParams()
   const preview = query.get('preview') === '1'
@@ -176,10 +226,6 @@ export default function PlayPage() {
   const phase = useGameStore((state) => state.phase)
   const node = useGameStore((state) => state.node)
   const index = useGameStore((state) => state.index)
-  const nodeCount = useGameStore((state) => state.nodeCount)
-  const endsAt = useGameStore((state) => state.endsAt)
-  const heldMs = useGameStore((state) => state.heldMs)
-  const connection = useGameStore((state) => state.connection)
   const sawPlaying = useGameStore((state) => state.sawPlaying)
 
   useEffect(() => {
@@ -288,36 +334,48 @@ export default function PlayPage() {
   const me = preview ? PREVIEW_SESSION : session
   if (!me) return <Navigate to="/" replace />
 
-  const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
   // A finished round is the signal that this device's round is over - the room
   // and the player are locked together.
   const roomMissing = !pinned && resolved === null
+  const stage_ = gameStage(node)
 
   return (
     <main className="game">
       {phase !== 'waiting' && (
       <header className="game__bar">
-        <span className={`dot dot--${connection}`} />
-        <span className="game__conn">{connection}</span>
-        {me.nickname && <span className="play__who">{me.nickname}</span>}
-        <span className="game__progress">
-          node {Math.min(index + 1, nodeCount)} / {nodeCount}
+        {/* Four flat diamonds, one per game: the filled ones are behind you, the
+            red one is where the show is now. It says "how far along" without
+            asking anyone to read a node index. */}
+        <nav className="game__track" aria-label="Game progress">
+          {GAME_STAGES.map((stage, at) => {
+            const position = at + 1
+            return (
+              <span
+                key={stage}
+                className={`game__seg ${
+                  stage_ === position ? 'is-now' : stage_ !== null && position < stage_ ? 'is-done' : ''
+                }`}
+                aria-current={stage_ === position ? 'step' : undefined}
+              />
+            )
+          })}
+        </nav>
+
+        <span className="game__right">
+          {me.nickname && <span className="play__who">{me.nickname}</span>}
+          {!preview && (
+            <button
+              type="button"
+              className="game__signout"
+              onClick={() => {
+                clearToken()
+                navigate('/', { replace: true })
+              }}
+            >
+              Logout
+            </button>
+          )}
         </span>
-        {node && !ownsTimer(node) && (
-          <span className="game__clock">{formatClock(remaining)}</span>
-        )}
-        {!preview && (
-          <button
-            type="button"
-            className="game__signout"
-            onClick={() => {
-              clearToken()
-              navigate('/', { replace: true })
-            }}
-          >
-            sign out
-          </button>
-        )}
       </header>
       )}
 

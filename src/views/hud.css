@@ -1,0 +1,863 @@
+/* The waiting-room panel, shared by the iPad and the wall screen.
+   Structure follows the Sabotage concept frame: notched bezel, corner brackets,
+   a title tab and a ring stack. Palette stays house red on black. */
+
+.hud {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.6rem, 1.8vw, 1.4rem);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Dot matrix: a projection surface, faded out at the edges so it never
+   competes with the frame. */
+.hud__matrix {
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+  background-image: radial-gradient(circle, var(--c-grid-line) 1px, transparent 1.6px);
+  background-size: 10px 10px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+}
+
+/* Fills the available box without ever exceeding it: an iPad in landscape has
+   far more width than height, and the frame should grow to match. */
+.hud__frame {
+  --notch: 18px;
+  position: relative;
+  width: min(100%, 62rem);
+  max-height: 100%;
+  padding: 2px;
+  background: linear-gradient(160deg, var(--c-brand-deep), rgba(175, 0, 14, 0.35) 45%, var(--c-brand-deep));
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0, 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) 100%,
+    var(--notch) 100%, 0 calc(100% - var(--notch)), 0 var(--notch)
+  );
+  box-shadow:
+    0 0 0 1px rgba(219, 0, 17, 0.45),
+    0 0 22px rgba(219, 0, 17, 0.5),
+    0 0 70px rgba(219, 0, 17, 0.28),
+    inset 0 0 60px rgba(219, 0, 17, 0.16);
+}
+
+.hud__inner {
+  --notch: 17px;
+  position: relative;
+  height: 100%;
+  display: grid;
+  /* Tab, bar, then everything else. The middle row must be `auto`, not `1fr`:
+     a `1fr` bar stretches to fill and pushes the stage to the bottom edge. */
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: clamp(0.5rem, 1.6vh, 1rem);
+  padding: clamp(1rem, 2.6vh, 1.6rem) clamp(1.1rem, 3vw, 2.2rem) clamp(0.9rem, 2.2vh, 1.4rem);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(175, 0, 14, 0.14), transparent 70%),
+    var(--c-surface);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0, 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) 100%,
+    var(--notch) 100%, 0 calc(100% - var(--notch)), 0 var(--notch)
+  );
+}
+
+/* Corner brackets: the one detail that makes a rectangle read as hardware. */
+/* Set inboard of the bezel, so the bracket reads as a separate layer rather
+   than as the border itself turning a corner. */
+.hud__corner {
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--c-brand);
+  filter: drop-shadow(0 0 6px rgba(219, 0, 17, 0.9));
+  --inset-x: clamp(1rem, 2.6vw, 1.9rem);
+  --inset-y: clamp(0.85rem, 2.2vh, 1.35rem);
+}
+
+.hud__corner--tl { top: var(--inset-y); left: var(--inset-x); border-right: 0; border-bottom: 0; }
+.hud__corner--tr { top: var(--inset-y); right: var(--inset-x); border-left: 0; border-bottom: 0; }
+.hud__corner--bl { bottom: var(--inset-y); left: var(--inset-x); border-right: 0; border-top: 0; }
+.hud__corner--br { bottom: var(--inset-y); right: var(--inset-x); border-left: 0; border-top: 0; }
+
+/* Title tab, half-proud of the bezel like a nameplate. */
+.hud__tab {
+  justify-self: center;
+  padding: 0.3rem 2.2rem 0.35rem;
+  background: var(--c-brand-deep);
+  color: var(--c-text);
+  font-family: 'Orbitron', var(--font-ui, ui-monospace), monospace;
+  font-size: clamp(0.62rem, 1.1vw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  clip-path: polygon(1rem 0, calc(100% - 1rem) 0, 100% 100%, 0 100%);
+  box-shadow: 0 0 26px rgba(219, 0, 17, 0.7);
+}
+
+.hud__bar {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
+  padding-bottom: clamp(0.4rem, 1vh, 0.7rem);
+  border-bottom: 1px solid rgba(175, 0, 14, 0.35);
+}
+
+.hud__event {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.8rem, 1.7vw, 1.05rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  padding: 0.15rem 0.7rem;
+  border: 1px solid rgba(175, 0, 14, 0.55);
+  border-radius: 999px;
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+.hud__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-brand);
+  box-shadow: 0 0 8px var(--c-brand);
+  animation: hud-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes hud-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud__dot { animation: none; }
+}
+
+/* The chamfered slashes from the concept frame, drawn with hard stops so they
+   stay crisp at any size. */
+.hud__chevrons {
+  flex: none;
+  width: clamp(2.2rem, 6vw, 4.4rem);
+  height: 0.85rem;
+  background: repeating-linear-gradient(
+    115deg,
+    var(--c-brand) 0 6px,
+    transparent 6px 12px
+  );
+  filter: drop-shadow(0 0 5px rgba(219, 0, 17, 0.8));
+}
+
+.hud__chevrons--flip {
+  transform: scaleX(-1);
+}
+
+.hud__stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(0.1rem, 0.4vh, 0.3rem);
+  padding-block: clamp(0.6rem, 2.2vh, 1.4rem);
+  text-align: center;
+}
+
+/* Ring stack: concentric arcs over a soft glow, sized off the shorter side so
+   it never pushes the frame taller than the screen. */
+.hud__rings {
+  position: relative;
+  width: clamp(6rem, 18vh, 11rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin-bottom: clamp(0.2rem, 1vh, 0.6rem);
+}
+
+.hud__ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.hud__ring--outer {
+  inset: 0;
+  border-top-color: var(--c-brand);
+  border-bottom-color: var(--c-brand);
+  filter: drop-shadow(0 0 8px rgba(219, 0, 17, 0.7));
+  opacity: 0.95;
+  animation: hud-spin 18s linear infinite;
+}
+
+.hud__ring--mid {
+  inset: 12%;
+  border-left-color: var(--c-brand);
+  border-right-color: var(--c-brand);
+  filter: drop-shadow(0 0 6px rgba(219, 0, 17, 0.6));
+  animation: hud-spin 12s linear infinite reverse;
+}
+
+.hud__ring--inner {
+  inset: 24%;
+  border-color: rgba(219, 0, 17, 0.35);
+  background: radial-gradient(circle, rgba(219, 0, 17, 0.22), transparent 68%);
+  box-shadow: 0 0 34px rgba(219, 0, 17, 0.35) inset;
+}
+
+@keyframes hud-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud__ring--outer, .hud__ring--mid { animation: none; }
+}
+
+/* A person, drawn in two rounded shapes - no icon font, no SVG payload. */
+.hud__avatar {
+  position: relative;
+  width: 46%;
+  aspect-ratio: 1;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+}
+
+.hud__avatar-head {
+  width: 30%;
+  aspect-ratio: 1;
+  border: 2px solid var(--c-text);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(244, 244, 246, 0.7), 0 0 40px rgba(219, 0, 17, 0.35);
+}
+
+.hud__avatar-body {
+  width: 66%;
+  height: 40%;
+  border: 2px solid var(--c-text);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  box-shadow: 0 0 18px rgba(244, 244, 246, 0.55), 0 0 40px rgba(219, 0, 17, 0.3);
+}
+
+.hud__label {
+  margin: 0;
+  font-size: clamp(0.7rem, 1.3vw, 0.88rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+/* The name is the one thing the player looks at on this screen, so it gets a
+   band of space above and below instead of sitting flush against its labels. */
+.hud__name {
+  margin-block: clamp(0.5rem, 2.2vh, 1.5rem);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.7rem, 5vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: var(--c-text);
+  text-shadow: 0 0 18px rgba(219, 0, 17, 0.85), 0 0 48px rgba(219, 0, 17, 0.45);
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud__note {
+  margin: 0.2rem 0 0;
+  font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+  color: var(--c-text-dim);
+}
+
+.hud__foot {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.9rem);
+  padding-top: clamp(0.4rem, 1vh, 0.7rem);
+  border-top: 1px solid rgba(175, 0, 14, 0.35);
+}
+
+.hud__footchip {
+  flex: none;
+  padding: 0.2rem 0.8rem;
+  border: 1px solid rgba(175, 0, 14, 0.6);
+  border-radius: 999px;
+  font-size: clamp(0.58rem, 1vw, 0.68rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text);
+}
+
+.hud__foottext {
+  font-size: clamp(0.7rem, 1.2vw, 0.82rem);
+  color: var(--c-text-dim);
+}
+
+/* Portrait and small screens: drop the decorative bars before the text shrinks. */
+@media (max-width: 30rem), (max-height: 26rem) {
+  .hud__chevrons { display: none; }
+  .hud__corner { display: none; }
+}
+
+/* ─── the wall-screen variant ──────────────────────────────────────────────────
+   Same frame, but the ring stack carries the player count and the names sit
+   underneath it, so five metres away still reads as "wating room, N people". */
+
+/* The wall screen has room to spare, so the panel fills it rather than sitting
+   in the middle of a large empty field. */
+.hud--display .hud__frame {
+  width: min(100%, 84rem);
+  height: min(100%, 46rem);
+  align-self: center;
+}
+
+/* Centred in the remaining height: a two-player room should not float below a
+   huge empty panel, and a full room grows until the list scrolls instead. */
+.hud--display .hud__stage {
+  align-content: center;
+  gap: clamp(0.3rem, 1vh, 0.8rem);
+  overflow-y: auto;
+  padding-block: clamp(0.3rem, 1vh, 0.8rem);
+  scrollbar-width: none;
+}
+
+.hud--display .hud__stage::-webkit-scrollbar {
+  display: none;
+}
+
+.hud--display .hud__rings {
+  width: clamp(7rem, 22vh, 13rem);
+}
+
+/* The count replaces the avatar: a number is the whole message on this screen. */
+.hud__count {
+  position: relative;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(2.2rem, 6vh, 4rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--c-text);
+  text-shadow: 0 0 20px rgba(219, 0, 17, 0.8), 0 0 54px rgba(219, 0, 17, 0.4);
+}
+
+.hud--display .hud__label {
+  font-size: clamp(0.8rem, 1.6vw, 1.15rem);
+  letter-spacing: 0.3em;
+}
+
+/* Names as chips: a room of 40 is a wall of text, so they wrap and scroll.
+   Centred, because a lone name pinned to the left looks like an error. */
+.hud--display .display__names {
+  flex: 0 1 auto;
+  width: 100%;
+  overflow: visible;
+  min-height: 0;
+  margin-block: clamp(0.3rem, 1vh, 0.8rem) 0;
+  /* Flex, not grid: with grid an auto-fill track set always fills the width, so
+     a single name would sit in column one instead of the middle. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  gap: clamp(0.4rem, 0.9vh, 0.7rem);
+}
+
+.hud--display .display__names li {
+  font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+  text-align: center;
+}
+
+.hud--display .hud__empty {
+  margin-top: clamp(0.5rem, 2vh, 1.4rem);
+}
+
+.hud__empty {
+  margin: clamp(0.4rem, 1.5vh, 1rem) 0 0;
+  font-size: clamp(0.95rem, 1.8vw, 1.3rem);
+  letter-spacing: 0.06em;
+  color: var(--c-text-dim);
+}
+
+/* ─── instrumentation ─────────────────────────────────────────────────────────
+   The details that stop the panel reading as a styled div: a CRT line pattern
+   over the glass, one slow sweep, tick marks along the bar, and a dashed ring
+   counter-rotating against the solid one. All decoration, all cheap. */
+
+.hud__inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.35) 0 1px,
+    transparent 1px 3px
+  );
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+
+.hud__inner::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(219, 0, 17, 0.09),
+    transparent
+  );
+  animation: hud-sweep 7s linear infinite;
+}
+
+@keyframes hud-sweep {
+  from { top: -22%; }
+  to { top: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud__inner::after { animation: none; opacity: 0; }
+}
+
+/* Tick marks under the status bar: a scale nobody reads, which is the point. */
+.hud__bar::after {
+  content: '';
+  position: absolute;
+  left: clamp(1.1rem, 3vw, 2.2rem);
+  right: clamp(1.1rem, 3vw, 2.2rem);
+  bottom: -1px;
+  height: 4px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(219, 0, 17, 0.55) 0 1px,
+    transparent 1px 9px
+  );
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent 22%, transparent 78%, #000);
+  mask-image: linear-gradient(90deg, #000, transparent 22%, transparent 78%, #000);
+}
+
+.hud__bar {
+  position: relative;
+}
+
+/* A dashed ring, counter-rotating against the solid one. */
+.hud__rings::before {
+  content: '';
+  position: absolute;
+  inset: -9%;
+  border-radius: 50%;
+  border: 1px dashed rgba(219, 0, 17, 0.45);
+  animation: hud-spin 34s linear infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud__rings::before { animation: none; }
+}
+
+/* ─── boot sequence ───────────────────────────────────────────────────────────
+   A CRT switching on: the panel snaps out of a thin bright line, then the tab,
+   the status bar and the rings light up in that order. Nothing here waits on
+   data - the waiting room has nothing to load, so the animation is free. */
+
+@keyframes hud-boot-panel {
+  0% {
+    transform: scale(0.72, 0.006);
+    opacity: 0;
+    filter: brightness(3.2);
+  }
+  34% {
+    transform: scale(0.94, 0.03);
+    opacity: 1;
+    filter: brightness(2.2);
+  }
+  68% {
+    transform: scale(1.008, 1.035);
+    filter: brightness(1.25);
+  }
+  100% {
+    transform: none;
+    filter: brightness(1);
+  }
+}
+
+@keyframes hud-boot-line {
+  0% {
+    opacity: 0.95;
+    transform: translateX(-50%) scaleX(0.15);
+  }
+  55% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scaleX(1);
+  }
+}
+
+@keyframes hud-boot-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The tab lights up like a filament, then settles. */
+@keyframes hud-boot-tab {
+  0%,
+  42% {
+    opacity: 0;
+    filter: brightness(4);
+  }
+  60% {
+    opacity: 1;
+    filter: brightness(2.4);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* A status bar types itself in from the left. */
+@keyframes hud-boot-print {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* The rings spin up from nothing, with one overshoot. */
+@keyframes hud-boot-rings {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hud-boot-glitch {
+  0%,
+  100% {
+    text-shadow:
+      1px 0 rgba(219, 0, 17, 0.55),
+      -1px 0 rgba(244, 244, 246, 0.35),
+      0 0 18px rgba(219, 0, 17, 0.85),
+      0 0 48px rgba(219, 0, 17, 0.45);
+  }
+  20% {
+    text-shadow:
+      -3px 0 rgba(219, 0, 17, 0.9),
+      3px 0 rgba(244, 244, 246, 0.6),
+      0 0 26px rgba(219, 0, 17, 1);
+  }
+  40% {
+    text-shadow:
+      2px 0 rgba(244, 244, 246, 0.7),
+      -2px 0 rgba(219, 0, 17, 0.9),
+      0 0 14px rgba(219, 0, 17, 0.7);
+  }
+}
+
+.hud__frame {
+  animation: hud-boot-panel 620ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  transform-origin: center;
+}
+
+/* The bright line the panel grows out of. */
+.hud::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: min(62rem, 92%);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--c-brand), #fff, var(--c-brand), transparent);
+  box-shadow: 0 0 22px rgba(219, 0, 17, 0.9);
+  pointer-events: none;
+  animation: hud-boot-line 620ms ease-out both;
+}
+
+.hud__tab {
+  animation: hud-boot-tab 700ms ease-out both;
+}
+
+.hud__bar {
+  animation: hud-boot-print 620ms steps(24, end) 180ms both;
+}
+
+.hud__rings {
+  animation: hud-boot-rings 640ms cubic-bezier(0.2, 0.9, 0.25, 1) 260ms both;
+}
+
+.hud__label,
+.hud__name,
+.hud__note,
+.hud__empty,
+.hud--display .display__names {
+  animation: hud-boot-fade-up 420ms ease-out 420ms both;
+}
+
+.hud__name {
+  animation-delay: 470ms;
+}
+
+.hud__note,
+.hud__empty {
+  animation-delay: 540ms;
+}
+
+/* The name lands with one glitch pass, then holds. */
+.hud__name {
+  animation:
+    hud-boot-fade-up 420ms ease-out 470ms both,
+    hud-boot-glitch 900ms steps(3, end) 900ms 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud__frame,
+  .hud__tab,
+  .hud__bar,
+  .hud__rings,
+  .hud__label,
+  .hud__name,
+  .hud__note,
+  .hud__empty,
+  .hud--display .display__names,
+  .hud::after {
+    animation: none;
+  }
+}
+
+/* ─── static instrumentation ──────────────────────────────────────────────────
+   Marks that cost nothing to draw and make the panel look like an instrument
+   rather than a coloured box: a perspective floor, gauge labels down both
+   edges, tick-ring inside the rings, and a radar sweep over them. */
+
+/* A grid floor receding to the horizon. It lives inside the stage rather than
+   outside the panel: the panel is opaque and fills the screen, so anything
+   painted behind it would never be seen. */
+.hud__stage::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 240%;
+  height: 62%;
+  z-index: 0;
+  pointer-events: none;
+  transform: translateX(-50%) perspective(300px) rotateX(62deg);
+  transform-origin: bottom center;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(219, 0, 17, 0.38) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(0deg, rgba(219, 0, 17, 0.26) 0 1px, transparent 1px 72px);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 74%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 74%);
+}
+
+/* Gauge labels down both edges, set vertically so they never collide with the
+   content - the panel's version of a scale printed on the chassis. */
+.hud__frame::before,
+.hud__frame::after {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font-size: 0.52rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(219, 0, 17, 0.75);
+  pointer-events: none;
+}
+
+.hud__frame::before {
+  content: 'sys · ready';
+  left: 0.6rem;
+  rotate: 180deg;
+}
+
+.hud__frame::after {
+  content: 'link · stable';
+  right: 0.6rem;
+}
+
+/* A tick ring inside the rings, and the radar sweep over them. */
+.hud__ring--inner {
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(219, 0, 17, 0.55) 0 0.6deg,
+      transparent 0.6deg 6deg
+    );
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 76%, #000 78%);
+  mask-image: radial-gradient(circle closest-side, transparent 76%, #000 78%);
+  border: 0;
+  box-shadow: none;
+}
+
+.hud__rings::after {
+  content: '';
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  pointer-events: none;
+  /* Bright edge first, fading behind it: the gradient runs transparent ->
+     bright in the direction of travel, so the solid end leads and the tail
+     dissolves instead of arriving before its own head. */
+  /* Stops must be closed at the head, or the last colour runs on to 360deg and
+     the "arc" becomes a full ring. Sharp edge at 60deg, fade behind it. */
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(219, 0, 17, 0.16) 32deg,
+    rgba(219, 0, 17, 0.8) 60deg,
+    transparent 61deg
+  );
+  /* An annulus, not a wedge: the sweep has to travel along the ring, or it
+     reads as a shape someone drew rather than a scanner turning. */
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 80%, #000 82%, #000 96%, transparent 97%);
+  mask-image: radial-gradient(circle closest-side, transparent 80%, #000 82%, #000 96%, transparent 97%);
+  animation: hud-spin 3.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud__rings::after { animation: none; }
+}
+
+/* The floor is a background layer; everything the player reads stays above it. */
+.hud__stage > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── briefing panel ──────────────────────────────────────────────────────────
+   The 15s rules card, in the same chassis as the waiting room. It is the same
+   markup on purpose: the audience meets one piece of hardware, not a deck of
+   unrelated slides. */
+
+.hud--brief .hud__frame {
+  width: min(100%, 60rem);
+  max-height: 100%;
+}
+
+/* Content may be longer than the panel on a small iPad, so the stage scrolls
+   rather than clipping the third rule. */
+.hud__stage--brief {
+  align-content: start;
+  justify-items: start;
+  text-align: left;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.3rem;
+  scrollbar-width: thin;
+}
+
+.brief__lead {
+  margin: 0 0 clamp(0.5rem, 1.6vh, 1rem);
+  font-size: clamp(0.95rem, 1.9vw, 1.15rem);
+  line-height: 1.65;
+  color: var(--c-text);
+  text-align: left;
+}
+
+.brief__rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: clamp(0.45rem, 1.4vh, 0.8rem);
+  counter-reset: brief;
+  width: 100%;
+}
+
+.brief__rules li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  font-size: clamp(0.85rem, 1.6vw, 1rem);
+  line-height: 1.55;
+  color: var(--c-text-muted);
+  text-align: left;
+  counter-increment: brief;
+}
+
+.brief__rules li::before {
+  content: counter(brief);
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--c-brand-deep);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--c-brand-deep) 14%, transparent);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.brief__rules li:last-child {
+  color: var(--c-text);
+}
+
+/* ─── game screen chassis ─────────────────────────────────────────────────────
+   Games reuse the waiting-room frame, but their content is scrollable and often
+   fills the panel, so the CRT scale-up would jank the layout: they boot with a
+   plain fade instead. */
+
+.hud--game .hud__frame {
+  width: min(100%, 82rem);
+  max-height: 100%;
+  animation: hud-boot-fade-up 320ms ease-out both;
+}
+
+.hud--game .hud__inner {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+/* Game content reads left to right; only the waiting room centres its text.
+   `overflow-x: hidden` matters: a scroll container that also scrolls sideways
+   paints a bar across the bottom of every game screen. */
+.hud--game .hud__stage {
+  align-content: start;
+  justify-items: stretch;
+  text-align: left;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}

@@ -1,6 +1,15 @@
-import { COLOR_GROUPS, contrastOnBlack, resolveColor } from '../../design/tokens'
+import { COLOR_GROUPS, FONT_TOKENS, contrastOnBlack, resolveColor } from '../../design/tokens'
 import './DesignPage.css'
 import './DesignBackground.css'
+
+/** Art in public/, served from the site root. */
+const ARTWORK = [
+  { src: '/hallucination_icon.PNG', label: 'Hallucination', note: 'game icon' },
+  { src: '/data_icon.PNG', label: 'Data Shadow', note: 'game icon' },
+  { src: '/sabotage_icon.PNG', label: 'Sabotage', note: 'game icon' },
+  { src: '/ultimate_icon.PNG', label: 'Ultimate Quiz', note: 'game icon' },
+  { src: '/city_skyline.PNG', label: 'City skyline', note: 'scene' },
+]
 
 export default function DesignPage() {
   return (
@@ -32,6 +41,39 @@ export default function DesignPage() {
           </ul>
         </div>
       ))}
+
+      <div className="design__fonts">
+        <h3>Typefaces</h3>
+        <ul className="design__font-list">
+          {FONT_TOKENS.map((font) => (
+            <li className="design__font" key={font.name}>
+              <div className="design__font-head">
+                <span className="design__font-name">{font.name}</span>
+                <code className="design__font-stack">{font.stack.split(',')[0]}</code>
+              </div>
+              <p className="design__font-sample" style={{ fontFamily: font.stack }}>
+                Arcade FTW
+              </p>
+              <p className="design__font-role">{font.role}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="design__art">
+        <h3>Artwork</h3>
+        <div className="design__art-grid">
+          {ARTWORK.map((item) => (
+            <figure className="design__art-item" key={item.src}>
+              <img className="design__art-img" src={item.src} alt={item.label} loading="lazy" />
+              <figcaption className="design__art-label">
+                <span>{item.label}</span>
+                <code>{item.note}</code>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
 
       <div className="design__backgrounds">
         <h3>Background</h3>

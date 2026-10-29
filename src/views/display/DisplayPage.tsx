@@ -6,11 +6,80 @@ import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { QUIZ_QUESTIONS } from '../../games/quiz/content'
 import { findBrief } from '../../games/briefs'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
+import '../../games/hallucination/HallucinationGame.css'
+import '../hud.css'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
 import { useGameStore } from '../../store/gameStore'
 import StaffLogin from '../StaffLogin'
 import './DisplayPage.css'
+
+/**
+ * The wall screen's waiting room: the same notched panel as the iPad, but the
+ * ring stack carries the player count and the roster sits under it. Built once
+ * so the "no room yet" and "room open" states cannot drift apart.
+ */
+function LobbyPanel({
+  count,
+  names,
+  note,
+}: {
+  count?: number
+  names: string[]
+  note: string
+}) {
+  return (
+    <div className="hud hud--display">
+      <div className="hud__matrix" aria-hidden="true" />
+      <div className="hud__frame">
+        <div className="hud__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
+
+          <div className="hud__tab">Waiting Room</div>
+
+          <div className="hud__bar">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="hud__event">Arcade FTW</span>
+            <span className="hud__status">
+              <span className="hud__dot" aria-hidden="true" />
+              get ready
+            </span>
+            <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+          </div>
+
+          <div className="hud__stage">
+            <div className="hud__rings" aria-hidden="true">
+              <span className="hud__ring hud__ring--outer" />
+              <span className="hud__ring hud__ring--mid" />
+              <span className="hud__ring hud__ring--inner" />
+              {count !== undefined && <span className="hud__count">{count}</span>}
+            </div>
+            <p className="hud__label">
+              {count === undefined
+                ? 'stand by'
+                : count === 1
+                  ? 'player joined'
+                  : 'players joined'}
+            </p>
+
+            {names.length > 0 ? (
+              <ul className="display__names">
+                {names.map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="hud__empty">{note}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function formatClock(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000))
@@ -70,10 +139,33 @@ function QuestionOnScreen({ kind, index }: { kind: 'hallucination' | 'quiz'; ind
   if (kind === 'hallucination') {
     const question = HALLUCINATION_QUESTIONS[index]
     if (!question) return null
+    // The wall shows the same conversation the iPads do, so an audience member
+    // looking up mid-answer does not have to re-find their place.
     return (
-      <article className="display__question">
-        <p className="display__prompt">{question.prompt}</p>
-        <p className="display__reply">{question.reply}</p>
+      <article className="display__conversation">
+        <div className="chat">
+          <div className="chat__row chat__row--user">
+            <div className="chat__bubble">
+              <span className="chat__who">Asked the model</span>
+              <p className="chat__text">{question.prompt}</p>
+            </div>
+            <span className="chat__avatar" aria-hidden="true">
+              <span className="chat__avatar-head" />
+              <span className="chat__avatar-body" />
+            </span>
+          </div>
+
+          <div className="chat__row chat__row--ai">
+            <div className="chat__answer">
+              <div className="chat__aihead">
+                <span className="chat__aibadge" aria-hidden="true" />
+                <span className="chat__ainame">Assistant</span>
+                <span className="chat__aistamp">generated · unverified</span>
+              </div>
+              <p className="chat__text chat__text--ai">{question.reply}</p>
+            </div>
+          </div>
+        </div>
         <p className="display__look">Trust it, or doubt it — on your iPad.</p>
       </article>
     )
@@ -179,11 +271,8 @@ export default function DisplayPage() {
 
   const phase = useGameStore((state) => state.phase)
   const node = useGameStore((state) => state.node)
-  const index = useGameStore((state) => state.index)
-  const nodeCount = useGameStore((state) => state.nodeCount)
   const endsAt = useGameStore((state) => state.endsAt)
   const heldMs = useGameStore((state) => state.heldMs)
-  const connection = useGameStore((state) => state.connection)
   const question = useGameStore((state) => state.question)
   const sabotage = useGameStore((state) => state.sabotage)
 
@@ -249,11 +338,7 @@ export default function DisplayPage() {
         <header className="display__bar">
           <span className="display__brand">Arcade FTW</span>
         </header>
-        <section className="display__lobby">
-          <p className="display__kicker">Get ready</p>
-          <h1 className="display__lobbyTitle">Waiting Room</h1>
-          <p className="display__lobbyEmpty">The host opens the round shortly.</p>
-        </section>
+        <LobbyPanel names={[]} note="The host opens the round shortly." />
       </main>
     )
   }
@@ -271,51 +356,41 @@ export default function DisplayPage() {
 
   return (
     <main className={`display display--${phase}`}>
-      <header className="display__bar">
-        <span className="display__brand">Arcade FTW</span>
-        <span className={`dot dot--${connection}`} />
-      </header>
-
       {phase === 'waiting' ? (
-        <section className="display__lobby">
-          <p className="display__kicker">Get ready</p>
-          <h1 className="display__lobbyTitle">Waiting Room</h1>
-
-          <p className="display__lobbyCount">
-            <span className="display__pulse" />
-            <strong>{joined.length}</strong>
-            {joined.length === 1 ? ' player joined' : ' players joined'}
-          </p>
-
-          {joined.length > 0 ? (
-            <ul className="display__names">
-              {joined.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="display__lobbyEmpty">Sign in on your iPad to join.</p>
-          )}
-
-          <p className="display__lobbyNote">
-            The round starts on its own — keep the iPad awake.
-          </p>
-        </section>
+        <LobbyPanel
+          count={joined.length}
+          names={joined}
+          note="Sign in on your iPad to join."
+        />
       ) : (
-        <section className="display__stage">
-          <p className="display__kicker">
-            node {Math.min(index + 1, nodeCount)} / {nodeCount}
-            {phase === 'paused' && ' · paused'}
-            {phase === 'finished' && ' · finished'}
-          </p>
-          <h1 className="display__title">{node?.title ?? '—'}</h1>
+        <div className="hud hud--display hud--stage">
+          <div className="hud__matrix" aria-hidden="true" />
+          <div className="hud__frame">
+            <div className="hud__inner">
+              <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+              <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+              <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+              <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-          {/* The display only ever has one clock, so it always shows the node's
-              remaining time - unlike the player screen, where the game's own
-              timer would otherwise compete with it. */}
-          <p className="display__clock">
-            {formatClock(node?.game === 'sabotage' ? sabotageRemaining : remaining)}
-          </p>
+              <div className="hud__tab">Arcade FTW</div>
+
+              <div className="hud__bar">
+                <span className="hud__chevrons" aria-hidden="true" />
+                <span className="hud__event">{node?.title ?? '—'}</span>
+                <span className="hud__status">
+                  <span className="hud__dot" aria-hidden="true" />
+                  {phase === 'paused' ? 'paused' : phase === 'finished' ? 'finished' : 'live'}
+                </span>
+                {/* The display only ever has one clock, so it always shows the
+                    node's remaining time - unlike the player screen, where the
+                    game's own timer would otherwise compete with it. */}
+                <span className="display__clock">
+                  {formatClock(node?.game === 'sabotage' ? sabotageRemaining : remaining)}
+                </span>
+                <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+              </div>
+
+              <div className="hud__stage display__stage">
 
           {node?.type === 'brief' && <BriefOnScreen brief={node.brief} />}
 
@@ -347,7 +422,10 @@ export default function DisplayPage() {
           {phase === 'finished' && (
             <p className="display__look">That's the show. Thank you for playing.</p>
           )}
-        </section>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   )

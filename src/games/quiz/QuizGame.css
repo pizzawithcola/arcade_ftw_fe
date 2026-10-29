@@ -1,37 +1,28 @@
-/* The quiz round. Same shell as the other screens, with its own board over it. */
+/* Quiz: four options inside the console chassis.
+ *
+ * The four answers are the only thing anyone touches, so they are the biggest
+ * element on the screen. Letters are set in the display face - on stage, "B" is
+ * what the host calls out - while the option text keeps the UI font.
+ */
 
-.stage.quiz {
-  justify-content: flex-start;
-  gap: 0;
-  padding: 0;
-  text-align: left;
-  width: 100%;
-  max-width: 52rem;
-  margin: 0 auto;
-}
-
-.quiz__bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid var(--c-surface-raised);
+.quiz__stage {
+  gap: clamp(0.5rem, 1.6vh, 0.9rem);
 }
 
 .quiz__count {
-  font-size: 0.75rem;
+  margin-left: auto;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.78rem;
   letter-spacing: 0.16em;
   color: var(--c-text-muted);
 }
 
 .quiz__timer {
-  margin-left: auto;
-  padding: 0.25rem 0.6rem;
+  padding: 0.1rem 0.6rem;
   border: 1px solid var(--c-border);
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--c-text);
 }
@@ -39,91 +30,92 @@
 .quiz__timer.is-urgent {
   border-color: var(--c-brand-deep);
   background: color-mix(in srgb, var(--c-brand-deep) 16%, transparent);
-  color: var(--c-text);
 }
 
 .quiz__score {
+  min-width: 2.6rem;
+  text-align: right;
+  font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--c-text-muted);
-}
-
-.quiz__board {
-  width: 100%;
-  padding: 1.6rem 1.25rem 1rem;
+  font-weight: 700;
+  color: var(--c-text);
 }
 
 .quiz__question {
-  margin: 0 0 1.4rem;
-  font-size: clamp(1.15rem, 2.6vw, 1.6rem);
-  line-height: 1.4;
+  margin: 0;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--c-brand-deep);
+  font-size: clamp(0.95rem, 2vw, 1.22rem);
+  font-weight: 600;
+  line-height: 1.45;
   color: var(--c-text);
 }
 
 .quiz__options {
   display: grid;
-  gap: 0.7rem;
+  gap: clamp(0.35rem, 1vh, 0.55rem);
+  width: 100%;
 }
 
 .quiz__option {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.9rem;
-  width: 100%;
-  padding: 0.9rem 1rem;
+  gap: 0.7rem;
+  padding: clamp(0.45rem, 1.2vh, 0.7rem) clamp(0.6rem, 1.4vw, 0.9rem);
   border: 1px solid var(--c-border);
-  border-radius: 8px;
-  background: var(--c-surface);
+  border-radius: 7px;
+  background: var(--c-surface-raised);
   color: var(--c-text);
   font: inherit;
-  font-size: 1rem;
+  font-size: clamp(0.8rem, 1.5vw, 0.92rem);
+  line-height: 1.45;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .quiz__option:hover:not(:disabled) {
-  background: var(--c-surface-raised);
+  border-color: var(--c-brand-deep);
+  background: color-mix(in srgb, var(--c-brand-deep) 10%, var(--c-surface-raised));
 }
 
 .quiz__option:disabled {
   cursor: default;
 }
 
-.quiz__waiting {
-  margin: 1rem 0 0;
-  font-size: 0.9rem;
-  color: var(--c-text-muted);
-  text-align: center;
-}
-
+/* The letter is the handle: a square that reads at a glance across a table. */
 .quiz__letter {
-  flex: none;
   display: grid;
   place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border: 1px solid var(--c-border);
-  border-radius: 6px;
-  font-size: 0.85rem;
+  border-radius: 5px;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--c-text-muted);
 }
 
 .quiz__optiontext {
-  line-height: 1.45;
+  min-width: 0;
 }
 
-/* States once the answer is shown. */
+/* Picked but not yet revealed: amber, because it is a pending state. */
 .quiz__option.is-picked {
   border-color: var(--c-warning);
 }
 
-/* Correct lights up white; only a wrong pick earns the red. */
+.quiz__option.is-picked .quiz__letter {
+  border-color: var(--c-warning);
+  color: var(--c-warning);
+}
+
+/* The right answer lights up white; a wrong pick wears the red. */
 .quiz__option.is-answer {
   border-color: var(--c-text);
-  background: color-mix(in srgb, var(--c-text) 10%, transparent);
+  background: color-mix(in srgb, var(--c-text) 9%, var(--c-surface-raised));
 }
 
 .quiz__option.is-answer .quiz__letter {
@@ -133,7 +125,7 @@
 
 .quiz__option.is-wrong {
   border-color: var(--c-brand-deep);
-  background: color-mix(in srgb, var(--c-brand-deep) 14%, transparent);
+  background: color-mix(in srgb, var(--c-brand-deep) 14%, var(--c-surface-raised));
 }
 
 .quiz__option.is-wrong .quiz__letter {
@@ -141,101 +133,121 @@
   color: var(--c-text);
 }
 
+.quiz__waiting {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
+}
+
+/* ─── reveal ────────────────────────────────────────────────────────────────── */
+
 .quiz__reveal {
+  display: grid;
+  gap: 0.4rem;
   width: 100%;
-  padding: 0.9rem 1.25rem 1.4rem;
-  border-top: 1px solid var(--c-surface-raised);
+  padding-top: clamp(0.3rem, 1vh, 0.6rem);
+  border-top: 1px solid var(--c-border);
 }
 
 .quiz__explain {
-  margin: 0 0 0.6rem;
+  margin: 0;
+  font-size: clamp(0.78rem, 1.45vw, 0.9rem);
+  line-height: 1.6;
   color: var(--c-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.7;
 }
 
 .quiz__correct {
-  margin: 0 0 1.1rem;
-  font-size: 0.85rem;
+  margin: 0;
+  font-size: 0.78rem;
   font-weight: 600;
-}
-
-.quiz__reveal.is-good .quiz__correct {
   color: var(--c-text);
 }
 
 .quiz__reveal.is-bad .quiz__correct {
   padding-left: 0.5rem;
   border-left: 2px solid var(--c-brand-deep);
-  color: var(--c-text);
 }
 
 .quiz__next {
-  padding: 0.7rem 1.6rem;
-  border: none;
+  justify-self: start;
+  margin-top: 0.2rem;
+  padding: 0.42rem 1.3rem;
+  border: 1px solid var(--c-brand-deep);
   border-radius: 6px;
   background: var(--c-brand-deep);
   color: var(--c-text);
   font: inherit;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
 }
 
+.quiz__next:hover {
+  border-color: var(--c-brand-press);
+  background: var(--c-brand-press);
+}
+
+/* ─── final score ───────────────────────────────────────────────────────────── */
+
 .quiz__final {
+  display: grid;
+  justify-items: start;
+  gap: 0.45rem;
   width: 100%;
-  padding: 1.6rem 1.25rem 2rem;
-  text-align: center;
 }
 
 .quiz__finallabel {
-  margin: 0 0 0.3rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--c-text-muted);
 }
 
 .quiz__finalscore {
-  margin: 0 0 1.4rem;
-  font-size: clamp(2.6rem, 8vw, 4.5rem);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(2.2rem, 6.5vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
   color: var(--c-text);
+  text-shadow: 0 0 22px rgba(219, 0, 17, 0.6), 0 0 52px rgba(219, 0, 17, 0.3);
 }
 
 .quiz__review {
-  display: grid;
-  gap: 0.5rem;
-  max-width: 42rem;
-  margin: 0 auto;
+  margin: 0.2rem 0 0;
   padding: 0;
   list-style: none;
-  text-align: left;
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
 }
 
 .quiz__review li {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  gap: 0.6rem;
   align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.6rem 0.8rem;
+  padding: 0.4rem 0.6rem;
   border: 1px solid var(--c-border);
   border-radius: 6px;
   background: var(--c-surface);
+  font-size: 0.78rem;
+  line-height: 1.5;
   color: var(--c-text-muted);
-  font-size: 0.85rem;
+}
+
+.quiz__review li.is-good {
+  border-left: 3px solid var(--c-text);
+}
+
+.quiz__review li.is-bad {
+  border-left: 3px solid var(--c-brand-deep);
 }
 
 .quiz__reviewmark {
-  flex: none;
-  min-width: 1.4rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
   font-weight: 700;
-  color: var(--c-text-muted);
-}
-
-.quiz__review li.is-good .quiz__reviewmark {
-  color: var(--c-text);
-}
-
-.quiz__review li.is-bad .quiz__reviewmark {
   color: var(--c-text);
 }

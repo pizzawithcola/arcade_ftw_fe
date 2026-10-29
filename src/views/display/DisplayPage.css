@@ -161,40 +161,52 @@
   }
 }
 
-/* ─── a round in progress ──────────────────────────────────────────────────── */
+/* ─── a round in progress ────────────────────────────────────────────────────
+   The stage lives inside the same chassis as everything else, so the wall and
+   the iPads look like one system. Type stays large: this is read from five
+   metres, not from a chair. */
 
 .display__stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: clamp(1rem, 3vw, 2.5rem) clamp(1.5rem, 5vw, 4rem);
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(0.6rem, 1.8vh, 1.2rem);
   text-align: center;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
+/* Orbitron's colon is drawn as a slashed zero, so the clock keeps the UI face:
+   "1:06" has to be unmistakable at five metres. */
+.display__clock {
+  margin-left: auto;
+  padding-right: 0.2rem;
+  font-family: inherit;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* The stage bar carries the section name, so it needs room to breathe. */
 .display__kicker {
   margin: 0;
-  font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+  font-size: clamp(0.8rem, 1.4vw, 1.05rem);
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--c-text-dim);
 }
 
-.display__title {
-  margin: 0;
-  font-size: clamp(2.6rem, 7vw, 5.5rem);
-  line-height: 1.05;
-  color: var(--c-text);
+.hud--stage .hud__event {
+  font-size: clamp(0.95rem, 2vw, 1.35rem);
 }
 
-.display__clock {
-  margin: 0;
-  font-size: clamp(2.4rem, 6vw, 4.5rem);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--c-text);
+.hud--stage .hud__tab {
+  font-size: clamp(0.7rem, 1.4vw, 0.95rem);
+}
+
+.hud--stage .hud__status {
+  font-size: clamp(0.66rem, 1.2vw, 0.82rem);
 }
 
 .display__look {
@@ -320,4 +332,77 @@
   width: 0.6rem;
   height: 2px;
   background: var(--c-brand-deep);
+}
+
+/* ─── the wall's version of a game question ───────────────────────────────────
+   The same conversation the iPads show, set for five metres: bigger type, a
+   wider measure, and no chat actions (nobody taps a projector). */
+.display__conversation {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.8rem, 2vh, 1.6rem);
+  width: 100%;
+}
+
+.hud--stage .chat {
+  width: min(100%, 78rem);
+  gap: clamp(0.7rem, 2vh, 1.4rem);
+  /* The wall centres its other screens; a transcript has to read left to
+     right, so this block opts out. */
+  text-align: left;
+}
+
+.hud--stage .chat__bubble {
+  width: min(100%, 62rem);
+  text-align: left;
+}
+
+.hud--stage .chat__answer {
+  width: min(100%, 68rem);
+}
+
+.hud--stage .chat__bubble {
+  padding: clamp(0.7rem, 1.8vh, 1.2rem) clamp(0.9rem, 2vw, 1.5rem);
+}
+
+.hud--stage .chat__answer {
+  padding: clamp(0.8rem, 2vh, 1.4rem) clamp(1rem, 2.2vw, 1.7rem);
+}
+
+.hud--stage .chat__who {
+  font-size: clamp(0.64rem, 1.05vw, 0.82rem);
+  letter-spacing: 0.24em;
+}
+
+.hud--stage .chat__text {
+  font-size: clamp(0.92rem, 1.45vw, 1.22rem);
+  line-height: 1.6;
+}
+
+.hud--stage .chat__text--ai {
+  font-size: clamp(1rem, 1.7vw, 1.4rem);
+  line-height: 1.55;
+}
+
+.hud--stage .chat__ainame {
+  font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+}
+
+.hud--stage .chat__aistamp {
+  font-size: clamp(0.62rem, 1vw, 0.78rem);
+}
+
+.hud--stage .chat__avatar {
+  width: clamp(2.2rem, 3.6vw, 3rem);
+  height: clamp(2.2rem, 3.6vw, 3rem);
+}
+
+.hud--stage .chat__avatar-head {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.hud--stage .chat__avatar-body {
+  width: 1.6rem;
+  height: 0.8rem;
 }

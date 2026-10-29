@@ -71,8 +71,21 @@ export default function HallucinationGame({
       0,
     )
     return (
-      <div className="stage stage--game stage--hallucination hallu">
-        <span className="stage__kind">Hallucination</span>
+      <div className="hud hud--game hallu">
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame">
+          <div className="hud__inner">
+            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--br" aria-hidden="true" />
+            <div className="hud__tab">Hallucination</div>
+            <div className="hud__bar">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <span className="hud__event">Round complete</span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
+            <div className="hud__stage hallu__stage">
         <div className="hallu__final">
           <p className="hallu__finallabel">Final score</p>
           <p className="hallu__finalscore">
@@ -102,6 +115,9 @@ export default function HallucinationGame({
             })}
           </ul>
         </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -110,29 +126,87 @@ export default function HallucinationGame({
   const right = picked ? isCorrect(picked, question.truth) : false
 
   return (
-    <div className="stage stage--game stage--hallucination hallu">
-      <header className="hallu__bar">
-        <span className="stage__kind">Hallucination</span>
-        <span className="hallu__count">
-          {index + 1} / {HALLUCINATION_QUESTIONS.length}
-        </span>
-        {!revealed && (
-          <span className={`hallu__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
-            {secondsLeft}s
-          </span>
-        )}
-        <span className={`hallu__score ${total < 0 ? 'is-bad' : total > 0 ? 'is-good' : ''}`}>
-          {total > 0 ? '+' : ''}
-          {total}
-        </span>
-      </header>
+    <div className="hud hud--game hallu">
+      <div className="hud__matrix" aria-hidden="true" />
+      <div className="hud__frame">
+        <div className="hud__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-      <div className="hallu__board">
-        <p className="hallu__ask">You asked the AI:</p>
-        <p className="hallu__prompt">{question.prompt}</p>
-        <p className="hallu__replylabel">It answered:</p>
-        <blockquote className="hallu__reply">{question.reply}</blockquote>
-      </div>
+          <div className="hud__tab">Hallucination</div>
+
+          <div className="hud__bar">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="hud__event">Ask the model</span>
+            <span className="hallu__count">
+              {index + 1} / {HALLUCINATION_QUESTIONS.length}
+            </span>
+            {!revealed && (
+              <span className={`hallu__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
+                {secondsLeft}s
+              </span>
+            )}
+            <span className={`hallu__score ${total < 0 ? 'is-bad' : total > 0 ? 'is-good' : ''}`}>
+              {total > 0 ? '+' : ''}
+              {total}
+            </span>
+          </div>
+
+          <div className="hud__stage hallu__stage">
+            <div className="chat">
+              {/* A normal transcript: your message on the right with the avatar,
+                  the model's reply on the left without one, newest at the
+                  bottom. Two columns looked like a comparison; this reads as a
+                  conversation. */}
+              <div className="chat__row chat__row--user">
+                <div className="chat__bubble">
+                  <span className="chat__who">You asked</span>
+                  <p className="chat__text">{question.prompt}</p>
+                </div>
+                <span className="chat__avatar" aria-hidden="true">
+                  <span className="chat__avatar-head" />
+                  <span className="chat__avatar-body" />
+                </span>
+              </div>
+
+              <div className="chat__row chat__row--ai">
+              <div className="chat__answer">
+                <div className="chat__aihead">
+                  <span className="chat__aibadge" aria-hidden="true" />
+                  <span className="chat__ainame">Assistant</span>
+                  <span className="chat__aistamp">generated · unverified</span>
+                </div>
+                <p className="chat__text chat__text--ai">{question.reply}</p>
+                <div className="chat__actions">
+                  <button type="button" className="chat__action" title="Good answer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3z" />
+                      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                    </svg>
+                  </button>
+                  <button type="button" className="chat__action" title="Bad answer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.7a2 2 0 0 0-2 1.7l-1.4 9a2 2 0 0 0 2 2.3z" />
+                      <path d="M17 2h2.3A2.3 2.3 0 0 1 22 4.3v7A2.3 2.3 0 0 1 19.3 14H17" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="chat__action"
+                    title="Copy the answer"
+                    onClick={() => void navigator.clipboard?.writeText(question.reply)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="9" y="9" width="12" height="12" rx="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              </div>
+            </div>
 
       {!revealed ? (
         <div className="hallu__choices">
@@ -187,6 +261,9 @@ export default function HallucinationGame({
           </button>
         </div>
       )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

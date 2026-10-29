@@ -66,3 +66,124 @@
   color: var(--c-text-dim);
   font-size: 0.66rem;
 }
+
+/* Artwork pulled straight from public/, at thumbnail size: enough to judge the
+   set together, and lazy so the page does not load 9MB of PNG up front. */
+.design__art {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.design__art h3 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.design__art-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.5rem;
+}
+
+.design__art-item {
+  margin: 0;
+  display: grid;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c-surface);
+}
+
+.design__art-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  padding: 0.5rem;
+}
+
+.design__art-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.55rem;
+  border-top: 1px solid var(--c-border);
+  font-size: 0.72rem;
+  color: var(--c-text);
+}
+
+.design__art-label code {
+  color: var(--c-text-dim);
+  white-space: nowrap;
+}
+
+/* One row per face: the name, a specimen at a size the face deserves, and where
+   it belongs. Samples are sized per row by the face itself, not by the list. */
+.design__fonts {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.design__fonts h3 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.design__font-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.design__font {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-brand-deep);
+  border-radius: 8px;
+  background: var(--c-surface);
+}
+
+.design__font-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--c-text-muted);
+}
+
+.design__font-name {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text);
+}
+
+.design__font-stack {
+  color: var(--c-text-dim);
+}
+
+/* The specimen: large enough to judge the face, and allowed to overflow rather
+   than wrap, so wide faces (Press Start 2P, Monoton) are not judged on a break. */
+.design__font-sample {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  color: var(--c-text);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.design__font-role {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--c-text-muted);
+}
