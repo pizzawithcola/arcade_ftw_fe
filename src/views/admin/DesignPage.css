@@ -1,0 +1,68 @@
+/* Palette reference: swatch, name, hex. Nothing else. */
+
+.design {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.design__group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.design__group h3 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.design__swatches {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.4rem;
+}
+
+.design__swatch {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
+}
+
+.design__chip {
+  flex: 0 0 auto;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--c-border);
+}
+
+.design__name {
+  font-size: 0.78rem;
+  color: var(--c-text);
+}
+
+.design__value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--c-text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* Contrast against black, so an unreadable step is visible on this page
+   instead of on a projector. Below 3.0 is decoration only. */
+.design__ratio {
+  color: var(--c-text-dim);
+  font-size: 0.66rem;
+}

@@ -4,7 +4,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle at 50% 0%, #132038 0%, #0b0f1a 60%);
+  /* The grid stays the page canvas; only a red bloom is added on top. */
+  background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--c-brand-deep) 16%, transparent) 0%, transparent 60%);
   cursor: none;
 }
 
@@ -14,14 +15,16 @@
   gap: 1rem;
   padding: 1rem 2rem;
   font-size: 0.9rem;
-  color: #5a6478;
+  color: var(--c-text-muted);
 }
 
 .display__brand {
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--c-brand-deep);
   font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .display__bar .dot {
@@ -47,7 +50,7 @@
   line-height: 1;
   letter-spacing: -0.02em;
   /* A hint of depth instead of a flat white headline. */
-  background: linear-gradient(180deg, #ffffff 0%, #b9c1d1 100%);
+  background: linear-gradient(180deg, var(--c-text) 0%, var(--c-text-muted) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -60,13 +63,13 @@
   margin: 0;
   font-size: clamp(1rem, 1.8vw, 1.4rem);
   letter-spacing: 0.02em;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .display__lobbyCount strong {
   font-size: clamp(1.8rem, 3.4vw, 2.8rem);
   font-variant-numeric: tabular-nums;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 /* A quiet "this is live" cue, so the wall does not look frozen. */
@@ -74,20 +77,20 @@
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
-  background: #57f2c4;
-  box-shadow: 0 0 0 0 rgba(87, 242, 196, 0.6);
+  background: var(--c-brand-deep);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
   animation: display-pulse 2.4s ease-out infinite;
 }
 
 @keyframes display-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(87, 242, 196, 0.5);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-brand-deep) 50%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 0.9rem rgba(87, 242, 196, 0);
+    box-shadow: 0 0 0 0.9rem color-mix(in srgb, var(--c-brand-deep) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(87, 242, 196, 0);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-brand-deep) 0%, transparent);
   }
 }
 
@@ -115,11 +118,11 @@
 
 .display__names li {
   padding: 0.55rem 0.9rem;
-  border: 1px solid #1e2739;
+  border: 1px solid var(--c-surface-raised);
   border-radius: 999px;
-  background: #111826;
+  background: var(--c-surface);
   font-size: clamp(0.95rem, 1.5vw, 1.25rem);
-  color: #dfe4ee;
+  color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -140,7 +143,7 @@
 .display__lobbyEmpty {
   margin: auto 0;
   font-size: clamp(1.1rem, 2.2vw, 1.7rem);
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .display__lobbyNote {
@@ -148,7 +151,7 @@
   font-size: clamp(0.8rem, 1.2vw, 1rem);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4b5468;
+  color: var(--c-text-dim);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -176,14 +179,14 @@
   font-size: clamp(0.85rem, 1.4vw, 1.1rem);
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .display__title {
   margin: 0;
   font-size: clamp(2.6rem, 7vw, 5.5rem);
   line-height: 1.05;
-  color: #e6e9f0;
+  color: var(--c-text);
 }
 
 .display__clock {
@@ -191,13 +194,13 @@
   font-size: clamp(2.4rem, 6vw, 4.5rem);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .display__look {
   margin: 0;
   font-size: clamp(1rem, 2vw, 1.5rem);
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 /* The post, sized for reading at distance while players work on their iPads. */
@@ -206,8 +209,8 @@
   margin-top: 0.5rem;
   padding: clamp(1rem, 2.5vw, 2rem);
   border-radius: 14px;
-  background: #ffffff;
-  color: #1b1f24;
+  background: var(--c-text);
+  color: var(--c-surface-raised);
   text-align: left;
 }
 
@@ -225,7 +228,7 @@
   height: 2.6rem;
   border-radius: 50%;
   background: linear-gradient(135deg, #0a66c2, #004182);
-  color: #ffffff;
+  color: var(--c-text);
   font-weight: 700;
 }
 
@@ -238,7 +241,7 @@
   display: block;
   font-size: 0.85rem;
   font-style: normal;
-  color: #5a6470;
+  color: var(--c-text-dim);
 }
 
 .display__post p {
@@ -262,12 +265,12 @@
 .display__prompt {
   margin: 0;
   font-size: clamp(1rem, 1.6vw, 1.4rem);
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .display__reply {
   margin: 0;
   font-size: clamp(1.3rem, 2.6vw, 2.3rem);
   line-height: 1.35;
-  color: #e6e9f0;
+  color: var(--c-text);
 }

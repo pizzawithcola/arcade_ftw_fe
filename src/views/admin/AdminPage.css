@@ -1,4 +1,9 @@
-/* Operator console. Dense, dark, no game rendering. */
+/* Operator console. Dense, dark, no game rendering.
+ *
+ * Palette split: 60% black canvas, 30% white type, 10% red. Red only fills or
+ * marks an edge - never small text, because no red clears 4.5:1 on black. Fills
+ * use the deep red var(--c-brand-deep): white on it is 6.76:1, and it does not glare across
+ * a dark room the way var(--c-brand) does. */
 
 .admin {
   height: 100%;
@@ -10,6 +15,7 @@
   /* Wide tables scroll inside their own wrapper; the page itself never does,
      otherwise a click near the edge can shift the whole console sideways. */
   overflow-x: hidden;
+  /* The grid comes from the body, so the console never paints its own canvas. */
 }
 
 .admin__bar {
@@ -22,15 +28,17 @@
   margin: 0;
   font-size: 1rem;
   letter-spacing: 0.14em;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--c-brand-deep);
   text-transform: uppercase;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .admin__bar button {
   margin-left: auto;
   border: none;
   background: none;
-  color: #5a6478;
+  color: var(--c-text-dim);
   font: inherit;
   font-size: 0.78rem;
   cursor: pointer;
@@ -60,22 +68,22 @@
   border-left: 2px solid transparent;
   border-radius: 6px;
   background: none;
-  color: #8b94a8;
+  color: var(--c-text-muted);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
 .admin__side button:hover {
-  color: #dfe4ee;
-  background: #131a28;
+  color: var(--c-text);
+  background: var(--c-surface-raised);
 }
 
 .admin__side button.is-active {
-  border-color: #232a3b;
-  border-left-color: #57f2c4;
-  background: #131a28;
-  color: #e6e9f0;
+  border-color: var(--c-border);
+  border-left-color: var(--c-brand-deep);
+  background: var(--c-surface-raised);
+  color: var(--c-text);
 }
 
 .admin__side-label {
@@ -86,7 +94,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .admin__content {
@@ -96,9 +104,9 @@
 }
 
 .admin__panel {
-  border: 1px solid #232a3b;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #0e1421;
+  background: var(--c-surface);
   padding: 0.9rem 1rem 1.1rem;
 }
 
@@ -107,26 +115,30 @@
   font-size: 0.74rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .admin__phase {
   font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .admin__phase.is-playing {
-  color: #57f2c4;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-brand-deep) 16%, transparent);
+  color: var(--c-text);
 }
 
 .admin__phase.is-paused {
-  color: #ffd166;
+  color: var(--c-warning);
 }
 
 .admin__phase.is-finished {
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .admin__panel-head {
@@ -144,7 +156,7 @@
 /* Segmented switch: Rooms | Players. Two buttons, one panel. */
 .admin__toggle {
   display: inline-flex;
-  border: 1px solid #2a3242;
+  border: 1px solid var(--c-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -152,24 +164,24 @@
 .admin__toggle button {
   padding: 0.35rem 0.9rem;
   border: none;
-  background: #131a28;
-  color: #8b94a8;
+  background: var(--c-surface-raised);
+  color: var(--c-text-muted);
   font: inherit;
   font-size: 0.78rem;
   cursor: pointer;
 }
 
 .admin__toggle button + button {
-  border-left: 1px solid #2a3242;
+  border-left: 1px solid var(--c-border);
 }
 
 .admin__toggle button:hover {
-  color: #dfe4ee;
+  color: var(--c-text);
 }
 
 .admin__toggle button.is-active {
-  background: #1b2334;
-  color: #57f2c4;
+  background: color-mix(in srgb, var(--c-brand-deep) 18%, transparent);
+  color: var(--c-text);
 }
 
 .admin__head-tools {
@@ -182,17 +194,19 @@
 /* Starting a round must not require a code or a second screen. */
 .admin__new-round {
   padding: 0.38rem 0.8rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-brand-deep);
   border-radius: 6px;
-  background: #131a28;
-  color: #57f2c4;
+  background: var(--c-brand-deep);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .admin__new-round:hover:not(:disabled) {
-  border-color: #57f2c4;
+  border-color: var(--c-brand-press);
+  background: var(--c-brand-press);
 }
 
 .admin__new-round:disabled {
@@ -207,18 +221,26 @@
   gap: 0.35rem;
   font-size: 0.78rem;
   letter-spacing: 0.04em;
-  color: #9aa4b8;
+  color: var(--c-text-muted);
 }
 
 .admin__current strong {
-  color: #57f2c4;
+  color: var(--c-text);
   font-weight: 600;
 }
 
 .admin__node {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin: 0 0 0.9rem;
   font-size: 1.4rem;
-  color: #e6e9f0;
+  color: var(--c-text);
+}
+
+.admin__node-sep {
+  color: var(--c-text-dim);
 }
 
 .admin__controls {
@@ -243,10 +265,10 @@
 .admin__controls button,
 .admin__jumps button {
   padding: 0.55rem 1rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-border);
   border-radius: 6px;
-  background: #131a28;
-  color: #e6e9f0;
+  background: var(--c-surface-raised);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -254,7 +276,7 @@
 
 .admin__controls button:hover:not(:disabled),
 .admin__jumps button:hover:not(:disabled) {
-  border-color: #57f2c4;
+  border-color: var(--c-brand-deep);
 }
 
 .admin__controls button:disabled,
@@ -278,29 +300,35 @@
   min-width: 0;
 }
 
+/* Which of the two screens the console mirrors. */
+.admin__toggle--screens button {
+  padding: 0.24rem 0.65rem;
+  font-size: 0.72rem;
+}
+
 .admin__tv {
   position: relative;
   height: 36vh;
   min-height: 12rem;
   aspect-ratio: 16 / 9;
-  border: 1px solid #232a3b;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #05080f;
+  background: var(--c-black);
   /* The iframe below is laid out at 1920×1080 and scaled to fit, so the box has
      to clip the unscaled frame rather than let it spill over the console. */
   overflow: hidden;
-  box-shadow: 0 0 0 1px #0b1220, 0 12px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 1px var(--c-border), 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 
 .admin__tv iframe {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 1920px;
-  height: 1080px;
+  top: 50%;
+  left: 50%;
+  width: var(--frame-w, 1920px);
+  height: var(--frame-h, 1080px);
   border: 0;
-  background: #05080f;
-  transform-origin: top left;
+  background: var(--c-black);
+  transform-origin: center center;
   /* A picture of another screen: it must never capture a click meant for the
      console. */
   pointer-events: none;
@@ -321,20 +349,20 @@
 
 /* Lower row: the rundown, one box per section. */
 .admin__progress {
-  border-top: 1px solid #1b2231;
+  border-top: 1px solid var(--c-border);
   padding-top: 0.9rem;
 }
 
 .admin__table-note {
   margin: 0 0 0.55rem;
   font-size: 0.78rem;
-  color: #5a6478;
+  color: var(--c-text-muted);
 }
 
 .admin__hint {
   margin: 0 0 0.5rem;
   font-size: 0.78rem;
-  color: #5a6478;
+  color: var(--c-text-muted);
 }
 
 /* Jump board: one box per section, with its nodes as labelled buttons. */
@@ -349,16 +377,18 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.5rem 0.6rem 0.6rem;
-  border: 1px solid #232a3b;
+  border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: #0d1420;
+  background: var(--c-black);
 }
 
 .admin__jumpgroup-title {
+  padding-left: 0.45rem;
+  border-left: 2px solid var(--c-brand-deep);
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .admin__jumpgroup-buttons {
@@ -375,13 +405,18 @@
 }
 
 .admin__jumps button.is-current {
-  border-color: #57f2c4;
-  color: #57f2c4;
+  border-color: var(--c-brand-deep);
+  background: var(--c-brand-deep);
+  color: var(--c-text);
 }
 
 .admin__error {
   margin: 0.9rem 0 0;
-  color: #ff5c7a;
+  padding: 0.35rem 0.55rem;
+  border-left: 3px solid var(--c-brand-deep);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c-brand-deep) 16%, transparent);
+  color: var(--c-text);
   font-size: 0.82rem;
 }
 
@@ -398,12 +433,12 @@
 
 .admin__table th {
   padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid #232a3b;
+  border-bottom: 1px solid var(--c-border);
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #8b94a8;
+  color: var(--c-text-muted);
   text-align: right;
   white-space: nowrap;
 }
@@ -415,8 +450,8 @@
 
 .admin__table td {
   padding: 0.45rem 0.6rem;
-  border-bottom: 1px solid #1a2030;
-  color: #dfe4ee;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-border) 65%, transparent);
+  color: var(--c-text);
   text-align: right;
   white-space: nowrap;
 }
@@ -427,46 +462,46 @@
 }
 
 .admin__table tbody tr:hover td {
-  background: #131a28;
+  background: var(--c-surface-raised);
 }
 
 .admin__dim {
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .admin__table tbody tr.is-current td {
-  background: #131a28;
+  background: color-mix(in srgb, var(--c-brand-deep) 10%, transparent);
 }
 
 .admin__table tbody tr.is-current td:first-child {
-  box-shadow: inset 2px 0 0 #57f2c4;
+  box-shadow: inset 2px 0 0 var(--c-brand-deep);
 }
 
 .admin__table button {
   padding: 0.2rem 0.6rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-border);
   border-radius: 5px;
-  background: #131a28;
-  color: #b9c1d1;
+  background: var(--c-surface-raised);
+  color: var(--c-text-muted);
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
 }
 
 .admin__table button:hover {
-  border-color: #57f2c4;
-  color: #e6e9f0;
+  border-color: var(--c-brand-deep);
+  color: var(--c-text);
 }
 
 .admin__total {
   font-weight: 700;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .admin__placeholder {
   margin: 0 0 0.6rem;
   font-size: 1rem;
-  color: #b9c1d1;
+  color: var(--c-text-muted);
 }
 
 @media (max-width: 52rem) {
@@ -491,17 +526,19 @@
 
 .admin__create {
   padding: 0.35rem 0.8rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-brand-deep);
   border-radius: 6px;
-  background: #131a28;
-  color: #57f2c4;
+  background: var(--c-brand-deep);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .admin__create:hover:not(:disabled) {
-  border-color: #57f2c4;
+  border-color: var(--c-brand-press);
+  background: var(--c-brand-press);
 }
 
 .admin__create:disabled {
@@ -517,17 +554,18 @@
   gap: 0.7rem;
   margin: 0 0 0.9rem;
   padding: 0.7rem 0.8rem;
-  border: 1px solid #2a3242;
+  border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: #111826;
+  background: var(--c-surface-raised);
 }
 
 .admin__editor-title {
+  padding: 0 0 0.4rem 0.45rem;
+  border-left: 2px solid var(--c-brand-deep);
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #57f2c4;
-  padding-bottom: 0.4rem;
+  color: var(--c-text);
 }
 
 .admin__editor label {
@@ -536,20 +574,26 @@
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .admin__editor input,
 .admin__editor select {
   padding: 0.35rem 0.5rem;
-  border: 1px solid #2a3242;
+  border: 1px solid var(--c-border);
   border-radius: 6px;
-  background: #131a28;
-  color: #e6e9f0;
+  background: var(--c-surface-raised);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.82rem;
   text-transform: none;
   letter-spacing: normal;
+}
+
+.admin__editor input:focus-visible,
+.admin__editor select:focus-visible {
+  border-color: var(--c-brand-deep);
+  outline: none;
 }
 
 .admin__editor-actions {
@@ -560,16 +604,23 @@
 
 .admin__editor-actions button {
   padding: 0.38rem 0.8rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-border);
   border-radius: 6px;
-  background: #131a28;
-  color: #e6e9f0;
+  background: var(--c-surface-raised);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .admin__editor-actions button[type='submit'] {
-  border-color: #57f2c4;
-  color: #57f2c4;
+  border-color: var(--c-brand-deep);
+  background: var(--c-brand-deep);
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.admin__editor-actions button[type='submit']:hover:not(:disabled) {
+  border-color: var(--c-brand-press);
+  background: var(--c-brand-press);
 }

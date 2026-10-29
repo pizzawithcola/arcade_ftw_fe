@@ -9,21 +9,21 @@
   position: relative;
   width: min(380px, 100%);
   padding: 2rem;
-  border: 1px solid #232a3b;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #111726;
+  background: var(--c-surface);
 }
 
 .login__card h1 {
   margin: 0 0 0.25rem;
   font-size: 1.6rem;
   letter-spacing: 0.08em;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .login__hint {
   margin: 0 0 1.5rem;
-  color: #8b94a8;
+  color: var(--c-text-muted);
   font-size: 0.85rem;
 }
 
@@ -35,7 +35,7 @@
 .login__field span {
   display: block;
   margin-bottom: 0.35rem;
-  color: #8b94a8;
+  color: var(--c-text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -45,17 +45,17 @@
 .login__field select {
   width: 100%;
   padding: 0.6rem 0.7rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-border);
   border-radius: 6px;
-  background: #0b0f1a;
-  color: #e6e9f0;
+  background: var(--c-black);
+  color: var(--c-text);
   font: inherit;
 }
 
 .login__field input:focus,
 .login__field select:focus {
   outline: none;
-  border-color: #57f2c4;
+  border-color: var(--c-brand-deep);
 }
 
 .login__field select {
@@ -64,7 +64,7 @@
   color-scheme: dark;
   appearance: none;
   padding-right: 2rem;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%238b94a8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%23a0a0a8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   background-size: 0.7rem;
@@ -72,11 +72,11 @@
 
 /* The placeholder is not a real choice, so it should not read as one. */
 .login__field select.is-placeholder {
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .login__field select:disabled {
-  color: #5a6478;
+  color: var(--c-text-dim);
   cursor: default;
 }
 
@@ -86,8 +86,8 @@
   padding: 0.7rem;
   border: none;
   border-radius: 6px;
-  background: #57f2c4;
-  color: #06121a;
+  background: var(--c-brand-deep);
+  color: var(--c-text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -100,7 +100,9 @@
 
 .login__error {
   margin: 0 0 0.8rem;
-  color: #ff5c7a;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--c-brand-deep);
+  color: var(--c-text);
   font-size: 0.8rem;
 }
 
@@ -111,7 +113,7 @@
 }
 
 .login__leaderboard a {
-  color: #57f2c4;
+  color: var(--c-text);
   font-size: 0.85rem;
   text-decoration: none;
 }
@@ -128,14 +130,14 @@
   padding: 0.15rem 0.4rem;
   border: none;
   background: none;
-  color: #3a4358;
+  color: var(--c-border);
   font: inherit;
   font-size: 0.7rem;
   cursor: pointer;
 }
 
 .login__admin-toggle:hover {
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 /* Staff links sit in the corner: present, never part of the audience flow. */
@@ -148,11 +150,11 @@
 }
 
 .login__staff a {
-  color: #3a4358;
+  color: var(--c-border);
   font-size: 0.7rem;
   text-decoration: none;
 }
 
 .login__staff a:hover {
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }

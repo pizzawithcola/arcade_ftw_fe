@@ -17,13 +17,13 @@
   gap: 1rem;
   width: 100%;
   padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid #1c2333;
+  border-bottom: 1px solid var(--c-surface-raised);
 }
 
 .hallu__count {
   font-size: 0.75rem;
   letter-spacing: 0.16em;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__score {
@@ -31,31 +31,32 @@
   font-variant-numeric: tabular-nums;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__timer {
   margin-left: auto;
   padding: 0.25rem 0.6rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-border);
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #e6e9f0;
+  color: var(--c-text);
 }
 
 .hallu__timer.is-urgent {
-  border-color: #ff5c7a;
-  color: #ff5c7a;
+  border-color: var(--c-brand-deep);
+  background: color-mix(in srgb, var(--c-brand-deep) 16%, transparent);
+  color: var(--c-text);
 }
 
 .hallu__score.is-good {
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .hallu__score.is-bad {
-  color: #ff5c7a;
+  color: var(--c-text);
 }
 
 .hallu__board {
@@ -69,23 +70,23 @@
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__prompt {
   margin: 0 0 1.4rem;
   font-size: clamp(1rem, 2.2vw, 1.35rem);
-  color: #e6e9f0;
+  color: var(--c-text);
 }
 
 .hallu__reply {
   margin: 0;
   padding: 1.1rem 1.25rem;
-  border: 1px solid #2c3549;
-  border-left: 3px solid #ffd166;
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-warning);
   border-radius: 8px;
-  background: #0e1421;
-  color: #dfe4ee;
+  background: var(--c-surface);
+  color: var(--c-text);
   font-size: clamp(0.95rem, 1.9vw, 1.15rem);
   line-height: 1.65;
 }
@@ -98,7 +99,7 @@
 .hallu__question {
   margin: 0 0 0.9rem;
   font-size: 0.95rem;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__buttons {
@@ -109,10 +110,10 @@
 
 .hallu__button {
   padding: 1rem 0.5rem;
-  border: 1px solid #2c3549;
+  border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: #111726;
-  color: #e6e9f0;
+  background: var(--c-surface);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -124,53 +125,54 @@
   transform: translateY(-2px);
 }
 
-/* Cool for doubt, warm for trust, so the axis is readable before you read it. */
+/* Five steps from red to white, so the axis is readable before you read it:
+   the deepest doubt is the strongest red, full trust is plain white. */
 .hallu__button--very_doubt {
-  border-color: #2f6ea8;
-  color: #9fd0ff;
+  border-color: var(--c-brand-deep);
+  background: color-mix(in srgb, var(--c-brand-deep) 26%, transparent);
 }
 
 .hallu__button--doubt {
-  border-color: #2c5680;
-  color: #7cc4ff;
+  border-color: var(--c-brand-press);
+  background: color-mix(in srgb, var(--c-brand-deep) 12%, transparent);
 }
 
 .hallu__button--not_sure {
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__button--partial_trust {
-  border-color: #8a6a2a;
-  color: #ffd166;
+  border-color: var(--c-text-muted);
+  background: color-mix(in srgb, var(--c-text) 6%, transparent);
 }
 
 .hallu__button--full_trust {
-  border-color: #2f8a6a;
-  color: #57f2c4;
+  border-color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 12%, transparent);
 }
 
 .hallu__button:hover,
 .hallu__button:focus-visible {
-  background: #182031;
+  background: var(--c-surface-raised);
 }
 
 .hallu__hint {
   margin: 0.9rem 0 0;
   font-size: 0.8rem;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .hallu__waiting {
   margin: 1rem 0 0;
   font-size: 0.9rem;
-  color: #9fb0d8;
+  color: var(--c-text-muted);
   text-align: center;
 }
 
 .hallu__reveal {
   width: 100%;
   padding: 1.2rem 1.25rem 1.6rem;
-  border-top: 1px solid #1c2333;
+  border-top: 1px solid var(--c-surface-raised);
 }
 
 .hallu__verdict {
@@ -188,11 +190,11 @@
 }
 
 .hallu__reveal.is-good .hallu__verdictkind {
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .hallu__reveal.is-bad .hallu__verdictkind {
-  color: #ff5c7a;
+  color: var(--c-text);
 }
 
 .hallu__verdictpoints {
@@ -202,22 +204,22 @@
 }
 
 .hallu__reveal.is-good .hallu__verdictpoints {
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .hallu__reveal.is-bad .hallu__verdictpoints {
-  color: #ff5c7a;
+  color: var(--c-text);
 }
 
 .hallu__verdictpick {
   font-size: 0.8rem;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__why {
   margin: 0 0 1.2rem;
   max-width: 52rem;
-  color: #b9c1d1;
+  color: var(--c-text-muted);
   font-size: 0.95rem;
   line-height: 1.7;
 }
@@ -226,8 +228,8 @@
   padding: 0.7rem 1.6rem;
   border: none;
   border-radius: 6px;
-  background: #57f2c4;
-  color: #06121a;
+  background: var(--c-brand-deep);
+  color: var(--c-text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -244,7 +246,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__finalscore {
@@ -252,13 +254,13 @@
   font-size: clamp(2.6rem, 8vw, 4.5rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .hallu__finalnote {
   margin: 0 auto 1.6rem;
   max-width: 42rem;
-  color: #b9c1d1;
+  color: var(--c-text-muted);
   font-size: 0.95rem;
   line-height: 1.7;
 }
@@ -278,10 +280,10 @@
   align-items: baseline;
   gap: 0.75rem;
   padding: 0.6rem 0.8rem;
-  border: 1px solid #232a3b;
+  border: 1px solid var(--c-border);
   border-radius: 6px;
-  background: #0e1421;
-  color: #b9c1d1;
+  background: var(--c-surface);
+  color: var(--c-text-muted);
   font-size: 0.85rem;
 }
 
@@ -290,15 +292,15 @@
   min-width: 3rem;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .hallu__review li.is-good .hallu__reviewpoints {
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .hallu__review li.is-bad .hallu__reviewpoints {
-  color: #ff5c7a;
+  color: var(--c-text);
 }
 
 @media (max-width: 44rem) {

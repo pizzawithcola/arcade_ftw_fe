@@ -1,0 +1,38 @@
+/* The single source of truth for every colour in the app.
+ *
+ * Nothing else hardcodes a palette value: components read these variables, so
+ * retheming means editing this block and nothing else. Rules baked into the
+ * choices below:
+ *   - Red is a fill or a rail, never small text. #af000e on black is 2.83:1,
+ *     so red type only appears at display sizes; white on red is 6.76:1.
+ *   - Black carries the page, white carries the type, red marks what matters.
+ *   - Warn-amber is the only non-red signal, and it means "connection trouble".
+ */
+:root {
+  /* Brand */
+  --c-brand: #db0011;        /* brand marks on light surfaces only */
+  --c-brand-deep: #af000e;   /* every dark-mode fill, rail and wash */
+  --c-brand-press: #7a0009;  /* pressed state under brand-deep */
+
+  /* State */
+  --c-warning: #e8b33a;      /* paused, countdown caution, lost socket */
+  --c-team-alt: #e9e9ec;     /* the second team on a red/black board */
+
+  /* Neutrals */
+  --c-black: #000000;        /* page canvas */
+  --c-surface: #0b0b0d;      /* panels */
+  --c-surface-raised: #151519; /* cards, inputs, list rows */
+  --c-border: #2b2b31;       /* every border, divider and outline */
+  --c-text: #f4f4f6;         /* body copy, values, headings */
+  --c-text-muted: #a0a0a8;   /* labels, captions, secondary copy */
+  --c-text-dim: #616168;     /* hints, disabled, timestamps */
+
+  /* The one light object in the app: the fake social post in Data Shadow.
+     It is deliberately paper-white, so it keeps its own ink. */
+  --c-paper: #ffffff;
+  --c-paper-ink: #151519;
+
+  /* The stage grid, 40px cells. */
+  --c-grid-line: rgba(43, 43, 49, 0.9);
+  --grid-cell: 40px;
+}

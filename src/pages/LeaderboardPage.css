@@ -16,28 +16,32 @@
 
 .board__bar h1 {
   margin: 0;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--c-brand-deep);
   font-size: 1.7rem;
   letter-spacing: 0.08em;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .board__home {
-  color: #8b94a8;
+  color: var(--c-text-muted);
   font-size: 0.8rem;
   text-decoration: none;
 }
 
 .board__home:hover {
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .board__error {
-  color: #ff5c7a;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--c-brand-deep);
+  color: var(--c-text);
   font-size: 0.85rem;
 }
 
 .board__empty {
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 /* The ranking list itself lives in components/Leaderboard.css. */

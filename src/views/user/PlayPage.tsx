@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   clearToken,
   currentRoom,
@@ -116,13 +116,33 @@ function NodeStage({
 /** How long a finished round keeps its closing screen before signing out. */
 const WRAP_UP_MS = 8000
 
+/**
+ * What the operator console's player preview runs as.
+ *
+ * It has no player row (`playerId: 0` is falsy on purpose), so the preview never
+ * joins the room, never picks up a team and can never report a score - it only
+ * mirrors what the socket says a player's device is showing.
+ */
+const PREVIEW_SESSION: PlayerSession = {
+  subject: 'preview',
+  isAdmin: false,
+  canControl: false,
+  scope: 'preview',
+  playerId: 0,
+  nickname: 'player device',
+  event: '',
+}
+
 export default function PlayPage() {
   // A QR-scanned URL pins a device to a room; `/play` follows the current round.
   const { code: pinned } = useParams()
   const navigate = useNavigate()
   const now = useTicker()
+  // `?preview=1` is the console's mirror of this screen: same layout, no player.
+  const [query] = useSearchParams()
+  const preview = query.get('preview') === '1'
   const [session, setSession] = useState<PlayerSession | null>(null)
-  const [checked, setChecked] = useState(false)
+  const [checked, setChecked] = useState(preview)
   const [resolved, setResolved] = useState<string | null>(null)
   const [eventName, setEventName] = useState('')
 
@@ -140,11 +160,12 @@ export default function PlayPage() {
   const sawPlaying = useGameStore((state) => state.sawPlaying)
 
   useEffect(() => {
+    if (preview) return
     void fetchSession().then((found) => {
       setSession(found && !found.isAdmin && found.nickname ? (found as PlayerSession) : null)
       setChecked(true)
     })
-  }, [])
+  }, [preview])
 
   // The event name for the heading comes from the backend's own list, so it can
   // never disagree with the label they picked at sign-in.
@@ -232,16 +253,17 @@ export default function PlayPage() {
   // round ended did not play it, so it waits here instead of being bounced
   // straight back to the login page.
   useEffect(() => {
-    if (phase !== 'finished' || !sawPlaying) return
+    if (preview || phase !== 'finished' || !sawPlaying) return
     const id = window.setTimeout(() => {
       clearToken()
       navigate('/', { replace: true })
     }, WRAP_UP_MS)
     return () => window.clearTimeout(id)
-  }, [phase, sawPlaying, navigate])
+  }, [preview, phase, sawPlaying, navigate])
 
   if (!checked) return null
-  if (!session) return <Navigate to="/" replace />
+  const me = preview ? PREVIEW_SESSION : session
+  if (!me) return <Navigate to="/" replace />
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
   // A finished round is the signal that this device's round is over - the room
@@ -254,23 +276,25 @@ export default function PlayPage() {
       <header className="game__bar">
         <span className={`dot dot--${connection}`} />
         <span className="game__conn">{connection}</span>
-        {session.nickname && <span className="play__who">{session.nickname}</span>}
+        {me.nickname && <span className="play__who">{me.nickname}</span>}
         <span className="game__progress">
           node {Math.min(index + 1, nodeCount)} / {nodeCount}
         </span>
         {node && !ownsTimer(node) && (
           <span className="game__clock">{formatClock(remaining)}</span>
         )}
-        <button
-          type="button"
-          className="game__signout"
-          onClick={() => {
-            clearToken()
-            navigate('/', { replace: true })
-          }}
-        >
-          sign out
-        </button>
+        {!preview && (
+          <button
+            type="button"
+            className="game__signout"
+            onClick={() => {
+              clearToken()
+              navigate('/', { replace: true })
+            }}
+          >
+            sign out
+          </button>
+        )}
       </header>
       )}
 
@@ -302,9 +326,9 @@ export default function PlayPage() {
           <p className="wait__note">Waiting for the host to open the next show…</p>
         </div>
       ) : phase === 'waiting' ? (
-        <WaitingRoom nickname={session.nickname} eventName={eventName} />
+        <WaitingRoom nickname={me.nickname} eventName={eventName} />
       ) : (
-        <NodeStage node={node} nodeIndex={index} room={code} team={session.team} />
+        <NodeStage node={node} nodeIndex={index} room={code} team={me.team} />
       )}
     </main>
   )

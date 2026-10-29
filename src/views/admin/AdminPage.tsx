@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import {
   addPlayer,
   clearToken,
@@ -19,9 +19,18 @@ import {
   type Session,
 } from '../../api'
 import StaffLogin from '../StaffLogin'
+import DesignPage from './DesignPage'
 import './AdminPage.css'
 
 const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
+
+/** How the show's state is written next to the node title. */
+const PHASE_LABELS: Record<string, string> = {
+  waiting: 'Waiting',
+  playing: 'Live',
+  paused: 'Paused',
+  finished: 'Finished',
+}
 
 interface JumpButton {
   index: number
@@ -81,7 +90,7 @@ function jumpGroups(flow: FlowNode[]): JumpGroup[] {
   return groups
 }
 
-type Section = 'console' | 'data' | 'settings'
+type Section = 'console' | 'data' | 'settings' | 'design'
 type DataTab = 'rooms' | 'players'
 
 interface PlayerDraft {
@@ -96,6 +105,7 @@ const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
   { key: 'data', label: 'Arcade Data', note: 'Rooms and players' },
   { key: 'settings', label: 'Game Setting', note: 'Coming later' },
+  { key: 'design', label: 'Design', note: 'Tokens and palette' },
 ]
 
 /**
@@ -332,6 +342,7 @@ export default function AdminPage() {
             />
           )}
           {section === 'settings' && <SettingsView />}
+          {section === 'design' && <DesignPage />}
           {error && <p className="admin__error">{error}</p>}
         </div>
       </div>
@@ -339,43 +350,62 @@ export default function AdminPage() {
   )
 }
 
-/** What the big screen is laid out for; the preview scales this whole frame.
- *  The matching 1920×1080 iframe size lives in AdminPage.css. */
-const SCREEN_WIDTH = 1920
+/** The two screens an operator watches during a run. */
+type PreviewScreen = 'display' | 'player'
+
+/** What each screen is laid out for. Both fit the same 16:9 window. */
+const FRAMES: Record<PreviewScreen, { width: number; height: number }> = {
+  display: { width: 1920, height: 1080 },
+  player: { width: 1194, height: 834 },
+}
 
 /**
- * The big screen, shrunk to fit the console.
+ * One screen of the show, shrunk into the console's preview window.
  *
- * The iframe is rendered at its real size (1920×1080) and then scaled by
- * `containerWidth / SCREEN_WIDTH`, so the operator sees the actual layout
- * squeezed down - a thumbnail of the room's screen, not a phone-sized viewport
- * where the same text overflows. Legibility is not the point; knowing what is
- * on screen is.
+ * Each iframe is rendered at the real size of the device it stands for (a 1920×
+ * 1080 wall screen, a landscape 1194×834 iPad) and then scaled by
+ * `min(boxWidth / frameWidth, boxHeight / frameHeight)`, so the operator sees
+ * the actual layout squeezed down rather than a desktop window where the same
+ * text reflows. Both frames land in the same 16:9 window, so switching screens
+ * never moves the furniture.
  */
-function ScreenPreview({ code }: { code: string }) {
+function ScreenPreview({ code, screen }: { code: string; screen: PreviewScreen }) {
   const box = useRef<HTMLDivElement | null>(null)
   const [scale, setScale] = useState(0)
+  const frame = FRAMES[screen]
 
   useEffect(() => {
     const element = box.current
     if (!element) return
     const measure = () => {
       const width = element.clientWidth
-      if (width > 0) setScale(width / SCREEN_WIDTH)
+      const height = element.clientHeight
+      if (width > 0 && height > 0) {
+        setScale(Math.min(width / frame.width, height / frame.height))
+      }
     }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [])
+  }, [frame.width, frame.height])
 
   return (
-    <div className="admin__tv" ref={box}>
+    <div
+      className="admin__tv"
+      ref={box}
+      style={{ '--frame-w': `${frame.width}px`, '--frame-h': `${frame.height}px` } as CSSProperties}
+    >
       <iframe
-        src={`/display/${code}`}
-        title="Big screen preview"
+        // The player screen mirrors the device: `?preview=1` keeps it from
+        // signing in, joining the room or ever reporting a score.
+        src={screen === 'display' ? `/display/${code}` : `/r/${code}?preview=1`}
+        title={screen === 'display' ? 'Big screen preview' : 'Player screen preview'}
         // Hidden until measured, so the first paint is never a full-size flash.
-        style={{ transform: `scale(${scale})`, visibility: scale > 0 ? 'visible' : 'hidden' }}
+        style={{
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          visibility: scale > 0 ? 'visible' : 'hidden',
+        }}
       />
     </div>
   )
@@ -393,11 +423,26 @@ function ConsoleView({
   busy: boolean
 }) {
   const phase = room?.state.phase ?? 'waiting'
+  const [screen, setScreen] = useState<PreviewScreen>('display')
   return (
     <section className="admin__panel">
       <div className="admin__panel-head">
         <h2>Show control</h2>
         <div className="admin__head-tools">
+          <div className="admin__toggle admin__toggle--screens" role="tablist" aria-label="Screen preview">
+            {(['display', 'player'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="tab"
+                aria-selected={screen === option}
+                className={screen === option ? 'is-active' : ''}
+                onClick={() => setScreen(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
           <span className="admin__current">
             {room ? (
               <>
@@ -417,10 +462,14 @@ function ConsoleView({
         <>
           <div className="admin__stage">
             <div className="admin__state">
-              <p className="admin__node">{room.state.node?.title ?? '—'}</p>
+              <p className="admin__node">
+                {room.state.node?.title ?? '—'}
+                <span className="admin__node-sep" aria-hidden="true">
+                  ·
+                </span>
+                <span className={`admin__phase is-${phase}`}>{PHASE_LABELS[phase]}</span>
+              </p>
               <p className="admin__hint">
-                <span className={`admin__phase is-${phase}`}>{phase}</span> · node{' '}
-                {room.state.index + 1} / {room.state.node_count} ·{' '}
                 {room.players} joined · {room.clients} online
               </p>
 
@@ -438,10 +487,11 @@ function ConsoleView({
               </div>
             </div>
 
-            {/* The actual big screen, scaled down: seeing it beside the controls
-                is how the operator catches a screen that is out of step without
-                walking over to it. The iframe has its own socket and state. */}
-            <ScreenPreview code={room.code} />
+            {/* The two screens the room runs, scaled down: seeing them beside
+                the controls is how the operator catches a screen that is out of
+                step without walking over to it. Each iframe has its own socket
+                and state. */}
+            <ScreenPreview code={room.code} screen={screen} />
           </div>
 
           <div className="admin__progress">

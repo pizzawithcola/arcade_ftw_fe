@@ -8,14 +8,27 @@ body,
   height: 100%;
 }
 
+/* One canvas for the whole app: black, with the 40px rule grid carried over
+   from the previous arcade's homepage. Every view paints on top of it, and
+   red is reserved for actions, rails and live state. */
 body {
   margin: 0;
-  background: #0b0f1a;
-  color: #e6e9f0;
+  background-color: var(--c-black);
+  background-image:
+    repeating-linear-gradient(0deg, var(--c-grid-line) 0 1px, transparent 1px var(--grid-cell)),
+    repeating-linear-gradient(90deg, var(--c-grid-line) 0 1px, transparent 1px var(--grid-cell));
+  color: var(--c-text);
   color-scheme: dark;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 a {
-  color: #57f2c4;
+  color: var(--c-text);
+  text-decoration-color: var(--c-brand-deep);
+}
+
+a:hover {
+  color: var(--c-text);
+  text-decoration: underline;
+  text-decoration-color: var(--c-brand-deep);
 }

@@ -10,31 +10,33 @@
 
 .status h1 {
   margin: 0 0 0.25rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--c-brand-deep);
   font-size: 2rem;
   letter-spacing: 0.08em;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .muted {
-  color: #8b94a8;
+  color: var(--c-text-muted);
   font-size: 0.85rem;
 }
 
 .card {
   margin-top: 1rem;
   padding: 0.85rem 1rem;
-  border: 1px solid #232a3b;
+  border: 1px solid var(--c-border);
   border-left-width: 3px;
   border-radius: 6px;
-  background: #111726;
+  background: var(--c-surface);
 }
 
 .card.ok {
-  border-left-color: #57f2c4;
+  border-left-color: var(--c-text);
 }
 
 .card.fail {
-  border-left-color: #ff5c7a;
+  border-left-color: var(--c-brand-deep);
 }
 
 .card header {
@@ -48,15 +50,15 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #5a6478;
+  background: var(--c-text-dim);
 }
 
 .dot.ok {
-  background: #57f2c4;
+  background: var(--c-brand-deep);
 }
 
 .dot.fail {
-  background: #ff5c7a;
+  background: var(--c-brand-deep);
 }
 
 .card pre {
@@ -64,5 +66,5 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 0.8rem;
-  color: #b7c0d4;
+  color: var(--c-text-muted);
 }

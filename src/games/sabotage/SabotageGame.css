@@ -9,7 +9,7 @@
 }
 
 .sab__phase {
-  color: var(--dim, #8b8b9e);
+  color: var(--dim, var(--c-text-muted));
   font-size: 0.9rem;
   text-transform: capitalize;
 }
@@ -35,11 +35,13 @@
 }
 
 .sab__teamline .is-red {
-  color: #e5484d;
+  color: var(--c-text);
+  border-bottom: 2px solid var(--c-brand-deep);
 }
 
 .sab__teamline .is-blue {
-  color: #3b82f6;
+  color: var(--c-text);
+  border-bottom: 2px solid var(--c-team-alt);
 }
 
 .sab__board {
@@ -67,15 +69,15 @@
   gap: 0.35rem;
   text-align: left;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--edge, #d8d8e0);
+  border: 1px solid var(--edge, var(--c-border));
   border-radius: 0.75rem;
-  background: var(--panel, #fff);
+  background: var(--panel, var(--c-text));
   cursor: pointer;
   transition: border-color 0.15s, transform 0.05s;
 }
 
 .sab__card:hover:not(:disabled) {
-  border-color: var(--accent, #6d5efc);
+  border-color: var(--accent, var(--c-brand-deep));
 }
 
 .sab__card:disabled {
@@ -84,8 +86,8 @@
 }
 
 .sab__card.is-picked {
-  border-color: var(--accent, #6d5efc);
-  box-shadow: 0 0 0 2px var(--accent, #6d5efc) inset;
+  border-color: var(--accent, var(--c-brand-deep));
+  box-shadow: 0 0 0 2px var(--accent, var(--c-brand-deep)) inset;
 }
 
 .sab__cardname {
@@ -94,7 +96,7 @@
 
 .sab__carddesc {
   font-size: 0.85rem;
-  color: var(--dim, #8b8b9e);
+  color: var(--dim, var(--c-text-muted));
   line-height: 1.4;
 }
 
@@ -105,7 +107,7 @@
 
 .sab__spent {
   font-size: 0.85rem;
-  color: var(--dim, #8b8b9e);
+  color: var(--dim, var(--c-text-muted));
 }
 
 .sab__spent ul {
@@ -120,12 +122,12 @@
 .sab__spent li {
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px dashed var(--edge, #d8d8e0);
+  border: 1px dashed var(--edge, var(--c-border));
   text-decoration: line-through;
 }
 
 .sab__hint {
-  color: var(--dim, #8b8b9e);
+  color: var(--dim, var(--c-text-muted));
   font-size: 0.9rem;
 }
 
@@ -140,17 +142,21 @@
   text-transform: uppercase;
 }
 
+/* Blocked reads white, broken through reads red: the same two signals the
+   rest of the show uses. */
 .sab__result.is-blocked .sab__verdict {
-  color: #16a34a;
+  color: var(--c-text);
 }
 
 .sab__result.is-failed .sab__verdict {
-  color: #e5484d;
+  padding-left: 0.5rem;
+  border-left: 3px solid var(--c-brand-deep);
+  color: var(--c-text);
 }
 
 .sab__pairing {
   font-size: 1rem;
-  color: var(--dim, #8b8b9e);
+  color: var(--dim, var(--c-text-muted));
 }
 
 .sab__scoreline {
@@ -162,9 +168,11 @@
 }
 
 .sab__scoreline .is-red {
-  color: #e5484d;
+  color: var(--c-text);
+  border-bottom: 2px solid var(--c-brand-deep);
 }
 
 .sab__scoreline .is-blue {
-  color: #3b82f6;
+  color: var(--c-text);
+  border-bottom: 2px solid var(--c-team-alt);
 }

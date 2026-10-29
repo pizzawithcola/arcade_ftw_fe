@@ -1,0 +1,139 @@
+/* The console's stage background, ported from the previous arcade's homepage
+   (#050510 canvas + 40px rules). Neutral rules on black and one slow sweep;
+   red is left for actions, so the split stays 60% black / 30% white / 10% red. */
+
+.design__backgrounds {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.design__backgrounds h3 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.design__backgrounds > p {
+  margin: 0;
+  max-width: 46rem;
+  font-size: 0.78rem;
+  color: var(--c-text-muted);
+}
+
+.design__bg {
+  margin: 0;
+  display: grid;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.design__bg-surface {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-content: center;
+  gap: 0.4rem;
+  min-height: 9.5rem;
+  padding: 1rem;
+  background-color: var(--c-black);
+  background-image:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--c-border) 90%, transparent) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--c-border) 90%, transparent) 0 1px, transparent 1px 40px);
+}
+
+/* Single slow sweep, the one motion cue kept from the old homepage. */
+.design__bg-surface::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c-text) 14%, transparent), transparent);
+  animation: design-scan 9s linear infinite;
+}
+
+@keyframes design-scan {
+  from {
+    top: -2px;
+  }
+  to {
+    top: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .design__bg-surface::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Sample composition, so the red placements are judged in place. */
+.design__demo {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+}
+
+.design__demo-eyebrow {
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.design__demo-title {
+  margin: 0;
+  padding-left: 0.55rem;
+  border-left: 3px solid var(--c-brand-deep);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-text);
+}
+
+.design__demo-copy {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--c-text-muted);
+}
+
+.design__demo-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.design__demo-btn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  background: var(--c-brand-deep);
+  color: var(--c-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.design__demo-btn--ghost {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--c-border);
+  background: none;
+  color: var(--c-text);
+}
+
+.design__bg-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.55rem;
+  background: var(--c-surface-raised);
+  font-size: 0.72rem;
+  color: var(--c-text-muted);
+}
+
+.design__bg-label code {
+  color: var(--c-text-dim);
+}

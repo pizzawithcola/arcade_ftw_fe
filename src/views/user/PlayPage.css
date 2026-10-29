@@ -8,25 +8,25 @@
   font-size: 0.7rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .play__name {
   margin: 0;
   font-size: clamp(2rem, 7vw, 3.4rem);
-  color: #e6e9f0;
+  color: var(--c-text);
 }
 
 .play__note {
   margin: 0.4rem 0 0;
   font-size: 1rem;
-  color: #b9c1d1;
+  color: var(--c-text-muted);
 }
 
 .play__hint {
   margin: 0;
   font-size: 0.85rem;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 /* The player's waiting room: three lines, centred, nothing to read twice. */
@@ -53,7 +53,7 @@
   font-weight: 600;
   letter-spacing: 0.34em;
   text-transform: uppercase;
-  color: #57f2c4;
+  color: var(--c-text);
 }
 
 .wait__event {
@@ -61,7 +61,7 @@
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.02em;
-  color: #e6e9f0;
+  color: var(--c-text);
   text-wrap: balance;
   max-width: 20ch;
 }
@@ -70,26 +70,26 @@
   margin: 0;
   font-size: clamp(1.5rem, 3.6vw, 2.6rem);
   line-height: 1.15;
-  color: #b9c1d1;
+  color: var(--c-text-muted);
 }
 
 .wait__hi strong {
   font-weight: 700;
-  color: #ffffff;
+  color: var(--c-text);
 }
 
 .wait__note {
   margin: 0;
   font-size: clamp(0.95rem, 1.7vw, 1.25rem);
   letter-spacing: 0.04em;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .play__who {
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
-  background: #1c2333;
-  color: #e6e9f0;
+  background: var(--c-surface-raised);
+  color: var(--c-text);
 }
 
 
@@ -116,9 +116,9 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.7rem 1rem;
-  border-bottom: 1px solid #1c2333;
+  border-bottom: 1px solid var(--c-surface-raised);
   font-size: 0.8rem;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .game__conn {
@@ -131,42 +131,44 @@
   font-size: 0.72rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
 
 .game__clock {
   margin-left: auto;
   font-size: 1.1rem;
-  color: #57f2c4;
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 
 .game__signout {
   border: none;
   background: none;
-  color: #3a4358;
+  color: var(--c-text-dim);
   font: inherit;
   font-size: 0.7rem;
   cursor: pointer;
 }
 
 .game__signout:hover {
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #5a6478;
+  background: var(--c-text-dim);
 }
 
 .dot--open {
-  background: #57f2c4;
+  background: var(--c-brand-deep);
 }
 
+/* Live is red. A lost socket is the one thing that turns amber, so the two
+   states can never be mistaken for each other. */
 .dot--closed {
-  background: #ff5c7a;
+  background: var(--c-warning);
 }
 
 .stage {
@@ -188,29 +190,29 @@
   font-size: 0.7rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #8b94a8;
+  color: var(--c-text-muted);
 }
 
 .stage h2 {
   margin: 0;
   font-size: clamp(1.6rem, 5vw, 3rem);
-  color: #e6e9f0;
+  color: var(--c-text);
 }
 
 .stage__note {
   margin: 0;
-  color: #8b94a8;
+  color: var(--c-text-muted);
   font-size: 0.85rem;
 }
 
 .stage--game .stage__kind {
-  color: #ffd166;
+  color: var(--c-warning);
 }
 
 .stage--quiz .stage__kind {
-  color: #7cc4ff;
+  color: var(--c-text-muted);
 }
 
 .stage--waiting {
-  color: #5a6478;
+  color: var(--c-text-dim);
 }
