@@ -29,7 +29,7 @@ const BRIEFS: Brief[] = [
     title: 'Hallucination',
     lead: 'An AI will sound certain whether it is right or making things up. Half of what you read next never happened.',
     rules: [
-      'Two statements, one at a time. Read each one carefully.',
+      'Three statements, one at a time. Read each one carefully.',
       'Rate how far you trust it, from Very Doubt to Full Trust.',
       'Trusting a fake and doubting a fact cost you the same. Guessing is not free.',
     ],
@@ -51,7 +51,7 @@ const BRIEFS: Brief[] = [
     title: 'Ultimate Quiz',
     lead: 'Everything you have learned tonight, one last time, against the clock. Bonus points are still on the table.',
     rules: [
-      'Fast questions, four answers each.',
+      'Five fast questions, four answers each. They start the moment this card ends.',
       'The quicker you answer, the more it scores.',
       'This is the last chance to take the lead - a good round here can turn the board over.',
     ],

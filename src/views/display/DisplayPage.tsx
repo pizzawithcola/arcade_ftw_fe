@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
-import { questionsFor, quizDeckFor, type QuizDeck } from '../../games/quiz/content'
+import { QUIZ_QUESTIONS } from '../../games/quiz/content'
 import TitleCard from '../../games/TitleCard'
 import Welcome from '../../games/Welcome'
 import { findTitle, GAME_COUNT, gameNumber } from '../../games/titles'
@@ -196,11 +196,9 @@ function questionOnScreen(
 function QuestionOnScreen({
   kind,
   index,
-  deck = 'hallucination',
 }: {
   kind: 'hallucination' | 'quiz'
   index: number
-  deck?: QuizDeck
 }) {
   if (kind === 'hallucination') {
     const question = HALLUCINATION_QUESTIONS[index]
@@ -237,7 +235,7 @@ function QuestionOnScreen({
     )
   }
 
-  const question = questionsFor(deck)[index]
+  const question = QUIZ_QUESTIONS[index]
   if (!question) return null
   return (
     <article className="display__question">
@@ -250,6 +248,11 @@ function QuestionOnScreen({
 /** The Sabotage wall: the target, the clock, and nothing that would tell
  *  either team what the other is buying. */
 const SAB_DOMAIN: Record<string, string> = { data: 'Data', people: 'People', infra: 'Infra' }
+
+/** Money as the room reads it: $27,000, never 27000. */
+function sabMoney(amount: number): string {
+  return `$${Math.max(0, amount).toLocaleString('en-US')}`
+}
 
 function SabotageOnScreen() {
   const sabotage = useGameStore((state) => state.sabotage)
@@ -270,13 +273,14 @@ function SabotageOnScreen() {
   if (sabotage.phase === 'brief') {
     return (
       <article className="display__question">
-        <p className="display__prompt">Four rounds. One target each.</p>
+        <p className="display__prompt">Four rounds. One budget.</p>
         <p className="display__reply">
-          Every card scores in Data, People and Infra. Only the round's target decides who
-          wins it.
+          Each team has {sabMoney(sabotage.total_budget)} for all four rounds. What you
+          spend now is gone in round four.
         </p>
         <p className="display__look">
-          100 points · up to 4 cards · the dearest card is not the strongest
+          Every card scores in Data, People and Infra · only the round's target decides who
+          wins · the dearest card is not the strongest
         </p>
       </article>
     )
@@ -294,6 +298,10 @@ function SabotageOnScreen() {
         </p>
         <p className="display__look">
           {sabotage.attacker === 'red' ? sabotage.attack_brief : sabotage.defence_brief}
+        </p>
+        <p className="display__look">
+          Left to spend — RED {sabMoney(sabotage.budget.red ?? 0)} · BLUE{' '}
+          {sabMoney(sabotage.budget.blue ?? 0)}
         </p>
       </article>
     )
@@ -319,6 +327,11 @@ function SabotageOnScreen() {
         </ul>
         <p className="display__look">
           Red {sabotage.scores.red} · Blue {sabotage.scores.blue}
+        </p>
+        <p className="display__look">
+          {r.attacker.toUpperCase()} spent {sabMoney(r.attack_cost)} ·{' '}
+          {r.defender.toUpperCase()} spent {sabMoney(r.defence_cost)} · left RED{' '}
+          {sabMoney(sabotage.budget.red ?? 0)} / BLUE {sabMoney(sabotage.budget.blue ?? 0)}
         </p>
       </article>
     )
@@ -484,18 +497,6 @@ export default function DisplayPage() {
             <RoomLeaderboard key={node.section} code={code} section={node.section} />
           )}
 
-          {/* The quiz opens on the same title card the tablets show, so the
-              room looks at one thing while the questions are about to start. */}
-          {(question?.intro_ms ?? 0) > 0 && (
-            <TitleCard
-              title="Quick Quiz"
-              kicker="next up"
-              note="Four answers, one question at a time. Answer before the clock runs out."
-              countdown={Math.ceil((question?.intro_ms ?? 0) / 1000)}
-              size="display"
-            />
-          )}
-
           {node?.type === 'title' && <GameTitleOnScreen node={node} remainingMs={remaining} />}
 
           {node?.type === 'intro' && (
@@ -505,17 +506,14 @@ export default function DisplayPage() {
             />
           )}
 
-          {question &&
-            !(question.intro_ms ?? 0) &&
-            (node?.game === 'hallucination' || node?.type === 'quiz') && (
-              <QuestionOnScreen
-                kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
-                index={question.index}
-                deck={quizDeckFor(node?.score)}
-              />
-            )}
+          {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
+            <QuestionOnScreen
+              kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
+              index={question.index}
+            />
+          )}
 
-          {question && !(question.intro_ms ?? 0) && (node?.game === 'hallucination' || node?.type === 'quiz') && (
+          {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
             <p className="display__kicker">
               question {question.index + 1} / {question.count}
             </p>

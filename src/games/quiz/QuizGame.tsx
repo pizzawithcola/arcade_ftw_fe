@@ -1,35 +1,26 @@
 import { useMemo, useState } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
-import { optionsOf, questionsFor, type QuizDeck } from './content'
-import TitleCard from '../TitleCard'
+import { optionsOf, QUIZ_QUESTIONS } from './content'
 import { questionScore } from './scoring'
 import './QuizGame.css'
 
 type Picks = Record<string, string>
 
-/** The countdown is not enough warning that a quiz has started, so the node
- *  opens with a title card that has to be impossible to miss. */
-const INTRO_MS = 5000
-
 /** After the answer is shown the round moves on by itself - five seconds, no
  *  button, because half the room is still reading when the next one lands. */
 const REVIEW_SECONDS = 5
 
-export default function QuizGame({
-  room,
-  nodeIndex,
-  deck,
-}: {
-  room: string
-  nodeIndex: number
-  /** Which round's questions: the deck follows the game that just ended. */
-  deck: QuizDeck
-}) {
+export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex: number }) {
   const [picks, setPicks] = useState<Picks>({})
   const report = useScoreReport(room, nodeIndex)
 
-  const questions = questionsFor(deck)
+  // There is no intro card: the brief in front of the round already announced
+  // it, so the node's first second is the first question. `intro_sec` is absent
+  // from the flow node for the same reason - the engine and the wall both
+  // subtract it, and a card here without it there would put them one question
+  // apart.
+  const questions = QUIZ_QUESTIONS
   const { cycles, totalMs } = useMemo(
     () => ({
       cycles: questions.map((item) => (item.time_limit + REVIEW_SECONDS) * 1000),
@@ -46,8 +37,8 @@ export default function QuizGame({
   const elapsed = useNodeElapsed()
 
   // Read off the node clock, exactly as the engine derives it for the big
-  // screen: the intro is skipped, then one cycle per question.
-  const stageMs = Math.max(0, elapsed - INTRO_MS)
+  // screen: one cycle per question from the first second.
+  const stageMs = elapsed
   const finished = stageMs >= totalMs
 
   const index = useMemo(() => {
@@ -77,8 +68,6 @@ export default function QuizGame({
     0,
     Math.ceil((question.time_limit * 1000 + REVIEW_SECONDS * 1000 - inCycleMs) / 1000),
   )
-  const introLeft = Math.max(0, Math.ceil((INTRO_MS - elapsed) / 1000))
-
   const total = useMemo(
     () =>
       questions.reduce(
@@ -106,126 +95,114 @@ export default function QuizGame({
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>
             <div className="hud__stage quiz__stage">
-        <div className="quiz__final">
-          <p className="quiz__finallabel">Final score</p>
-          <p className="quiz__finalscore">
-            {total} / {perfect}
-          </p>
-          <ul className="quiz__review">
-            {questions.map((item) => {
-              const letter = picks[item.id]
-              const correct = letter === item.correct_option
-              const missed = letter === undefined
-              return (
-                <li key={item.id} className={correct ? 'is-good' : 'is-bad'}>
-                  <span className="quiz__reviewmark">{correct ? '✓' : missed ? '—' : '✗'}</span>
-                  <span>{item.text}</span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-            </div>
-          </div>
-        </div>
+      <div className="quiz__final">
+        <p className="quiz__finallabel">Final score</p>
+        <p className="quiz__finalscore">
+          {total} / {perfect}
+        </p>
+        <ul className="quiz__review">
+          {questions.map((item) => {
+            const letter = picks[item.id]
+            const correct = letter === item.correct_option
+            const missed = letter === undefined
+            return (
+              <li key={item.id} className={correct ? 'is-good' : 'is-bad'}>
+                <span className="quiz__reviewmark">{correct ? '✓' : missed ? '—' : '✗'}</span>
+                <span>{item.text}</span>
+              </li>
+            )
+          })}
+        </ul>
       </div>
-    )
-  }
-
-  return (
-    <div className="hud hud--game quiz">
-      <div className="hud__matrix" aria-hidden="true" />
-      <div className="hud__frame">
-        <div className="hud__inner">
-          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
-          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
-          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
-          <span className="hud__corner hud__corner--br" aria-hidden="true" />
-
-          <div className="hud__tab">Quiz</div>
-
-          <div className="hud__bar">
-            <span className="hud__chevrons" aria-hidden="true" />
-            <span className="hud__event">{introLeft > 0 ? 'Get ready' : 'Pick one'}</span>
-            {introLeft === 0 && (
-              <span className="quiz__count">
-                {index + 1} / {questions.length}
-              </span>
-            )}
-            {!revealed && introLeft === 0 && (
-              <span className={`quiz__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
-                {secondsLeft}s
-              </span>
-            )}
-          </div>
-
-          <div className="hud__stage quiz__stage">
-            {introLeft > 0 ? (
-              <TitleCard
-                title="Quick Quiz"
-                kicker="next up"
-                note="Four answers, one question at a time. Answer before the clock runs out."
-                countdown={introLeft}
-              />
-            ) : (
-              <>
-                <p className="quiz__question">{question.text}</p>
-                <div className="quiz__options">
-                  {optionsOf(question).map((option) => {
-                    const isPicked = picked === option.letter
-                    const isAnswer = revealed && option.letter === question.correct_option
-                    const isWrongPick = revealed && isPicked && option.letter !== question.correct_option
-                    const classes = [
-                      'quiz__option',
-                      isPicked ? 'is-picked' : '',
-                      isAnswer ? 'is-answer' : '',
-                      isWrongPick ? 'is-wrong' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')
-                    return (
-                      <button
-                        key={option.letter}
-                        type="button"
-                        className={classes}
-                        disabled={waiting || revealed}
-                        onClick={() => {
-                          setPicks((current) => ({ ...current, [question.id]: option.letter }))
-                          report(index, questionScore(option.letter, question.correct_option))
-                        }}
-                      >
-                        <span className="quiz__letter">{option.letter}</span>
-                        <span className="quiz__optiontext">{option.text}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {waiting && (
-                  <p className="quiz__waiting">Waiting for others to answer…</p>
-                )}
-
-                {revealed && (
-                  <div
-                    className={`quiz__reveal ${picked === question.correct_option ? 'is-good' : 'is-bad'}`}
-                  >
-                    <p className="quiz__explain">{question.explain}</p>
-                    <p className="quiz__correct">
-                      {picked === undefined
-                        ? `Time's up — the answer was ${question.correct_option}.`
-                        : `The answer was ${question.correct_option}.`}
-                    </p>
-                    <p className="quiz__autonext">
-                      {index === questions.length - 1 ? 'Final score' : 'Next question'} in{' '}
-                      {reviewLeft}s
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+return (
+  <div className="hud hud--game quiz">
+    <div className="hud__matrix" aria-hidden="true" />
+    <div className="hud__frame">
+      <div className="hud__inner">
+        <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+        <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+        <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+        <span className="hud__corner hud__corner--br" aria-hidden="true" />
+
+        <div className="hud__tab">Quiz</div>
+
+        <div className="hud__bar">
+          <span className="hud__chevrons" aria-hidden="true" />
+          <span className="hud__event">Pick one</span>
+          <span className="quiz__count">
+            {index + 1} / {questions.length}
+          </span>
+          {!revealed && (
+            <span className={`quiz__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
+              {secondsLeft}s
+            </span>
+          )}
+        </div>
+
+        <div className="hud__stage quiz__stage">
+          <p className="quiz__question">{question.text}</p>
+          <div className="quiz__options">
+            {optionsOf(question).map((option) => {
+              const isPicked = picked === option.letter
+              const isAnswer = revealed && option.letter === question.correct_option
+              const isWrongPick =
+                revealed && isPicked && option.letter !== question.correct_option
+              const classes = [
+                'quiz__option',
+                isPicked ? 'is-picked' : '',
+                isAnswer ? 'is-answer' : '',
+                isWrongPick ? 'is-wrong' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+              return (
+                <button
+                  key={option.letter}
+                  type="button"
+                  className={classes}
+                  disabled={waiting || revealed}
+                  onClick={() => {
+                    setPicks((current) => ({ ...current, [question.id]: option.letter }))
+                    report(index, questionScore(option.letter, question.correct_option))
+                  }}
+                >
+                  <span className="quiz__letter">{option.letter}</span>
+                  <span className="quiz__optiontext">{option.text}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {waiting && <p className="quiz__waiting">Waiting for others to answer…</p>}
+
+          {revealed && (
+            <div
+              className={`quiz__reveal ${
+                picked === question.correct_option ? 'is-good' : 'is-bad'
+              }`}
+            >
+              <p className="quiz__explain">{question.explain}</p>
+              <p className="quiz__correct">
+                {picked === undefined
+                  ? `Time's up — the answer was ${question.correct_option}.`
+                  : `The answer was ${question.correct_option}.`}
+              </p>
+              <p className="quiz__autonext">
+                {index === questions.length - 1 ? 'Final score' : 'Next question'} in{' '}
+                {reviewLeft}s
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)
 }

@@ -15,9 +15,12 @@ export interface HallucinationQuestion {
  * Hardcoded for now. When the question bank lands these move behind the API and
  * this file becomes the fixture the tests run against.
  *
- * Two questions, deliberately one of each: a round of nothing but traps teaches
- * "doubt everything", which is its own failure mode. The second question is the
- * one that punishes that reflex, so the pair has to stay balanced.
+ * Three questions: two traps and one honest answer, in that order. A round of
+ * nothing but traps teaches "doubt everything", which is its own failure mode,
+ * so the calm answer sits in the middle and the closing question is a trap of a
+ * different shape than the first - a fabricated citation, then a fabricated
+ * deadline. Making it longer means changing the flow node's `questions` and
+ * `duration_sec` too, or the node ends mid-question.
  */
 export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
   {
@@ -28,6 +31,15 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
     truth: 'doubt',
     reveal:
       'The case name and the docket number are shaped exactly like a real citation — and that is the whole trick. A model generates a plausible-looking citation as easily as a plausible-looking sentence, and nothing in the wording tells you which one you are holding. A citation is evidence only once you have opened it: search the case name and the docket number, and check that the parties, the year and the ruling all match.',
+  },
+  {
+    id: 'fake-circular-deadline',
+    prompt: 'Do we have to report an AI failure to the HKMA within 24 hours?',
+    reply:
+      'Yes. Under HKMA Circular 2025/03, any AI model failure that affects a customer must be reported within 24 hours, and late reporting can attract a fine of up to HK$5 million.',
+    truth: 'doubt',
+    reveal:
+      'Circular numbers, deadlines and penalties are exactly the shape a model invents, and the specificity is what makes it convincing: nobody would make up "Circular 2025/03", so nobody checks it. A rule with a number on it is only real if you can find it on the regulator’s own site. This one is not there.',
   },
   {
     id: 'image-water-cost',

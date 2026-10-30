@@ -11,7 +11,6 @@ import {
 import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
-import { quizDeckFor } from '../../games/quiz/content'
 import SabotageGame from '../../games/sabotage/SabotageGame'
 import { findBrief } from '../../games/briefs'
 import TitleCard from '../../games/TitleCard'
@@ -234,12 +233,7 @@ function NodeStage({
   }
   if (node.type === 'quiz') {
     return (
-      <QuizGame
-        key={nodeIndex}
-        room={room}
-        nodeIndex={nodeIndex}
-        deck={quizDeckFor(node.score)}
-      />
+      <QuizGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
     )
   }
 
