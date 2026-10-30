@@ -8,6 +8,7 @@ import {
   type SabotageState,
   type SabotageTeam,
 } from '../../store/gameStore'
+import { CARD_ICONS, deckHasArt } from './cardIcons'
 import './SabotageGame.css'
 
 const DOMAIN_LABEL: Record<SabotageDomain, string> = {
@@ -27,6 +28,11 @@ function clock(ms: number): string {
 
 function teamName(team: SabotageTeam | undefined): string {
   return team === 'red' ? 'RED' : team === 'blue' ? 'BLUE' : '—'
+}
+
+/** Money as the players think about it: $14,000, never 14000. */
+function money(amount: number): string {
+  return `$${Math.max(0, amount).toLocaleString('en-US')}`
 }
 
 function roleName(role: string | undefined): string {
@@ -153,8 +159,13 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
       : sabotage.remaining_ms
 
   const deck = build?.deck ?? (sabotage.decks[myTeam ?? 'red'] ?? [])
+  const withArt = deckHasArt(deck)
   const mineCost = mine.reduce((sum, id) => sum + (sabotage.cards[id]?.cost ?? 0), 0)
-  const budgetLeft = 100 - mineCost
+  // The team's money, not this round's: `round_budget` is what it walked in
+  // with, so an unvoted hand comes straight off the same number the server
+  // charges against.
+  const roundBudget = build?.round_budget ?? sabotage.total_budget
+  const budgetLeft = roundBudget - mineCost
   const teamVector = build?.vector ?? [0, 0, 0]
 
   const toggle = (id: string) => {
@@ -174,10 +185,13 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
   }
 
   const fits = (id: string) =>
-    mine.includes(id) || (mine.length < 4 && mineCost + (sabotage.cards[id]?.cost ?? 0) <= 100)
+    mine.includes(id) ||
+    (mine.length < 4 && mineCost + (sabotage.cards[id]?.cost ?? 0) <= roundBudget)
 
   return (
-    <div className={`hud hud--game sab is-${sabotage.phase}`}>
+    // The whole screen takes the player's job, not their team: purple for the
+    // attacker, blue for the defender. Spectators keep the plain brand.
+    <div className={`hud hud--game sab is-${sabotage.phase} ${myRole ? `is-${myRole}` : ''}`}>
       <div className="hud__matrix" aria-hidden="true" />
       <div className="hud__frame sab__frame">
         <div className="hud__inner sab__inner">
@@ -188,7 +202,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
 
           <div className="sab__head">
             <span className="hud__chevrons" aria-hidden="true" />
-            <div className="hud__tab">Sabotage</div>
+            <div className="hud__tab">AI Sabotage</div>
             <div className="sab__headright">
               <span className="sab__round">
                 R{sabotage.round}/{sabotage.rounds}
@@ -218,49 +232,72 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
 
           {selecting && (
             <div className="sab__stage">
-              <div className="sab__targetline">
-                <span className={`sab__targetbadge is-${sabotage.target}`}>
-                  TARGET · {DOMAIN_LABEL[sabotage.target].toUpperCase()}
-                </span>
-                <span className="sab__theme">{sabotage.theme}</span>
-                <span className={`sab__myrole is-${myRole ?? 'spectator'}`}>
-                  YOU ARE {roleName(myRole)}
-                </span>
-              </div>
-              <p className="sab__prompt">
-                {myRole === 'attacker'
-                  ? sabotage.attack_brief
-                  : myRole === 'defender'
-                    ? sabotage.defence_brief
-                    : sabotage.attack_brief}
-              </p>
-              {!myTeam && (
-                <p className="sab__spectator">
-                  You signed in after the teams were drawn, so you are watching this round.
-                </p>
-              )}
-
-              {/* The build sits above the hand, not below it: the numbers a
-                  player needs while choosing are the ones the hand adds up to,
-                  and at the bottom of the screen they were off the eye line. */}
-              <div className="sab__build">
-                <div className="sab__buildhead">
-                  <span className="sab__buildlabel">Your build</span>
-                  <span className={`sab__budgetnum ${budgetLeft < 0 ? 'is-over' : ''}`}>
-                    {budgetLeft}
-                  </span>
-                  <span className="sab__budgetlabel">points left</span>
-                  <span className="sab__picked">
-                    {mine.length} card{mine.length === 1 ? '' : 's'} of 4
-                  </span>
-                  <span className="sab__tally">
-                    {build
-                      ? `${build.voters}/${build.members} voted`
-                      : 'collecting votes'}
-                  </span>
+              {/* Two panels across the top: the story on the left, the money on
+                  the right. Reading order is "what is happening" then "what can
+                  I still afford", and the hand underneath is where both are
+                  acted on. */}
+              <div className="sab__top">
+                {/* Which round, who attacks, what it is scored on, and the one
+                    line that says what is happening. A player who reads nothing
+                    else on this screen still knows what they are doing. */}
+                <div className="sab__scene">
+                  <div className="sab__scenehead">
+                    <span className="sab__sceneround">
+                      Round {sabotage.round} of {sabotage.rounds}
+                    </span>
+                    <span className="sab__sceneattacker">
+                      {sabotage.attacker.toUpperCase()} attacks
+                    </span>
+                    <span className={`sab__targetbadge is-${sabotage.target}`}>
+                      Target · {DOMAIN_LABEL[sabotage.target]}
+                    </span>
+                    <span className={`sab__myrole is-${myRole ?? 'spectator'}`}>
+                      You are {roleName(myRole).toLowerCase()}
+                    </span>
+                  </div>
+                  <p className="sab__scenetitle">{sabotage.theme}</p>
+                  <p className="sab__scenebrief">
+                    {myRole === 'defender' ? sabotage.defence_brief : sabotage.attack_brief}
+                  </p>
+                  {!myTeam && (
+                    <p className="sab__spectator">
+                      You signed in after the teams were drawn, so you are watching this round.
+                    </p>
+                  )}
                 </div>
-                <Bars vector={teamVector} target={sabotage.target} />
-                {refused && <p className="sab__refused">{refused}</p>}
+
+                {/* The live cost of the hand being assembled: what the team has
+                    already committed, what this round costs so far, and what is
+                    left to spend for the rest of the match. */}
+                <div className="sab__build">
+                  <div className="sab__buildhead">
+                    <span className="sab__buildlabel">Live spend</span>
+                    <span className="sab__budgetnum">{money(budgetLeft)}</span>
+                    <span className="sab__budgetlabel">left for all four rounds</span>
+                  </div>
+                  <div className="sab__spend">
+                    <span className="sab__spendrow">
+                      <b>Earlier rounds</b>
+                      <em>{money(build?.spent ?? 0)}</em>
+                    </span>
+                    <span className="sab__spendrow is-now">
+                      <b>This round</b>
+                      <em>{money(mineCost)}</em>
+                    </span>
+                  </div>
+                  <Bars vector={teamVector} target={sabotage.target} />
+                  <div className="sab__buildfoot">
+                    <span className="sab__picked">
+                      {mine.length} card{mine.length === 1 ? '' : 's'} of 4
+                    </span>
+                    <span className="sab__tally">
+                      {build
+                        ? `${build.voters}/${build.members} voted`
+                        : 'collecting votes'}
+                    </span>
+                  </div>
+                  {refused && <p className="sab__refused">{refused}</p>}
+                </div>
               </div>
 
               <div className="sab__cards">
@@ -273,15 +310,31 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                     <button
                       key={id}
                       type="button"
-                      className={`sab__card ${on ? 'is-on' : ''} ${allowed ? '' : 'is-locked'}`}
+                      className={`sab__card ${withArt ? 'has-icon' : ''} ${on ? 'is-on' : ''} ${
+                        allowed ? '' : 'is-locked'
+                      }`}
                       onClick={() => toggle(id)}
                     >
+                      {/* Only a fully illustrated deck reserves a slot: a
+                          deck with no art starts at the name instead of
+                          carrying an empty band under the timer. */}
+                      {withArt && (
+                        <span className="sab__cardicon">
+                          <img src={CARD_ICONS[id]} alt="" decoding="async" />
+                        </span>
+                      )}
                       <span className="sab__cardtop">
                         <span className="sab__cardname">{card.name}</span>
-                        <span className="sab__cardcost">{card.cost}</span>
                       </span>
                       <span className="sab__cardblurb">{card.blurb}</span>
-                      <CardVector vector={card.vector} />
+                      {/* Price at the foot of the card, not in the corner: a
+                          dollar figure is three times the width of the two-digit
+                          number it replaced, and in the corner it squeezed every
+                          name down to "Jailbreak the…". */}
+                      <span className="sab__cardfoot">
+                        <CardVector vector={card.vector} />
+                        <span className="sab__cardcost">{money(card.cost)}</span>
+                      </span>
                     </button>
                   )
                 })}
@@ -307,26 +360,30 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
 function Rules({ sabotage }: { sabotage: SabotageState & { endsAt: number | null; heldMs: number } }) {
   return (
     <div className="sab__rules">
-      <h2 className="sab__rulestitle">Four rounds. One target each.</h2>
+      <h2 className="sab__rulestitle">Four rounds. One budget.</h2>
       <ul className="sab__rulelist">
         <li>
-          Every card scores in three areas: <b>Data</b>, <b>People</b>, <b>Infra</b>.
+          Your team has <b>{money(sabotage.total_budget)}</b> for <b>all four rounds</b>. What
+          you spend now is gone in round four.
+        </li>
+        <li>
+          Every card scores in three areas: <b>Data</b>, <b>People</b>, <b>Infra</b>. Cards cost
+          <b> $1,000 to $14,000</b>.
         </li>
         <li>
           Each round names <b>one target</b>. Only that column decides who wins the round.
         </li>
         <li>
-          You have <b>100 points</b> and may buy <b>up to 4 cards</b>. A dearer card is not
-          a stronger one.
+          Up to <b>4 cards a round</b>. A dearer card is not a stronger one.
         </li>
         <li>
           Your team votes; the most-voted cards get bought. <b>Talk to each other.</b>
         </li>
-        <li>Four rounds: attack, defend, attack, defend.</li>
       </ul>
       <p className="sab__rulesfoot">
-        Round 1 is <b>{sabotage.theme}</b> · target{' '}
-        <b>{DOMAIN_LABEL[sabotage.target]}</b> · {sabotage.attacker.toUpperCase()} attacks
+        Four rounds: attack, defend, attack, defend · round 1 is{' '}
+        <b>{sabotage.theme}</b> · target <b>{DOMAIN_LABEL[sabotage.target]}</b> ·{' '}
+        {sabotage.attacker.toUpperCase()} attacks
       </p>
     </div>
   )
@@ -382,6 +439,14 @@ function Reveal({
           {defender.toUpperCase()} +{result.points[defender]}
         </span>
       </div>
+      <p className="sab__spend">
+        {attacker.toUpperCase()} spent {money(result.attack_cost)} · {defender.toUpperCase()}{' '}
+        spent {money(result.defence_cost)}
+      </p>
+      <p className="sab__spend">
+        Left to spend — RED {money(sabotage.budget.red ?? 0)} · BLUE{' '}
+        {money(sabotage.budget.blue ?? 0)}
+      </p>
       <p className="sab__verdictsub">
         {result.void
           ? 'Neither side bought a card, so the round scores nothing'
@@ -435,6 +500,10 @@ function Final({
           </li>
         ))}
       </ol>
+      <p className="sab__sidenote">
+        Red finished with {money(sabotage.budget.red ?? 0)} · Blue with{' '}
+        {money(sabotage.budget.blue ?? 0)}
+      </p>
       <p className="sab__sidenote">Your team score is already on the board.</p>
     </div>
   )

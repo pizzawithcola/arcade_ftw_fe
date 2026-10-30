@@ -33,17 +33,17 @@
   width: min(100%, 62rem);
   max-height: 100%;
   padding: 2px;
-  background: linear-gradient(160deg, var(--c-brand-deep), rgba(175, 0, 14, 0.35) 45%, var(--c-brand-deep));
+  background: linear-gradient(160deg, var(--c-brand-deep), color-mix(in srgb, var(--c-brand-deep) 35%, transparent) 45%, var(--c-brand-deep));
   clip-path: polygon(
     var(--notch) 0, calc(100% - var(--notch)) 0, 100% var(--notch),
     100% calc(100% - var(--notch)), calc(100% - var(--notch)) 100%,
     var(--notch) 100%, 0 calc(100% - var(--notch)), 0 var(--notch)
   );
   box-shadow:
-    0 0 0 1px rgba(219, 0, 17, 0.45),
-    0 0 22px rgba(219, 0, 17, 0.5),
-    0 0 70px rgba(219, 0, 17, 0.28),
-    inset 0 0 60px rgba(219, 0, 17, 0.16);
+    0 0 0 1px color-mix(in srgb, var(--c-brand) 45%, transparent),
+    0 0 22px color-mix(in srgb, var(--c-brand) 50%, transparent),
+    0 0 70px color-mix(in srgb, var(--c-brand) 28%, transparent),
+    inset 0 0 60px color-mix(in srgb, var(--c-brand) 16%, transparent);
 }
 
 .hud__inner {
@@ -57,7 +57,7 @@
   gap: clamp(0.5rem, 1.6vh, 1rem);
   padding: clamp(1rem, 2.6vh, 1.6rem) clamp(1.1rem, 3vw, 2.2rem) clamp(0.9rem, 2.2vh, 1.4rem);
   background:
-    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(175, 0, 14, 0.14), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 50% 40%, color-mix(in srgb, var(--c-brand-deep) 14%, transparent), transparent 70%),
     var(--c-surface);
   clip-path: polygon(
     var(--notch) 0, calc(100% - var(--notch)) 0, 100% var(--notch),
@@ -74,7 +74,7 @@
   width: 1.25rem;
   height: 1.25rem;
   border: 2px solid var(--c-brand);
-  filter: drop-shadow(0 0 6px rgba(219, 0, 17, 0.9));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-brand) 90%, transparent));
   --inset-x: clamp(1rem, 2.6vw, 1.9rem);
   --inset-y: clamp(0.85rem, 2.2vh, 1.35rem);
 }
@@ -96,7 +96,7 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   clip-path: polygon(1rem 0, calc(100% - 1rem) 0, 100% 100%, 0 100%);
-  box-shadow: 0 0 26px rgba(219, 0, 17, 0.7);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--c-brand) 70%, transparent);
 }
 
 .hud__bar {
@@ -104,7 +104,7 @@
   align-items: center;
   gap: clamp(0.5rem, 1.5vw, 1rem);
   padding-bottom: clamp(0.4rem, 1vh, 0.7rem);
-  border-bottom: 1px solid rgba(175, 0, 14, 0.35);
+  border-bottom: 1px solid color-mix(in srgb, var(--c-brand-deep) 35%, transparent);
 }
 
 .hud__event {
@@ -124,7 +124,7 @@
   gap: 0.4rem;
   margin-left: auto;
   padding: 0.15rem 0.7rem;
-  border: 1px solid rgba(175, 0, 14, 0.55);
+  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 55%, transparent);
   border-radius: 999px;
   font-size: clamp(0.6rem, 1vw, 0.72rem);
   letter-spacing: 0.18em;
@@ -162,7 +162,7 @@
     var(--c-brand) 0 6px,
     transparent 6px 12px
   );
-  filter: drop-shadow(0 0 5px rgba(219, 0, 17, 0.8));
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c-brand) 80%, transparent));
 }
 
 .hud__chevrons--flip {
@@ -200,7 +200,7 @@
   inset: 0;
   border-top-color: var(--c-brand);
   border-bottom-color: var(--c-brand);
-  filter: drop-shadow(0 0 8px rgba(219, 0, 17, 0.7));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c-brand) 70%, transparent));
   opacity: 0.95;
   animation: hud-spin 18s linear infinite;
 }
@@ -209,15 +209,15 @@
   inset: 12%;
   border-left-color: var(--c-brand);
   border-right-color: var(--c-brand);
-  filter: drop-shadow(0 0 6px rgba(219, 0, 17, 0.6));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-brand) 60%, transparent));
   animation: hud-spin 12s linear infinite reverse;
 }
 
 .hud__ring--inner {
   inset: 24%;
-  border-color: rgba(219, 0, 17, 0.35);
-  background: radial-gradient(circle, rgba(219, 0, 17, 0.22), transparent 68%);
-  box-shadow: 0 0 34px rgba(219, 0, 17, 0.35) inset;
+  border-color: color-mix(in srgb, var(--c-brand) 35%, transparent);
+  background: radial-gradient(circle, color-mix(in srgb, var(--c-brand) 22%, transparent), transparent 68%);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--c-brand) 35%, transparent) inset;
 }
 
 @keyframes hud-spin {
@@ -243,7 +243,7 @@
   aspect-ratio: 1;
   border: 2px solid var(--c-text);
   border-radius: 50%;
-  box-shadow: 0 0 18px rgba(244, 244, 246, 0.7), 0 0 40px rgba(219, 0, 17, 0.35);
+  box-shadow: 0 0 18px rgba(244, 244, 246, 0.7), 0 0 40px color-mix(in srgb, var(--c-brand) 35%, transparent);
 }
 
 .hud__avatar-body {
@@ -252,7 +252,7 @@
   border: 2px solid var(--c-text);
   border-bottom: 0;
   border-radius: 999px 999px 0 0;
-  box-shadow: 0 0 18px rgba(244, 244, 246, 0.55), 0 0 40px rgba(219, 0, 17, 0.3);
+  box-shadow: 0 0 18px rgba(244, 244, 246, 0.55), 0 0 40px color-mix(in srgb, var(--c-brand) 30%, transparent);
 }
 
 .hud__label {
@@ -273,7 +273,7 @@
   line-height: 1.05;
   letter-spacing: 0.04em;
   color: var(--c-text);
-  text-shadow: 0 0 18px rgba(219, 0, 17, 0.85), 0 0 48px rgba(219, 0, 17, 0.45);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--c-brand) 85%, transparent), 0 0 48px color-mix(in srgb, var(--c-brand) 45%, transparent);
   max-width: 22ch;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -291,13 +291,13 @@
   align-items: center;
   gap: clamp(0.5rem, 1.5vw, 0.9rem);
   padding-top: clamp(0.4rem, 1vh, 0.7rem);
-  border-top: 1px solid rgba(175, 0, 14, 0.35);
+  border-top: 1px solid color-mix(in srgb, var(--c-brand-deep) 35%, transparent);
 }
 
 .hud__footchip {
   flex: none;
   padding: 0.2rem 0.8rem;
-  border: 1px solid rgba(175, 0, 14, 0.6);
+  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
   border-radius: 999px;
   font-size: clamp(0.58rem, 1vw, 0.68rem);
   letter-spacing: 0.2em;
@@ -361,7 +361,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   color: var(--c-text);
-  text-shadow: 0 0 20px rgba(219, 0, 17, 0.8), 0 0 54px rgba(219, 0, 17, 0.4);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--c-brand) 80%, transparent), 0 0 54px color-mix(in srgb, var(--c-brand) 40%, transparent);
 }
 
 .hud--display .hud__label {
@@ -431,7 +431,7 @@
   background: linear-gradient(
     180deg,
     transparent,
-    rgba(219, 0, 17, 0.09),
+    color-mix(in srgb, var(--c-brand) 9%, transparent),
     transparent
   );
   animation: hud-sweep 7s linear infinite;
@@ -456,7 +456,7 @@
   height: 4px;
   background-image: repeating-linear-gradient(
     90deg,
-    rgba(219, 0, 17, 0.55) 0 1px,
+    color-mix(in srgb, var(--c-brand) 55%, transparent) 0 1px,
     transparent 1px 9px
   );
   -webkit-mask-image: linear-gradient(90deg, #000, transparent 22%, transparent 78%, #000);
@@ -473,7 +473,7 @@
   position: absolute;
   inset: -9%;
   border-radius: 50%;
-  border: 1px dashed rgba(219, 0, 17, 0.45);
+  border: 1px dashed color-mix(in srgb, var(--c-brand) 45%, transparent);
   animation: hud-spin 34s linear infinite reverse;
 }
 
@@ -579,22 +579,22 @@
   0%,
   100% {
     text-shadow:
-      1px 0 rgba(219, 0, 17, 0.55),
+      1px 0 color-mix(in srgb, var(--c-brand) 55%, transparent),
       -1px 0 rgba(244, 244, 246, 0.35),
-      0 0 18px rgba(219, 0, 17, 0.85),
-      0 0 48px rgba(219, 0, 17, 0.45);
+      0 0 18px color-mix(in srgb, var(--c-brand) 85%, transparent),
+      0 0 48px color-mix(in srgb, var(--c-brand) 45%, transparent);
   }
   20% {
     text-shadow:
-      -3px 0 rgba(219, 0, 17, 0.9),
+      -3px 0 color-mix(in srgb, var(--c-brand) 90%, transparent),
       3px 0 rgba(244, 244, 246, 0.6),
-      0 0 26px rgba(219, 0, 17, 1);
+      0 0 26px color-mix(in srgb, var(--c-brand) 100%, transparent);
   }
   40% {
     text-shadow:
       2px 0 rgba(244, 244, 246, 0.7),
-      -2px 0 rgba(219, 0, 17, 0.9),
-      0 0 14px rgba(219, 0, 17, 0.7);
+      -2px 0 color-mix(in srgb, var(--c-brand) 90%, transparent),
+      0 0 14px color-mix(in srgb, var(--c-brand) 70%, transparent);
   }
 }
 
@@ -612,7 +612,7 @@
   width: min(62rem, 92%);
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--c-brand), #fff, var(--c-brand), transparent);
-  box-shadow: 0 0 22px rgba(219, 0, 17, 0.9);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--c-brand) 90%, transparent);
   pointer-events: none;
   animation: hud-boot-line 620ms ease-out both;
 }
@@ -688,8 +688,8 @@
   transform: translateX(-50%) perspective(300px) rotateX(62deg);
   transform-origin: bottom center;
   background-image:
-    repeating-linear-gradient(90deg, rgba(219, 0, 17, 0.38) 0 1px, transparent 1px 72px),
-    repeating-linear-gradient(0deg, rgba(219, 0, 17, 0.26) 0 1px, transparent 1px 72px);
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--c-brand) 38%, transparent) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--c-brand) 26%, transparent) 0 1px, transparent 1px 72px);
   -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 74%);
   mask-image: linear-gradient(to top, #000 0%, transparent 74%);
 }
@@ -706,7 +706,7 @@
   font-size: 0.52rem;
   letter-spacing: 0.34em;
   text-transform: uppercase;
-  color: rgba(219, 0, 17, 0.75);
+  color: color-mix(in srgb, var(--c-brand) 75%, transparent);
   pointer-events: none;
 }
 
@@ -726,7 +726,7 @@
   background:
     repeating-conic-gradient(
       from 0deg,
-      rgba(219, 0, 17, 0.55) 0 0.6deg,
+      color-mix(in srgb, var(--c-brand) 55%, transparent) 0 0.6deg,
       transparent 0.6deg 6deg
     );
   -webkit-mask-image: radial-gradient(circle closest-side, transparent 76%, #000 78%);
@@ -749,8 +749,8 @@
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(219, 0, 17, 0.16) 32deg,
-    rgba(219, 0, 17, 0.8) 60deg,
+    color-mix(in srgb, var(--c-brand) 16%, transparent) 32deg,
+    color-mix(in srgb, var(--c-brand) 80%, transparent) 60deg,
     transparent 61deg
   );
   /* An annulus, not a wedge: the sweep has to travel along the ring, or it

@@ -47,8 +47,8 @@ export interface WsMessage {
 export type SabotageTeam = 'red' | 'blue'
 export type SabotageDomain = 'data' | 'people' | 'infra'
 
-/** A card is three numbers and a price. The price is not a power ranking: a
- *  cheap card can be the strongest thing in the deck. */
+/** A card is three numbers and a price in dollars. The price is not a power
+ *  ranking: a cheap card can be the strongest thing in the deck. */
 export interface SabotageCard {
   name: string
   blurb: string
@@ -74,6 +74,9 @@ export interface SabotageRoundResult {
   defence: string[]
   attack_vector: number[]
   defence_vector: number[]
+  /** What each side paid for its hand, in dollars. */
+  attack_cost: number
+  defence_cost: number
   /** null when neither side bought anything: the round scores nothing. */
   winner: SabotageTeam | null
   void: boolean
@@ -91,7 +94,13 @@ export interface SabotageBuild {
   target: SabotageDomain
   deck: string[]
   build: string[]
+  /** Dollars the team walked into this round with, before its build. */
+  round_budget: number
+  /** Dollars left once the team's build is paid for. */
   budget: number
+  /** Dollars already committed in the rounds before this one. */
+  spent: number
+  total_budget: number
   vector: number[]
   votes: Record<string, number>
   dropped: { card: string; reason: 'budget' | 'slots' }[]
@@ -123,7 +132,12 @@ export interface SabotageState {
   decks: Record<SabotageTeam, string[]>
   /** Empty while selecting: both sides commit at the same time. */
   builds: Partial<Record<SabotageTeam, string[]>>
-  budget: Partial<Record<SabotageTeam, number>>
+  /** One pool per team for the whole match, in dollars. */
+  total_budget: number
+  /** Committed so far; during select it covers the finished rounds only. */
+  spent: Record<SabotageTeam, number>
+  /** Dollars the team can still spend. */
+  budget: Record<SabotageTeam, number>
   vectors: Partial<Record<SabotageTeam, number[]>>
   votes: Partial<Record<SabotageTeam, Record<string, number>>>
   dropped: Partial<Record<SabotageTeam, { card: string; reason: string }[]>>
