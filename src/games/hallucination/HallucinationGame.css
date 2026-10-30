@@ -403,22 +403,17 @@
   color: var(--c-text-muted);
 }
 
-.hallu__next {
+/* The verdict advances itself, so this is a status line, not a control: it has
+   to be readable at a glance and never look pressable. */
+.hallu__autonext {
   justify-self: start;
-  padding: 0.45rem 1.4rem;
-  border: 1px solid var(--c-brand-deep);
-  border-radius: 6px;
-  background: var(--c-brand-deep);
-  color: var(--c-text);
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.hallu__next:hover {
-  border-color: var(--c-brand-press);
-  background: var(--c-brand-press);
+  margin: 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--c-brand-deep);
+  font-family: ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
 }
 
 /* ─── final score ───────────────────────────────────────────────────────────── */

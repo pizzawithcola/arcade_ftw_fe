@@ -340,6 +340,36 @@
   color: var(--c-text-muted);
 }
 
+/* Same beat as the tablets: one line every two seconds, so the wall and the
+   iPad in a player's hands are never on different lines. */
+.display__briefLead,
+.display__briefRules li {
+  animation: briefLine 0.45s ease-out both;
+}
+
+.display__briefLead {
+  animation-delay: 2s;
+}
+
+.display__briefRules li:nth-child(1) {
+  animation-delay: 4s;
+}
+
+.display__briefRules li:nth-child(2) {
+  animation-delay: 6s;
+}
+
+.display__briefRules li:nth-child(3) {
+  animation-delay: 8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .display__briefLead,
+  .display__briefRules li {
+    animation: none;
+  }
+}
+
 .display__briefRules li::before {
   content: '';
   position: absolute;

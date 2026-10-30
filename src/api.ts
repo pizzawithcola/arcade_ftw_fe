@@ -162,7 +162,12 @@ export async function fetchLeaderboard(limit = 10): Promise<LeaderboardRow[]> {
 export interface RoomLeaderboardRow {
   rank: number
   nickname: string
+  /** This section's points. */
   score: number
+  /** Standing before this section started, so the board can count up from it. */
+  previous: number
+  /** Standing right now, which is what the board is ranked by. */
+  total: number
 }
 
 /** One section's in-game ranking for a room. The player tablet reads it too. */

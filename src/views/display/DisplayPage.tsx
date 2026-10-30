@@ -3,14 +3,17 @@ import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
-import { QUIZ_QUESTIONS } from '../../games/quiz/content'
+import { questionsFor, quizDeckFor, type QuizDeck } from '../../games/quiz/content'
+import TitleCard from '../../games/TitleCard'
+import Welcome from '../../games/Welcome'
+import { findTitle, GAME_COUNT, gameNumber } from '../../games/titles'
 import { findBrief } from '../../games/briefs'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import '../../games/hallucination/HallucinationGame.css'
 import '../hud.css'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
-import { useGameStore } from '../../store/gameStore'
+import { useGameStore, type FlowNode, type QuestionState } from '../../store/gameStore'
 import StaffLogin from '../StaffLogin'
 import './DisplayPage.css'
 
@@ -102,6 +105,22 @@ function BriefOnScreen({ brief: key }: { brief?: string }) {
   )
 }
 
+/** The wall's version of the name card in front of each game. */
+function GameTitleOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: number }) {
+  const entry = findTitle(node.title)
+  if (!entry) return null
+  const at = gameNumber(node.title, node.section)
+  return (
+    <TitleCard
+      title={entry.name}
+      kicker={at ? `game ${at} of ${GAME_COUNT}` : 'next up'}
+      note={entry.note}
+      countdown={Math.max(0, Math.ceil(remainingMs / 1000))}
+      size="display"
+    />
+  )
+}
+
 /** The Data Shadow post is one static page, so the big screen can show it whole. */
 function PostOnScreen() {
   return (
@@ -138,13 +157,51 @@ function PostOnScreen() {
  * to move on. The URL never changes.
  */
 /**
+ * Which question is on screen right now, derived from the node clock.
+ *
+ * The broadcast carries the question only at the moment it changes, so a wall
+ * that trusted the last message sat on question one for the whole node - and,
+ * with a title card in front of a quiz, never left the card at all. Both sides
+ * run the same arithmetic, so a screen that derives it still cannot disagree
+ * with the engine.
+ */
+function questionOnScreen(
+  node: FlowNode | null,
+  remainingMs: number,
+): QuestionState | null {
+  const count = node?.questions
+  const each = node?.seconds_each
+  if (!count || !each) return null
+  const durationMs = (node?.duration_sec ?? 0) * 1000
+  const elapsed = Math.max(0, durationMs - remainingMs)
+  const introMs = (node?.intro_sec ?? 0) * 1000
+  const stage = Math.max(0, elapsed - introMs)
+  const eachMs = each * 1000
+  return {
+    index: Math.min(count - 1, Math.floor(stage / eachMs)),
+    count,
+    seconds_each: each,
+    remaining_ms: Math.max(0, Math.round(eachMs - (stage % eachMs))),
+    intro_ms: Math.max(0, Math.round(introMs - elapsed)),
+  }
+}
+
+/**
  * The question the whole room is answering.
  *
  * The engine says which one is current, so the screen and the iPads cannot
  * disagree. Options stay on the iPad: the screen is there to be read from six
  * metres away, and four options are not.
  */
-function QuestionOnScreen({ kind, index }: { kind: 'hallucination' | 'quiz'; index: number }) {
+function QuestionOnScreen({
+  kind,
+  index,
+  deck = 'hallucination',
+}: {
+  kind: 'hallucination' | 'quiz'
+  index: number
+  deck?: QuizDeck
+}) {
   if (kind === 'hallucination') {
     const question = HALLUCINATION_QUESTIONS[index]
     if (!question) return null
@@ -180,7 +237,7 @@ function QuestionOnScreen({ kind, index }: { kind: 'hallucination' | 'quiz'; ind
     )
   }
 
-  const question = QUIZ_QUESTIONS[index]
+  const question = questionsFor(deck)[index]
   if (!question) return null
   return (
     <article className="display__question">
@@ -297,7 +354,7 @@ export default function DisplayPage() {
   const node = useGameStore((state) => state.node)
   const endsAt = useGameStore((state) => state.endsAt)
   const heldMs = useGameStore((state) => state.heldMs)
-  const question = useGameStore((state) => state.question)
+  const broadcast = useGameStore((state) => state.question)
   const sabotage = useGameStore((state) => state.sabotage)
 
   useEffect(() => {
@@ -368,6 +425,7 @@ export default function DisplayPage() {
   }
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
+  const question = questionOnScreen(node, remaining) ?? broadcast
   // Sabotage has its own per-phase countdown; show that instead of the node's
   // 170-second slot, which only matters for when the flow moves on.
   const sabotageRemaining = sabotage
@@ -426,21 +484,46 @@ export default function DisplayPage() {
             <RoomLeaderboard key={node.section} code={code} section={node.section} />
           )}
 
+          {/* The quiz opens on the same title card the tablets show, so the
+              room looks at one thing while the questions are about to start. */}
+          {(question?.intro_ms ?? 0) > 0 && (
+            <TitleCard
+              title="Quick Quiz"
+              kicker="next up"
+              note="Four answers, one question at a time. Answer before the clock runs out."
+              countdown={Math.ceil((question?.intro_ms ?? 0) / 1000)}
+              size="display"
+            />
+          )}
+
+          {node?.type === 'title' && <GameTitleOnScreen node={node} remainingMs={remaining} />}
+
+          {node?.type === 'intro' && (
+            <Welcome
+              elapsedMs={Math.max(0, (node.duration_sec ?? 0) * 1000 - remaining)}
+              size="display"
+            />
+          )}
+
           {question &&
+            !(question.intro_ms ?? 0) &&
             (node?.game === 'hallucination' || node?.type === 'quiz') && (
               <QuestionOnScreen
                 kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
                 index={question.index}
+                deck={quizDeckFor(node?.score)}
               />
             )}
 
-          {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
+          {question && !(question.intro_ms ?? 0) && (node?.game === 'hallucination' || node?.type === 'quiz') && (
             <p className="display__kicker">
               question {question.index + 1} / {question.count}
             </p>
           )}
 
-          {phase === 'playing' && !question && node?.type !== 'leaderboard' && node?.type !== 'brief' && (
+          {phase === 'playing' &&
+            !question &&
+            !['leaderboard', 'brief', 'title', 'intro'].includes(node?.type ?? '') && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (

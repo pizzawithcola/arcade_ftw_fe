@@ -8,7 +8,15 @@ import './HallucinationGame.css'
 type Picks = Record<string, string>
 
 /** Each reply gets this long before the round moves on without an answer. */
-const QUESTION_SECONDS = 30
+const SELECT_SECONDS = 25
+
+/**
+ * The verdict then holds for five seconds and moves on by itself: a reader who
+ * looks up mid-sentence must never be able to hold the room on one question.
+ */
+const REVIEW_SECONDS = 5
+const CYCLE_MS = (SELECT_SECONDS + REVIEW_SECONDS) * 1000
+const TOTAL_MS = CYCLE_MS * HALLUCINATION_QUESTIONS.length
 
 export default function HallucinationGame({
   room,
@@ -17,22 +25,29 @@ export default function HallucinationGame({
   room: string
   nodeIndex: number
 }) {
-  const [index, setIndex] = useState(0)
   const [picks, setPicks] = useState<Picks>({})
-  const [finished, setFinished] = useState(false)
   const report = useScoreReport(room, nodeIndex)
 
   // Frozen while the operator has the show paused, so a pause stops the
   // questions too instead of letting them expire off-screen.
   const elapsed = useNodeElapsed()
-  const [questionStart, setQuestionStart] = useState(elapsed)
+
+  // Which question is on screen is read off the node clock rather than kept in
+  // state: the big screen derives the same index from the same clock, so the
+  // room can never be looking at one question while a tablet answers another.
+  const index = Math.min(
+    HALLUCINATION_QUESTIONS.length - 1,
+    Math.floor(elapsed / CYCLE_MS),
+  )
+  const inCycleMs = elapsed - index * CYCLE_MS
+  const finished = elapsed >= TOTAL_MS
 
   const question = HALLUCINATION_QUESTIONS[index]
 
   const pickKey = picks[question.id]
   const picked = pickKey ? levelByKey(pickKey) : undefined
 
-  const timeLeftMs = Math.max(0, QUESTION_SECONDS * 1000 - (elapsed - questionStart))
+  const timeLeftMs = Math.max(0, SELECT_SECONDS * 1000 - inCycleMs)
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
   // The reveal happens only when the question's clock runs out: an early answer
   // sits in a "waiting" state until everyone has had their time. A player who
@@ -40,6 +55,9 @@ export default function HallucinationGame({
   const expired = timeLeftMs === 0
   const waiting = picked !== undefined && !expired
   const revealed = expired
+  // The verdict owns the last five seconds of the cycle, then the next question
+  // takes over without anyone touching the screen.
+  const reviewLeft = Math.max(0, Math.ceil((CYCLE_MS - inCycleMs) / 1000))
 
   const total = useMemo(
     () =>
@@ -51,17 +69,6 @@ export default function HallucinationGame({
   )
 
   const isLast = index === HALLUCINATION_QUESTIONS.length - 1
-
-  const next = () => {
-    if (isLast) {
-      setFinished(true)
-      return
-    }
-    setIndex((current) => current + 1)
-    // Anchor to the node clock, so a question started while paused keeps its
-    // full time until the show resumes.
-    setQuestionStart(elapsed)
-  }
 
   if (finished) {
     // Derived, not assumed: the best a doubt sentence can pay is 10, so the
@@ -252,9 +259,9 @@ export default function HallucinationGame({
             </span>
           </div>
           <p className="hallu__why">{question.reveal}</p>
-          <button type="button" className="hallu__next" onClick={next}>
-            {isLast ? 'See final score' : 'Next'}
-          </button>
+          <p className="hallu__autonext">
+            {isLast ? 'Final score' : 'Next question'} in {reviewLeft}s
+          </p>
         </div>
       )}
           </div>

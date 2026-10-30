@@ -8,6 +8,8 @@ export interface QuestionState {
   count: number
   seconds_each: number
   remaining_ms: number
+  /** Milliseconds left on the quiz's title card; 0 once the questions start. */
+  intro_ms?: number
 }
 
 export interface FlowNode {
@@ -21,6 +23,11 @@ export interface FlowNode {
   /** Brief nodes: which game's "how to play" copy to show. */
   brief?: string
   duration_sec?: number
+  /** Question nodes: how many, and how long each cycle runs. */
+  questions?: number
+  seconds_each?: number
+  /** Quiz nodes: a title card before the first question. */
+  intro_sec?: number
 }
 interface StateMessage {
   phase: Phase

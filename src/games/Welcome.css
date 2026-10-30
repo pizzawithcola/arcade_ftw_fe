@@ -1,0 +1,296 @@
+/* The opening screen. Same language as the game cards that follow - Orbitron for
+   names, one red rail per element, white copy, a slow scan - but calmer, because
+   this one stays up for twelve seconds rather than flashing past in five. */
+
+.welcome {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(0.7rem, 2.4vh, 1.4rem);
+  width: 100%;
+  height: 100%;
+  padding: clamp(0.6rem, 2vh, 1.4rem) 0;
+  overflow: hidden;
+  text-align: center;
+  --wcard-name: clamp(0.72rem, 1.5vw, 0.9rem);
+  --wcard-hook: clamp(0.6rem, 1.2vw, 0.72rem);
+  --welcome-title: clamp(1.5rem, 5.2vmin, 2.4rem);
+}
+
+.welcome--display {
+  --wcard-name: clamp(1rem, 1.5vw, 1.5rem);
+  --wcard-hook: clamp(0.8rem, 1.1vw, 1.1rem);
+  --welcome-title: clamp(2.4rem, 4.6vw, 4.6rem);
+}
+
+/* A soft wash rather than a travelling bar: a 1.6s sweep is right on a card that
+   is up for five seconds, and a distraction on a screen up for twelve. */
+.welcome__scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 50% 18%, rgba(175, 0, 14, 0.28), transparent 72%),
+    linear-gradient(180deg, rgba(175, 0, 14, 0.1), transparent 30%);
+  mask-image: radial-gradient(95% 92% at 50% 50%, #000 40%, transparent 88%);
+  -webkit-mask-image: radial-gradient(95% 92% at 50% 50%, #000 40%, transparent 88%);
+  animation: welcome-breathe 6s ease-in-out infinite;
+}
+
+.welcome__head {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.3rem, 1.1vh, 0.6rem);
+}
+
+.welcome__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: clamp(0.6rem, 1.4vh, 0.72rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  animation: welcome-fade 0.6s ease-out both;
+}
+
+.welcome__dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--c-brand-deep);
+  animation: welcome-pulse 1.4s ease-in-out infinite;
+}
+
+/* The name is the only element that earns the red twin: it is far past display
+   size, which is the only place red type holds contrast on black. */
+.welcome__title {
+  position: relative;
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: var(--welcome-title);
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  color: var(--c-text);
+  text-shadow: 0 0 1.8rem rgba(175, 0, 14, 0.5);
+  animation: welcome-slam 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.welcome__title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--c-brand-deep);
+  clip-path: inset(16% 0 60% 0);
+  animation: welcome-glitch 2.6s steps(2, end) infinite;
+}
+
+.welcome__rule {
+  width: min(60%, 20rem);
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c-brand-deep) 22%,
+    var(--c-brand) 50%,
+    var(--c-brand-deep) 78%,
+    transparent
+  );
+  opacity: 0;
+  transform: scaleX(0);
+  transition:
+    opacity 400ms ease-out,
+    transform 620ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.welcome__rule.is-in {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.welcome__sub {
+  margin: 0;
+  max-width: min(92%, 34rem);
+  font-size: clamp(0.72rem, 1.6vh, 0.9rem);
+  line-height: 1.5;
+  color: var(--c-text-muted);
+  opacity: 0;
+  transform: translateY(0.6rem);
+  transition:
+    opacity 480ms ease-out,
+    transform 480ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.welcome__sub.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Four across on a landscape iPad, two by two when the screen is taller than it
+   is wide - the same breakpoint the Sabotage hand uses. */
+.welcome__games {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.4rem, 1vw, 0.8rem);
+  width: min(100%, 62rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome__foot {
+  margin: 0;
+  font-size: clamp(0.62rem, 1.4vh, 0.78rem);
+  letter-spacing: 0.04em;
+  color: var(--c-text-dim);
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 520ms ease-out,
+    transform 520ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.welcome__foot.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ─── one game in the map ───────────────────────────────────────────────────── */
+
+.wcard {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  align-content: start;
+  gap: clamp(0.25rem, 0.8vh, 0.45rem);
+  min-width: 0;
+  padding: clamp(0.4rem, 1.2vh, 0.7rem) clamp(0.45rem, 0.9vw, 0.75rem);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface-raised);
+  text-align: left;
+  /* Released from below, resting where it lands. */
+  opacity: 0;
+  transform: translateY(2.5rem);
+  transition:
+    opacity 520ms ease-out,
+    transform 520ms cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
+.wcard.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.wcard__num {
+  font-family: ui-monospace, monospace;
+  font-size: clamp(0.6rem, 1.3vh, 0.72rem);
+  letter-spacing: 0.2em;
+  color: var(--c-brand);
+}
+
+.wcard__name {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: var(--wcard-name);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--c-text);
+}
+
+/* Sweeps across the card after it has landed, so the arrival has a full stop. */
+.wcard__line {
+  height: 1px;
+  background: linear-gradient(90deg, var(--c-brand-deep), transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 620ms 260ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.wcard.is-in .wcard__line {
+  transform: scaleX(1);
+}
+
+.wcard__hook {
+  font-size: var(--wcard-hook);
+  line-height: 1.4;
+  color: var(--c-text-muted);
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .welcome__games {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 34rem);
+  }
+}
+
+@keyframes welcome-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes welcome-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes welcome-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes welcome-glitch {
+  0%,
+  100% {
+    transform: translate(2px, -1px);
+  }
+  50% {
+    transform: translate(-3px, 1px);
+  }
+}
+
+@keyframes welcome-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome__scan,
+  .welcome__dot,
+  .welcome__title,
+  .welcome__title::after {
+    animation: none;
+  }
+
+  /* The cards still appear on the clock, just without the travel. */
+  .wcard,
+  .welcome__sub,
+  .welcome__foot,
+  .welcome__rule {
+    transform: none;
+  }
+}

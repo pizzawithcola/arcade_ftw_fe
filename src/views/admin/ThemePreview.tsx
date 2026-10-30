@@ -619,9 +619,7 @@ export default function ThemePreview() {
                         a correct one, and the confidence is the least reliable signal it gives you.
                       </p>
                       <p className="quiz__correct">The answer was A.</p>
-                      <button type="button" className="quiz__next">
-                        Next
-                      </button>
+                      <p className="quiz__autonext">Next question in 5s</p>
                     </div>
                   </div>
                 </div>

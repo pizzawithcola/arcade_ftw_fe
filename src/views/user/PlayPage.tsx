@@ -11,11 +11,16 @@ import {
 import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
+import { quizDeckFor } from '../../games/quiz/content'
 import SabotageGame from '../../games/sabotage/SabotageGame'
 import { findBrief } from '../../games/briefs'
+import TitleCard from '../../games/TitleCard'
+import Welcome from '../../games/Welcome'
+import { findTitle, GAME_COUNT, gameNumber } from '../../games/titles'
 import '../hud.css'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
+import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useGameStore, type FlowNode } from '../../store/gameStore'
 import './PlayPage.css'
 
@@ -81,10 +86,85 @@ function NodeStage({
   room: string
   team?: string
 }) {
+  // Unconditional, so it sits above every branch below: the title card needs the
+  // node clock, and a hook cannot hide behind an `if`.
+  const elapsed = useNodeElapsed()
+
   if (!node) {
     return (
       <div className="stage stage--waiting">
         <p>Syncing…</p>
+      </div>
+    )
+  }
+
+  // The opening: what tonight is, and the four games it is made of. The reveal
+  // runs off the node clock, so pausing the show freezes it mid-build.
+  if (node.type === 'intro') {
+    return (
+      <div className="hud hud--game" key={nodeIndex}>
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame">
+          <div className="hud__inner">
+            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--br" aria-hidden="true" />
+            <div className="hud__tab">Welcome</div>
+            <div className="hud__bar">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <span className="hud__event">Tonight's line-up</span>
+              <span className="hud__status">
+                <span className="hud__dot" aria-hidden="true" />
+                starting soon
+              </span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
+            <div className="hud__stage">
+              <Welcome elapsedMs={elapsed} />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // The five seconds before each game: its name, and one line about it.
+  if (node.type === 'title') {
+    const entry = findTitle(node.title)
+    if (!entry) return null
+    const at = gameNumber(node.title, node.section)
+    return (
+      <div className="hud hud--game" key={nodeIndex}>
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame">
+          <div className="hud__inner">
+            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--br" aria-hidden="true" />
+            <div className="hud__tab">Up next</div>
+            <div className="hud__bar">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <span className="hud__event">
+                {at ? `Round ${at} of ${GAME_COUNT}` : 'Next game'}
+              </span>
+              <span className="hud__status">
+                <span className="hud__dot" aria-hidden="true" />
+                starting
+              </span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
+            <div className="hud__stage">
+              <TitleCard
+                title={entry.name}
+                kicker={at ? `game ${at} of ${GAME_COUNT}` : 'next up'}
+                note={entry.note}
+                countdown={Math.max(0, Math.ceil(((node.duration_sec ?? 0) * 1000 - elapsed) / 1000))}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -153,7 +233,14 @@ function NodeStage({
     )
   }
   if (node.type === 'quiz') {
-    return <QuizGame key={nodeIndex} room={room} nodeIndex={nodeIndex} />
+    return (
+      <QuizGame
+        key={nodeIndex}
+        room={room}
+        nodeIndex={nodeIndex}
+        deck={quizDeckFor(node.score)}
+      />
+    )
   }
 
   const kind = node.game ?? node.type

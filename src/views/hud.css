@@ -841,6 +841,48 @@
   color: var(--c-text);
 }
 
+/* A rules card that lands all at once is read as a wall of text and skipped.
+   Each line arrives on its own beat instead - title, then two seconds per line -
+   so the room follows it in the order it was written. */
+@keyframes briefLine {
+  from {
+    opacity: 0;
+    transform: translateY(0.55rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.brief__lead,
+.brief__rules li {
+  animation: briefLine 0.45s ease-out both;
+}
+
+.brief__lead {
+  animation-delay: 2s;
+}
+
+.brief__rules li:nth-child(1) {
+  animation-delay: 4s;
+}
+
+.brief__rules li:nth-child(2) {
+  animation-delay: 6s;
+}
+
+.brief__rules li:nth-child(3) {
+  animation-delay: 8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brief__lead,
+  .brief__rules li {
+    animation: none;
+  }
+}
+
 /* ─── game screen chassis ─────────────────────────────────────────────────────
    Games reuse the waiting-room frame, but their content is scrollable and often
    fills the panel, so the CRT scale-up would jank the layout: they boot with a

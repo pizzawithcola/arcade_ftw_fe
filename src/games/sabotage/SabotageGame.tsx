@@ -45,17 +45,11 @@ const DOMAINS: SabotageDomain[] = ['data', 'people', 'infra']
  *  numbers do - a card that is all pips in one column is a specialist, one
  *  spread over three is a compromise. The round's target row is the only one
  *  that carries the brand, because it is the only one that decides the round. */
-function CardVector({
-  vector,
-  target,
-}: {
-  vector: [number, number, number]
-  target: SabotageDomain
-}) {
+function CardVector({ vector }: { vector: [number, number, number] }) {
   return (
     <span className="sab__vec">
       {DOMAINS.map((domain, index) => (
-        <span key={domain} className={`sab__vecrow ${domain === target ? 'is-target' : ''}`}>
+        <span key={domain} className="sab__vecrow">
           <b>{DOMAIN_LABEL[domain]}</b>
           <span className="sab__pips" aria-hidden="true">
             {[0, 1, 2].map((pip) => (
@@ -229,7 +223,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                   TARGET · {DOMAIN_LABEL[sabotage.target].toUpperCase()}
                 </span>
                 <span className="sab__theme">{sabotage.theme}</span>
-                <span className={`sab__myrole is-${myTeam ?? 'red'}`}>
+                <span className={`sab__myrole is-${myRole ?? 'spectator'}`}>
                   YOU ARE {roleName(myRole)}
                 </span>
               </div>
@@ -287,7 +281,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                         <span className="sab__cardcost">{card.cost}</span>
                       </span>
                       <span className="sab__cardblurb">{card.blurb}</span>
-                      <CardVector vector={card.vector} target={sabotage.target} />
+                      <CardVector vector={card.vector} />
                     </button>
                   )
                 })}

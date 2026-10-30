@@ -56,6 +56,7 @@ const SECTION_TITLES: Record<string, string> = {
 
 /** What a node is inside its section. */
 function nodeKind(node: FlowNode): string {
+  if (node.type === 'title') return 'title'
   if (node.type === 'brief') return BRIEF_LABEL
   if (node.type === 'leaderboard') return 'ranking'
   if (node.type === 'quiz') return 'quiz'

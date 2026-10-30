@@ -160,23 +160,17 @@
   border-left: 2px solid var(--c-brand-deep);
 }
 
-.quiz__next {
+/* The round advances itself, so this states what is about to happen instead of
+   asking for a tap nobody has time to make. */
+.quiz__autonext {
   justify-self: start;
-  margin-top: 0.2rem;
-  padding: 0.42rem 1.3rem;
-  border: 1px solid var(--c-brand-deep);
-  border-radius: 6px;
-  background: var(--c-brand-deep);
-  color: var(--c-text);
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.quiz__next:hover {
-  border-color: var(--c-brand-press);
-  background: var(--c-brand-press);
+  margin: 0.2rem 0 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--c-brand-deep);
+  font-family: ui-monospace, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
 }
 
 /* ─── final score ───────────────────────────────────────────────────────────── */

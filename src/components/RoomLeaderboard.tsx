@@ -23,7 +23,13 @@ export default function RoomLeaderboard({
       .then((board) => {
         if (live) {
           setRows(
-            board.map((row) => ({ rank: row.rank, nickname: row.nickname, score: row.score })),
+            board.map((row) => ({
+              rank: row.rank,
+              nickname: row.nickname,
+              score: row.score,
+              previous: row.previous,
+              total: row.total,
+            })),
           )
         }
       })

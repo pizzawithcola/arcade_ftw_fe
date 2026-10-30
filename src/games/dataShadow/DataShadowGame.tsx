@@ -16,8 +16,12 @@ import {
 } from './scoring'
 import './DataShadowGame.css'
 
-/** One post, one clock. */
-const ROUND_SECONDS = 45
+/**
+ * One post, one clock. Fifty seconds was too short to read a paragraph and
+ * sweep it for names: the room was still working when the verdict landed.
+ * The node's own duration leaves a few seconds of verdict after this.
+ */
+const ROUND_SECONDS = 80
 
 const BLOCK_OFFSETS: number[] = (() => {
   const offsets: number[] = []
