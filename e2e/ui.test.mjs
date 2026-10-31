@@ -412,11 +412,10 @@ describe('the sabotage draw', () => {
         'You will switch between Attacker and Defender',
         'Choose your cards to build your Attack / Defense, up to four cards each round',
         'Discuss with your teammates, for the best combination',
-        'Sharpest Spear vs Most Balanced Shield',
       ])
       assert.deepEqual(
         rules.delays,
-        ['0s', '2s', '4s', '6s', '8s', '10s'],
+        ['0s', '2s', '4s', '6s', '8s'],
         'one line every two seconds, so each gets read',
       )
       assert.equal(rules.lastOpacity, '0', 'the last line is still waiting its turn')

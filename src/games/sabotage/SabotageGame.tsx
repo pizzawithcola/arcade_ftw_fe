@@ -412,9 +412,6 @@ function Rules({ sabotage }: { sabotage: SabotageState & { endsAt: number | null
           Discuss with your teammates, for the best combination
         </li>
       </ul>
-      <p className="sab__rulesfoot sab__rulestep" style={step(5)}>
-        Sharpest Spear vs Most Balanced Shield
-      </p>
     </div>
   )
 }

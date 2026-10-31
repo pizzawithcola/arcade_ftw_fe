@@ -193,13 +193,13 @@
   justify-self: center;
   width: min(100%, 46rem);
   display: grid;
-  gap: clamp(0.5rem, 1.4vh, 1rem);
+  gap: clamp(0.65rem, 1.8vh, 1.3rem);
 }
 
 .sab__rulestitle {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(1.1rem, 2.8vw, 1.7rem);
+  font-size: clamp(1.32rem, 3.36vw, 2.04rem);
   letter-spacing: 0.06em;
   color: var(--c-text);
 }
@@ -208,9 +208,9 @@
   margin: 0;
   padding-left: 1.1rem;
   display: grid;
-  gap: clamp(0.3rem, 0.9vh, 0.55rem);
-  font-size: clamp(0.82rem, 1.9vw, 1rem);
-  line-height: 1.45;
+  gap: clamp(0.45rem, 1.35vh, 0.8rem);
+  font-size: clamp(0.98rem, 2.28vw, 1.2rem);
+  line-height: 1.55;
   color: var(--c-text-muted);
 }
 
@@ -218,20 +218,9 @@
   color: var(--c-text);
 }
 
-.sab__rulesfoot {
-  margin: 0;
-  padding-top: clamp(0.4rem, 1vh, 0.7rem);
-  border-top: 1px solid var(--c-border);
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.75rem, 1.7vw, 0.92rem);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--c-text);
-}
-
 /* The rules arrive one line at a time, two seconds apart, so nobody is reading
-   six lines at once on a screen they just picked up. Fifteen seconds of brief:
-   the title lands at 0s, the last line at 10s, and that leaves five to read it
+   five lines at once on a screen they just picked up. Fifteen seconds of brief:
+   the title lands at 0s, the last line at 8s, and that leaves seven to read it
    back. `both` keeps the line hidden until its turn. */
 .sab__rulestep {
   animation: sab-step-in 0.45s ease-out both;
