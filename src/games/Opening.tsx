@@ -10,6 +10,9 @@
  * paused opening has to hold on whichever half is on screen. The rules points
  * arrive one at a time off that same clock, so a pause freezes the build rather
  * than letting it finish off-screen.
+ *
+ * There is no lead line above the points: twelve seconds is three lines of
+ * instruction, and a fourth paragraph of framing only delays them.
  */
 import type { FlowNode } from '../store/gameStore'
 import TitleCard from './TitleCard'
@@ -39,7 +42,6 @@ export default function Opening({
       <TitleCard
         title={entry.name}
         kicker={at ? `game ${at} of ${GAME_COUNT}` : 'next up'}
-        note={entry.note}
         countdown={Math.max(0, Math.ceil((titleMs - elapsedMs) / 1000))}
         size={size}
       />
@@ -53,9 +55,6 @@ export default function Opening({
 
   return (
     <section className={`opening opening--${size}`}>
-      {entry.lead && (
-        <p className={`brief__lead opening__lead ${shown(-1) ? 'is-in' : ''}`}>{entry.lead}</p>
-      )}
       <ul className="brief__rules">
         {(entry.rules ?? []).map((rule, at) => (
           <li key={rule} className={`opening__point ${shown(at) ? 'is-in' : ''}`}>

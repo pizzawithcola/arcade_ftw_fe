@@ -14,13 +14,11 @@
   overflow: hidden;
   text-align: center;
   --wcard-name: clamp(0.72rem, 1.5vw, 0.9rem);
-  --wcard-hook: clamp(0.6rem, 1.2vw, 0.72rem);
   --welcome-title: clamp(1.5rem, 5.2vmin, 2.4rem);
 }
 
 .welcome--display {
   --wcard-name: clamp(1rem, 1.5vw, 1.5rem);
-  --wcard-hook: clamp(0.8rem, 1.1vw, 1.1rem);
   --welcome-title: clamp(2.4rem, 4.6vw, 4.6rem);
 }
 
@@ -213,10 +211,18 @@
   transform: scaleX(1);
 }
 
-.wcard__hook {
-  font-size: var(--wcard-hook);
-  line-height: 1.4;
-  color: var(--c-text-muted);
+/* The mark sits between the number and the name, centred, and takes whatever
+   height the card has left. `contain` rather than `cover`: these are logos, and
+   cropping one would be worse than leaving space around it. */
+.wcard__icon {
+  width: 100%;
+  max-height: clamp(3.5rem, 12vh, 7.5rem);
+  justify-self: center;
+  align-self: center;
+  object-fit: contain;
+  /* The set is already neon on transparent; the drop shadow only stops it from
+     looking pasted on, so it stays close to the mark and does not bloom. */
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c-brand) 28%, transparent));
 }
 
 @media (max-aspect-ratio: 1/1) {

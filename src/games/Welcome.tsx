@@ -70,9 +70,11 @@ export default function Welcome({
           return (
             <li key={game.key} className={`wcard ${shown(at) ? 'is-in' : ''}`} aria-hidden={!shown(at)}>
               <span className="wcard__num">{String(index + 1).padStart(2, '0')}</span>
+              {/* The mark carries what the game is at a glance; a sentence
+                  under the name was never read from the back of the room. */}
+              <img className="wcard__icon" src={game.icon} alt="" draggable={false} />
               <span className="wcard__name">{game.name}</span>
               <span className="wcard__line" aria-hidden="true" />
-              <span className="wcard__hook">{game.hook}</span>
             </li>
           )
         })}

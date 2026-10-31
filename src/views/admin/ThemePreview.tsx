@@ -337,7 +337,6 @@ export default function ThemePreview() {
                         <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
                       </div>
                       <div className="hud__stage hud__stage--brief">
-                        <p className="brief__lead">{entry.lead}</p>
                         <ul className="brief__rules">
                           {(entry.rules ?? []).map((rule) => (
                             <li key={rule}>{rule}</li>

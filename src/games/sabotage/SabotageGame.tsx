@@ -367,14 +367,11 @@ function Rules({ sabotage }: { sabotage: SabotageState & { endsAt: number | null
           you spend now is gone in round four.
         </li>
         <li>
-          Every card scores in three areas: <b>Data</b>, <b>People</b>, <b>Infra</b>. Cards cost
-          <b> $1,000 to $14,000</b>.
+          Every card scores in <b>Data</b>, <b>People</b> and <b>Infra</b>. Each round names
+          <b> one target</b>, and only that column decides who wins.
         </li>
         <li>
-          Each round names <b>one target</b>. Only that column decides who wins the round.
-        </li>
-        <li>
-          Up to <b>4 cards a round</b>. A dearer card is not a stronger one.
+          <b>Up to 4 cards a round.</b> A dearer card is not a stronger one.
         </li>
         <li>
           Your team votes; the most-voted cards get bought. <b>Talk to each other.</b>
