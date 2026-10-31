@@ -60,7 +60,7 @@ npm run test:e2e:ui     # 只有浏览器层，约 2 分钟
 | 文件 | 覆盖 |
 |---|---|
 | `e2e/framework.test.mjs` | 同源与 `/api` 前缀、鉴权边界、13 节点 rundown 的形状与总时长、引擎推进 / 暂停 / 跳转 / 结算、四个 section 榜单、Sabotage 分队与阶段、单人跳过、房间生命周期、静态资源 |
-| `e2e/ui.test.mjs` | 13 个节点在大屏上都能画出来（没有落到 placeholder）、欢迎页四张卡是「编号 + 图标 + 名称」、opening 第 3 秒交棒给规则且只有 3–4 点、Ultimate 大屏与平板同一道题、第 5 题带 ×3 且结算 `/160`、控制台的跳转板与题库表格、玩家登录进等待室 |
+| `e2e/ui.test.mjs` | 13 个节点在大屏上都能画出来（没有落到 placeholder）、欢迎页四张卡是「编号 + 图标 + 名称」、opening 第 3 秒交棒给规则且只有 3–4 点、Ultimate 大屏与平板同一道题、第 5 题带 ×3 且结算 `/800`、控制台的跳转板与题库表格、玩家登录进等待室 |
 
 浏览器用 `playwright-core` + **本机已装的 Chrome**（`channel: 'chrome'`），不下载 Chromium。
 CI 里要跑得先装浏览器，所以 CI 目前**不跑 E2E**。
@@ -104,4 +104,3 @@ aws cloudformation deploy \
 | `npm run lint` | oxlint |
 | `npm run preview` | 预览产物 |
 | `npm run test:e2e` | 端到端：HTTP/WS + 浏览器（需要前后端都在跑）|
-
