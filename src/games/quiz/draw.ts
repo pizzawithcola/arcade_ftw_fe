@@ -18,7 +18,7 @@
  *   slot 2  Hallucination       1 of 5   x1
  *   slot 3  CEO impersonation   1 of 3   x1
  *   slot 4  Assistant / sources 1 of 4   x2   bonus
- *   slot 5  Hong Kong           1 of 5   x3   bonus
+ *   slot 5  Hong Kong           1 of 3   x3   bonus
  *
  * Slot 1 merges Data Shadow with phishing email: both are about information
  * leaving the building on someone else's instruction, and the pool is the five
