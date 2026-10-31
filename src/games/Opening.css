@@ -41,6 +41,22 @@
   opacity: 1;
 }
 
+/* One grid cell, whatever the line is made of: `brief__rules li` is a badge
+   plus a text column, so three loose children would land in three cells. */
+.opening__text {
+  min-width: 0;
+}
+
+.opening__word.is-trust {
+  color: var(--c-win);
+  font-weight: 600;
+}
+
+.opening__word.is-doubt {
+  color: var(--c-warning);
+  font-weight: 600;
+}
+
 .opening--display .opening__point {
   font-size: clamp(1rem, 1.35vw, 1.5rem);
   line-height: 1.5;

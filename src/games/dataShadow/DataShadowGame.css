@@ -102,6 +102,11 @@
   /* Natural height, never squeezed: the column scrolls, so a shorter screen
      loses nothing. Squeezing the card is what used to cut the pictures off. */
   flex: 0 0 auto;
+  /* Dragging across the post is the game, so the browser's selection is what we
+     want - but not the iOS callout bar (Copy / Look Up / Share) that comes with
+     a long press: it covers the text being chosen and offers actions that mean
+     nothing here. This removes the menu and leaves the selection alone. */
+  -webkit-touch-callout: none;
   min-height: 0;
   display: flex;
   flex-direction: column;

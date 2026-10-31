@@ -70,10 +70,9 @@
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.quiz__option:hover:not(:disabled) {
-  border-color: var(--c-brand-deep);
-  background: color-mix(in srgb, var(--c-brand-deep) 10%, var(--c-surface-raised));
-}
+/* No hover state, on purpose. A red hover made one option look pre-selected on
+   a laptop, and on an iPad the hover sticks after a tap, so the option the player
+   was still deciding about looked answered. Selection is the only highlight. */
 
 .quiz__option:disabled {
   cursor: default;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
 import { HALLUCINATION_QUESTIONS } from './content'
@@ -24,7 +24,6 @@ const SELECT_SECONDS = 20
  */
 const REVIEW_SECONDS = 5
 const CYCLE_MS = (SELECT_SECONDS + REVIEW_SECONDS) * 1000
-const TOTAL_MS = CYCLE_MS * HALLUCINATION_QUESTIONS.length
 
 export default function HallucinationGame({
   room,
@@ -48,7 +47,6 @@ export default function HallucinationGame({
     Math.floor(elapsed / CYCLE_MS),
   )
   const inCycleMs = elapsed - index * CYCLE_MS
-  const finished = elapsed >= TOTAL_MS
 
   const question = HALLUCINATION_QUESTIONS[index]
 
@@ -70,15 +68,6 @@ export default function HallucinationGame({
   // takes over without anyone touching the screen.
   const reviewLeft = Math.max(0, Math.ceil((CYCLE_MS - inCycleMs) / 1000))
 
-  const total = useMemo(
-    () =>
-      HALLUCINATION_QUESTIONS.reduce((sum, item) => {
-        const value = picks[item.id]
-        return value === undefined ? sum : sum + scoreFor(value, item.truth)
-      }, 0),
-    [picks],
-  )
-
   // The answer is committed when the clock runs out, not when the slider is
   // first touched: a player who changes their mind before the timer ends must
   // keep the score for what they finally chose.
@@ -92,62 +81,6 @@ export default function HallucinationGame({
   }, [revealed, index, picks, question, report])
 
   const isLast = index === HALLUCINATION_QUESTIONS.length - 1
-
-  if (finished) {
-    // Every question pays the same 200 at the far end of the slider, whichever
-    // way it leans, so the ceiling is simply the number of questions.
-    const best = HALLUCINATION_QUESTIONS.length * MAX_TRUST
-    return (
-      <div className="hud hud--game hallu">
-        <div className="hud__matrix" aria-hidden="true" />
-        <div className="hud__frame">
-          <div className="hud__inner">
-            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
-            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
-            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
-            <span className="hud__corner hud__corner--br" aria-hidden="true" />
-            <div className="hud__tab">Hallucination</div>
-            <div className="hud__bar">
-              <span className="hud__chevrons" aria-hidden="true" />
-              <span className="hud__event">Round complete</span>
-              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
-            </div>
-            <div className="hud__stage hallu__stage">
-        <div className="hallu__final">
-          <p className="hallu__finallabel">Final score</p>
-          <p className="hallu__finalscore">
-            {total > 0 ? '+' : ''}
-            {total}
-          </p>
-          <p className="hallu__finalnote">
-            {total === best
-              ? 'A perfect read. You trusted exactly what held up and doubted exactly what did not.'
-              : total > 0
-                ? 'You read more of it correctly than not — which is roughly the best anyone manages without checking.'
-                : 'A negative score means the confident answers got you. That is the point of the round: fluency is not evidence.'}
-          </p>
-          <ul className="hallu__review">
-            {HALLUCINATION_QUESTIONS.map((item) => {
-              const value = picks[item.id]
-              const points = value === undefined ? 0 : scoreFor(value, item.truth)
-              return (
-                <li key={item.id} className={points < 0 ? 'is-bad' : points > 0 ? 'is-good' : ''}>
-                  <span className="hallu__reviewpoints">
-                    {points > 0 ? '+' : ''}
-                    {points}
-                  </span>
-                  <span>{item.prompt}</span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const points = picked === undefined ? 0 : scoreFor(picked, question.truth)
   const right = picked === undefined ? false : isCorrect(picked, question.truth)

@@ -340,9 +340,10 @@ export default function ThemePreview() {
                       </div>
                       <div className="hud__stage hud__stage--brief">
                         <ul className="brief__rules">
-                          {(entry.rules ?? []).map((rule) => (
-                            <li key={rule}>{rule}</li>
-                          ))}
+                          {(entry.rules ?? []).map((rule) => {
+                            const line = typeof rule === 'string' ? rule : rule.text
+                            return <li key={line}>{line}</li>
+                          })}
                         </ul>
                       </div>
                     </div>

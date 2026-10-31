@@ -242,19 +242,23 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                 </b>{' '}
                 in round {roman(sabotage.round)}
               </p>
-              {/* Both colours, side by side: the player has to walk to the table
-                  painted the same colour as this tablet before the round opens. */}
-              <p className="sab__legend">
-                <span className="sab__legendatk">Purple round to attack</span>
-                <span className="sab__legendsep" aria-hidden="true">
-                  ·
-                </span>
-                <span className="sab__legenddef">Blue round to defend</span>
-              </p>
             </div>
           )}
 
           {sabotage.phase === 'brief' && <Rules sabotage={sabotage} />}
+
+          {/* The colour legend sits at the foot of the screen, on the draw and
+              the rules card alike: it is a reminder of where to sit, not part of
+              what you are being told. */}
+          {(sabotage.phase === 'team_reveal' || sabotage.phase === 'brief') && (
+            <p className="sab__legend">
+              <span className="sab__legendatk">Purple round to attack</span>
+              <span className="sab__legendsep" aria-hidden="true">
+                ·
+              </span>
+              <span className="sab__legenddef">Blue round to defend</span>
+            </p>
+          )}
 
           {selecting && (
             <div className="sab__stage">
@@ -270,15 +274,10 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                 <div className="sab__scene">
                   <p className="sab__scenetitle">{roundTitle(sabotage.round, sabotage.theme)}</p>
                   <p className="sab__scenebrief">
-                    You are the{' '}
-                    <b
-                      className={
-                        myRole === 'defender' ? 'sab__roleword is-def' : 'sab__roleword is-atk'
-                      }
-                    >
-                      {myRole === 'defender' ? 'Defender' : 'Attacker'}
-                    </b>
-                    . {selectBrief(sabotage.round, myRole)}
+                    <RoleSentence
+                      sentence={selectBrief(sabotage.round, myRole)}
+                      role={myRole === 'defender' ? 'Defender' : 'Attacker'}
+                    />
                   </p>
                   {!myTeam && (
                     <p className="sab__spectator">
@@ -368,6 +367,24 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
         </div>
       </div>
     </div>
+  )
+}
+
+/** The round's instruction with the job word painted in its own colour.
+ *
+ *  The sentence is the client's, so nothing is rewritten here: the job word is
+ *  found inside it and wrapped, which keeps the copy identical with the colours
+ *  switched off. */
+function RoleSentence({ sentence, role }: { sentence: string | undefined; role: string }) {
+  if (!sentence) return null
+  const at = sentence.indexOf(role)
+  if (at === -1) return <>{sentence}</>
+  return (
+    <>
+      {sentence.slice(0, at)}
+      <b className={`sab__roleword ${role === 'Defender' ? 'is-def' : 'is-atk'}`}>{role}</b>
+      {sentence.slice(at + role.length)}
+    </>
   )
 }
 

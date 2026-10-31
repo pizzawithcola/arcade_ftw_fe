@@ -124,28 +124,6 @@ const THE_BET: Record<number, string> = {
   4: 'The bet: one bad source makes a confident wrong answer.',
 }
 
-/** What the round asks of you, said as an instruction rather than a story.
- *  It sits under the round's name on the picking screen, where the player has
- *  just looked up from the draw and needs to know what to do with the cards. */
-const SELECT_BRIEF: Record<number, Record<'attacker' | 'defender', string>> = {
-  1: {
-    attacker: 'Choose the cards below to prepare a strong phishing email',
-    defender: 'Choose the cards below to defend from the threats of phishing emails',
-  },
-  2: {
-    attacker: 'Choose the cards below to prepare a convincing CEO impersonation',
-    defender: 'Choose the cards below to defend from the threats of CEO impersonation',
-  },
-  3: {
-    attacker: 'Choose the cards below to manipulate the AI assistant',
-    defender: 'Choose the cards below to defend the AI assistant from manipulation',
-  },
-  4: {
-    attacker: "Choose the cards below to poison the AI's sources",
-    defender: "Choose the cards below to defend the AI's sources from poisoning",
-  },
-}
-
 /** The round's name as a heading. The engine's theme strings are sentence case
  *  ("Phishing email"), which is right mid-sentence and wrong as a title, and
  *  CSS `capitalize` would also give us "Manipulating The AI Assistant". */
@@ -153,11 +131,39 @@ const ROUND_TITLE: Record<number, string> = {
   1: 'Phishing Email',
   2: 'CEO Impersonation',
   3: 'Manipulating the AI Assistant',
-  4: "Poisoning the AI's Sources",
+  4: "Poisoning the AI's Data Sources",
 }
 
 export function roundTitle(round: number, fallback: string): string {
   return ROUND_TITLE[round] ?? fallback
+}
+
+/** What the round asks of you, said as an instruction rather than a story.
+ *  It sits under the round's name on the picking screen, where the player has
+ *  just looked up from the draw and needs to know what to do with the cards. */
+const SELECT_BRIEF: Record<number, Record<'attacker' | 'defender', string>> = {
+  1: {
+    // Supplied verbatim: this is the round the room learns the game on.
+    attacker:
+      'You are the Attacker. Choose from the attacks below to craft a successful Phishing Attack.',
+    defender:
+      'You are the Defender. Choose from the cards below to defend against an AI-enabled phishing attack.',
+  },
+  2: {
+    // The cards are the attacks, and the attacks are people-shaped.
+    attacker: 'You are the Attacker. Choose the AI attacks below to impersonate the CEO.',
+    defender: 'You are the Defender. Choose the AI Defense below to stop the impersonation.',
+  },
+  3: {
+    // Here the attack is on the assistant itself, not on a person.
+    attacker: 'You are the Attacker. Choose the AI attacks below to manipulate the assistant.',
+    defender: 'You are the Defender. Choose the AI Defense below to keep the assistant in line.',
+  },
+  4: {
+    attacker: "You are the Attacker. Choose the AI attacks below to poison the AI's data sources.",
+    defender:
+      "You are the Defender. Choose the Defense Methods below to protect the AI's data sources.",
+  },
 }
 
 /** The instruction for this round and this side; undefined for a spectator. */

@@ -14,9 +14,11 @@
  * There is no lead line above the points: twelve seconds is three lines of
  * instruction, and a fourth paragraph of framing only delays them.
  */
+import type { ReactNode } from 'react'
+
 import type { FlowNode } from '../store/gameStore'
 import TitleCard from './TitleCard'
-import { DEFAULT_TITLE_SEC, findOpening, GAME_COUNT, gameNumber } from './openings'
+import { DEFAULT_TITLE_SEC, findOpening, GAME_COUNT, gameNumber, type RuleLine } from './openings'
 import './Opening.css'
 
 /** After the hand-over: when the first point lands, and the beat between them. */
@@ -57,11 +59,53 @@ export default function Opening({
     <section className={`opening opening--${size}`}>
       <ul className="brief__rules">
         {(entry.rules ?? []).map((rule, at) => (
-          <li key={rule} className={`opening__point ${shown(at) ? 'is-in' : ''}`}>
-            {rule}
+          <li
+            key={typeof rule === 'string' ? rule : rule.text}
+            className={`opening__point ${shown(at) ? 'is-in' : ''}`}
+          >
+            {typeof rule === 'string' ? rule : (
+              <span className="opening__text">
+                <Painted line={rule} />
+              </span>
+            )}
           </li>
         ))}
       </ul>
     </section>
   )
+}
+
+/** One rule line, with the two words that name a colour painted in it.
+ *
+ *  The words stay exactly where the client wrote them: this only wraps them, so
+ *  the line reads the same with the colours stripped. */
+function Painted({ line }: { line: RuleLine }) {
+  const marks: { word: string; tone: 'trust' | 'doubt' }[] = []
+  if (line.trust) marks.push({ word: line.trust, tone: 'trust' })
+  if (line.doubt) marks.push({ word: line.doubt, tone: 'doubt' })
+  if (marks.length === 0) return <>{line.text}</>
+
+  // One pass over the sentence, cutting at whichever mark comes first.
+  const out: ReactNode[] = []
+  let rest = line.text
+  let key = 0
+  while (rest.length > 0) {
+    const hits = marks
+      .map((mark) => ({ ...mark, at: rest.indexOf(mark.word) }))
+      .filter((hit) => hit.at >= 0)
+      .sort((a, b) => a.at - b.at)
+    if (hits.length === 0) {
+      out.push(rest)
+      break
+    }
+    const hit = hits[0]
+    if (hit.at > 0) out.push(rest.slice(0, hit.at))
+    out.push(
+      <span key={`mark-${key++}`} className={`opening__word is-${hit.tone}`}>
+        {hit.word}
+      </span>,
+    )
+    rest = rest.slice(hit.at + hit.word.length)
+  }
+  return <>{out}</>
 }

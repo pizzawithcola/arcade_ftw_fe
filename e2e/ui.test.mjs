@@ -435,7 +435,10 @@ describe('the sabotage draw', () => {
         }
       })
       assert.equal(pick.title, 'Phishing Email')
-      assert.match(pick.brief ?? '', /^You are the (Attacker|Defender)\. Choose the cards below to /)
+      assert.match(
+        pick.brief ?? '',
+        /^You are the (Attacker|Defender)\. Choose from the (cards|attacks) below to /,
+      )
       assert.equal(pick.head, false, 'the round number and the target badge are gone')
       assert.match(pick.build ?? '', /^\$[\d,]+Spend for this round/)
       assert.equal(

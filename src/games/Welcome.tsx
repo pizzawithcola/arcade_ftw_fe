@@ -24,13 +24,12 @@ import './Welcome.css'
  *
  * The four cards have to be finished by the fifth second of a ten-second node:
  * each one lands in 520ms and sweeps its rule for another 880ms, so the last
- * card (1.2 + 3 x 0.9 = 3.9s) is fully settled at 4.8s and the footer has
- * arrived with it. The remaining five seconds are for reading, not animation.
+ * card (1.2 + 3 x 0.9 = 3.9s) is fully settled at 4.8s. The remaining five
+ * seconds are for reading, not animation.
  */
 const SUBHEAD_AT = 500
 const CARD_AT = 1200
 const CARD_STAGGER = 900
-const FOOTER_AT = 4200
 
 export default function Welcome({
   elapsedMs,
@@ -40,7 +39,6 @@ export default function Welcome({
   size?: 'device' | 'display'
 }) {
   const shown = (at: number) => elapsedMs >= at
-  const lastCardDone = CARD_AT + (GAME_ORDER.length - 1) * CARD_STAGGER
 
   return (
     <div className={`welcome welcome--${size}`}>
@@ -49,7 +47,7 @@ export default function Welcome({
       <header className="welcome__head">
         <p className="welcome__kicker">
           <span className="welcome__dot" aria-hidden="true" />
-          {GAME_ORDER.length} games · one board
+          tonight
         </p>
         {/* The one red-lit thing on the screen, exactly as on the game cards:
             the brand marks the name, never the copy. */}
@@ -58,7 +56,7 @@ export default function Welcome({
         </h1>
         <span className={`welcome__rule ${shown(SUBHEAD_AT) ? 'is-in' : ''}`} aria-hidden="true" />
         <p className={`welcome__sub ${shown(SUBHEAD_AT) ? 'is-in' : ''}`}>
-          Four games. Four scores. One winner at the end of the night.
+          Four Games, One Winner!
         </p>
       </header>
 
@@ -80,9 +78,6 @@ export default function Welcome({
         })}
       </ol>
 
-      <p className={`welcome__foot ${shown(lastCardDone) && shown(FOOTER_AT) ? 'is-in' : ''}`}>
-        A ranking after every game — and Sabotage splits the room into two teams.
-      </p>
     </div>
   )
 }

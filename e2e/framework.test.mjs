@@ -173,10 +173,14 @@ describe('the rundown is the 13-node show the frontend draws', () => {
   test('every question node leaves a readable tail after its last verdict', () => {
     for (const node of state.flow.filter((n) => n.questions)) {
       const content = (node.intro_sec ?? 0) + node.questions * node.seconds_each
+      // A round may cut its closing score page on purpose and say so with
+      // `closing_sec`; everything else still owes a readable tail.
+      const wanted = node.closing_sec ?? 3
       assert.ok(
-        node.duration_sec - content >= 3,
-        `${node.title}: ${node.duration_sec} - ${content} leaves under 3s for the score`,
+        node.duration_sec - content >= wanted,
+        `${node.title}: ${node.duration_sec} - ${content} leaves under ${wanted}s for the score`,
       )
+      assert.ok(node.duration_sec - content >= 0, `${node.title} ends mid-question`)
     }
   })
 

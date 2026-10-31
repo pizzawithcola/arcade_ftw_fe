@@ -14,7 +14,7 @@
 export const BASE = process.env.E2E_BASE ?? 'http://localhost:5070'
 
 /** How long a full show runs, from `flow.py`. The walk test asserts this. */
-export const SHOW_SECONDS = 549
+export const SHOW_SECONDS = 546
 
 export class Api {
   constructor() {

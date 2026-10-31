@@ -18,6 +18,17 @@
  * for a title and not long enough for a sentence under it.
  */
 
+/** One rule line: the words, plus which of them carry a colour. The copy is the
+ *  client's, so a colour never rewrites it - it only paints a word that is
+ *  already there. */
+export interface RuleLine {
+  text: string
+  /** Word to paint trust-green, exactly as it appears in `text`. */
+  trust?: string
+  /** Word to paint doubt-yellow, exactly as it appears in `text`. */
+  doubt?: string
+}
+
 export interface GameOpening {
   /** Matches the `game` key on the flow node. */
   key: string
@@ -26,7 +37,7 @@ export interface GameOpening {
   /** The mark on the welcome map. Square, transparent, 384px. */
   icon: string
   /** What the player actually does: three points, four at the very most. */
-  rules?: string[]
+  rules?: (string | RuleLine)[]
 }
 
 const OPENINGS: GameOpening[] = [
@@ -36,7 +47,12 @@ const OPENINGS: GameOpening[] = [
     icon: '/game_icons/hallucination_icon.PNG',
     rules: [
       'Review the AI response',
-      'Drag right if you trust(green), and drag left if you have doubts (yellow)',
+      // "(green)" and "(yellow)" are instructions about the word before them.
+      {
+        text: 'Drag right if you trust(green), and drag left if you have doubts (yellow)',
+        trust: 'trust',
+        doubt: 'doubts',
+      },
       'Your confidence affects your score',
     ],
   },

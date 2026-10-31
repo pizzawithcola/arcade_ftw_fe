@@ -20,7 +20,9 @@
    and without this the stage lands in the middle row and is sized to its
    content, leaving the bottom third of the chassis empty. */
 .hud--game .hud__inner.sab__inner {
-  grid-template-rows: auto minmax(0, 1fr);
+  /* Header, the stage, and the colour legend pinned to the foot. The legend is
+     a reminder of where to sit, so it belongs under everything else. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .sab__syncing {
@@ -145,6 +147,9 @@
    colour, because the player has to find the matching table before they sit. */
 .sab__legend {
   margin: 0;
+  align-self: end;
+  padding-top: clamp(0.4rem, 1.2vh, 0.8rem);
+  border-top: 1px solid var(--c-border);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -444,12 +449,12 @@
   border-radius: 4px;
 }
 
-/* The name owns the first line and the whole card width. It is bottom-aligned
-   in the flexible row so the copy hugs the score lines. */
+/* The name owns the first line and the whole card width, at the top of the copy
+   block: the art above it is the flexible row, so the text sits where the eye
+   expects a title. */
 .sab__cardtop {
   display: flex;
   align-items: flex-start;
-  align-self: end;
   min-width: 0;
 }
 
@@ -464,11 +469,11 @@
 .sab__cardname {
   flex: 1;
   min-width: 0;
-  /* Two lines are always reserved and the text sits on the bottom of them, so
-     a one-line name and a two-line name start their description at the same
-     height instead of the short ones riding up. */
+  /* Two lines are reserved and filled from the top: a one-line name and a
+     two-line name then start their description at the same height, without the
+     short ones sitting lower than their neighbours. */
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   min-height: 2.4em;
   font-size: clamp(0.78rem, 1.7vw, 0.98rem);
   font-weight: 600;
@@ -506,8 +511,12 @@
   color: var(--c-text-dim);
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
+  /* Four lines, always: each card is its own grid, so a three-line blurb next
+     to a four-line one would slide its own title up and stop the column of
+     names lining up. */
+  height: calc(4 * 1.35em);
 }
 
 /* The three numbers are the card's bottom edge, so they line up across the
@@ -727,10 +736,12 @@
 /* ─── reveal ──────────────────────────────────────────────────────────────── */
 
 .sab__reveal {
+  /* The headline, the table and the score line all get a clear breath: five
+     seconds is not enough to hunt for where one block ends and the next starts. */
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: clamp(0.4rem, 1.2vh, 0.8rem);
+  gap: clamp(2rem, 4vh, 2.5rem);
   text-align: center;
 }
 
@@ -761,17 +772,27 @@
 .sab__lines {
   display: grid;
   gap: 0.3rem;
-  width: min(100%, 34rem);
+  /* 34rem read as a narrow ledger under a very wide headline; half again gives
+     the sentences room to sit on one line. */
+  width: min(100%, 51rem);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* The rows themselves are the table; its edges need air, and the headline and
+   the score line above and below are what it needs air from. */
+.sab__lines + .sab__score {
+  margin-top: 2rem;
+}
+
 .sab__line {
   display: grid;
   grid-template-columns: 4.4rem 5rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.55rem;
+  /* Centred, not baseline: a sentence that wraps to two lines used to drag its
+     own name and numbers up to the first line, so the row read ragged. */
+  align-items: center;
+  gap: 0.7rem;
   padding: 0.3rem 0.55rem;
   border: 1px solid var(--c-border);
   border-left-width: 3px;
@@ -867,18 +888,21 @@
    The two columns are read across, so the colon between them is the only
    separator the block needs. */
 .sab__score {
+  /* Three auto columns, centred as a block: the two sides sit the same distance
+     from the colon, whatever their numbers happen to be. */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: auto auto auto;
+  justify-content: center;
   align-items: center;
-  gap: clamp(0.5rem, 1.6vw, 1.2rem);
-  width: min(100%, 40rem);
+  gap: clamp(1rem, 3vw, 2.4rem);
+  width: min(100%, 44rem);
   padding-top: clamp(0.3rem, 0.8vh, 0.5rem);
   border-top: 1px solid var(--c-border);
 }
 
 .sab__scorecol {
   display: grid;
-  justify-items: start;
+  justify-items: center;
   gap: 0.1rem;
   min-width: 0;
   opacity: 0.62;

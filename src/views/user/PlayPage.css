@@ -144,8 +144,11 @@
   transition: background 0.2s ease;
 }
 
+/* Both halves of the track are the brand: what is behind you is won, what you
+   are on is live. The glow is the only difference, so the current game still
+   reads as the one in front of you. */
 .game__seg.is-done {
-  background: color-mix(in srgb, var(--c-text) 52%, transparent);
+  background: color-mix(in srgb, var(--c-brand) 62%, transparent);
 }
 
 .game__seg.is-now {
