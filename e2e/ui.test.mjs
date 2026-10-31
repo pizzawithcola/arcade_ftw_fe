@@ -457,6 +457,7 @@ describe('the sabotage draw', () => {
             attack: li.querySelector('.sab__linescore b')?.textContent?.trim(),
             defence: li.querySelectorAll('.sab__linescore b')[1]?.textContent?.trim(),
             verdict: li.querySelector('.sab__linewin')?.textContent?.trim(),
+            sentence: li.querySelector('.sab__linetext')?.textContent?.trim(),
           })),
           score: text('.sab__score'),
         }
@@ -473,6 +474,12 @@ describe('the sabotage draw', () => {
         assert.match(row.attack ?? '', /^\d+$/, 'each row leads with the attack score')
         assert.match(row.defence ?? '', /^\d+$/, 'then the defence score')
         assert.ok(['WIN', 'LOSE'].includes(row.verdict ?? ''), `row verdict: ${row.verdict}`)
+        // Plain English, same shape every time: what your side did, or did not.
+        assert.match(
+          row.sentence ?? '',
+          /^(You successfully |You couldn't |Your attack on their Infra was blocked)/,
+          `row copy stays literal: ${row.sentence}`,
+        )
       }
       assert.match(
         reveal.score ?? '',

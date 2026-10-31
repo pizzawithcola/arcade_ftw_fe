@@ -3,7 +3,7 @@
  *
  * The engine only knows three facts about a column - the attacker was ahead, the
  * two were level, or the defender was ahead - but two sides read them, so each
- * fact has two voices. That is twelve sentences a round, fourty-eight across the
+ * fact has two voices. That is twelve sentences a round, forty-eight across the
  * match:
  *
  *   attacker ahead   ->  they broke through     /  the defender lost it
@@ -12,12 +12,15 @@
  * So a player only ever sees three sentences: their own side's reading of the
  * three columns. Twelve is the size of the table, not the size of the screen.
  *
- * Three rules for the copy:
- *   1. Five to eight words. The reveal is five seconds and three lines, and a
- *      sentence that needs a second reading will not get one.
- *   2. Success says what was gained, failure says what stopped it - the same
- *      event told from two sides must not read as the same sentence twice.
- *   3. No jargon and no numbers: the numbers are on the wall.
+ * The reveal is five seconds and three lines. Nothing here is clever:
+ *
+ *   1. Plain words only. No metaphor, no "filter at the door", no "filter leaked
+ *      the mail". If a sentence needs a second reading it has already failed.
+ *   2. The same shape twice: "You successfully ..." when the reader's side took
+ *      the column, "You couldn't ..." when it did not. The other dimension -
+ *      which column, which round - is carried by the numbers beside it.
+ *   3. The job, not the mechanic: data, employees, filter. Read at a glance by
+ *      someone who has never played, which is most of the room.
  *
  * A round nobody bid on scores as a defence, so its sentences are just the
  * failure and hold lines - there is no special "no bids" copy any more.
@@ -28,87 +31,87 @@ export type SabotageVoice = 'broke' | 'failed' | 'held' | 'lost'
 /** Indexed by round (1-based), then by domain, then by voice. */
 const COPY: Record<number, Record<string, Record<SabotageVoice, string>>> = {
   1: {
-    // Phishing email - one credential is the whole game.
+    // Phishing email - one click is the whole game.
     data: {
-      broke: 'You took a live password.',
-      failed: 'No password ever came back.',
-      held: 'No password left the building.',
-      lost: 'A live password left the building.',
+      broke: 'You successfully got the data from phishing emails',
+      failed: "You couldn't get any data from phishing emails",
+      held: 'You successfully stopped them taking your data',
+      lost: "You couldn't stop them taking your data",
     },
     people: {
-      broke: 'A colleague handed over the access.',
-      failed: 'Nobody in the office believed it.',
-      held: 'Your team spotted the fake urgency.',
-      lost: 'One colleague clicked and let them in.',
+      broke: 'You successfully got an employee to click',
+      failed: "You couldn't breach in from their employees",
+      held: 'You successfully stopped every employee clicking',
+      lost: "You couldn't stop an employee clicking",
     },
     infra: {
-      broke: 'The mail reached every inbox unfiltered.',
-      failed: 'The filter caught it first.',
-      held: 'Your filter stopped it at the door.',
-      lost: 'Your filters let the mail through.',
+      broke: 'You successfully got past their email filter',
+      failed: 'Your attack on their Infra was blocked',
+      held: 'You successfully blocked the attack on your Infra',
+      lost: "You couldn't block the attack on your Infra",
     },
   },
   2: {
-    // CEO impersonation - the only real control is a callback.
+    // CEO impersonation - the only control is a callback.
     data: {
-      broke: 'The fake paperwork held up.',
-      failed: 'Someone checked the address and stopped it.',
-      held: 'Your checks caught the wrong address.',
-      lost: 'Nobody checked the paperwork behind it.',
+      broke: 'You successfully got the money released',
+      failed: "You couldn't get the money released",
+      held: 'You successfully kept the money in the company',
+      lost: "You couldn't stop the money leaving",
     },
     people: {
-      broke: 'The voice was enough to authorise it.',
-      failed: 'They called back on a known number.',
-      held: 'Your team rang back before paying.',
-      lost: 'A familiar voice got it authorised.',
+      broke: 'You successfully got an employee to authorise it',
+      failed: "You couldn't get any employee to authorise it",
+      held: 'You successfully stopped every employee authorising it',
+      lost: "You couldn't stop an employee authorising it",
     },
     infra: {
-      broke: 'The payment cleared with no second look.',
-      failed: 'The payment died at approval.',
-      held: 'Approval stopped the payment cold.',
-      lost: 'No second pair of eyes checked it.',
+      broke: 'You successfully got past their approval checks',
+      failed: 'Your attack on their Infra was blocked',
+      held: 'You successfully blocked the attack on your Infra',
+      lost: "You couldn't block the attack on your Infra",
     },
   },
   3: {
-    // Manipulating the assistant - its own rules are the last line.
+    // Manipulating the AI assistant - whoever it obeys, wins.
     data: {
-      broke: 'The assistant read what it should not.',
-      failed: 'The data was out of reach.',
-      held: 'Its reach was cut short.',
-      lost: 'Nothing limited what it could read.',
+      broke: 'You successfully got the AI to reveal data',
+      failed: "You couldn't get any data out of the AI",
+      held: 'You successfully stopped the AI revealing data',
+      lost: "You couldn't stop the AI revealing data",
     },
     people: {
-      broke: 'It obeyed you, not its owner.',
-      failed: 'A person read the reply first.',
-      held: 'Your sign-off rule held it back.',
-      lost: 'Nobody read the reply first.',
+      broke: 'You successfully got the AI to obey you',
+      failed: "You couldn't make the AI obey you",
+      held: 'You successfully kept control of the AI',
+      lost: "You couldn't keep control of the AI",
     },
     infra: {
-      broke: 'Your instructions overwrote its own rules.',
-      failed: 'Its own rules held firm.',
-      held: 'Nothing the attacker sent changed them.',
-      lost: 'Its own rules were overwritten.',
+      broke: "You successfully got past the AI's rules",
+      failed: 'Your attack on their Infra was blocked',
+      held: 'You successfully blocked the attack on your Infra',
+      lost: "You couldn't block the attack on your Infra",
     },
   },
   4: {
-    // Poisoning the sources - one bad file is a confident wrong answer.
+    // Poisoning the AI's sources - one bad source, one wrong answer.
     data: {
-      broke: 'A false file is now a source.',
-      failed: 'Nothing false made it in.',
-      held: 'Every answer traces to a trusted source.',
-      lost: 'It will be quoted to a customer.',
+      broke: 'You successfully got false data into the AI',
+      failed: "You couldn't get false data into the AI",
+      held: 'You successfully kept false data out of the AI',
+      lost: "You couldn't keep false data out of the AI",
     },
     people: {
-      broke: 'An insider made the edit quietly.',
-      failed: 'Someone asked who changed it.',
-      held: 'Your team questioned the edit.',
-      lost: 'The edit went through unquestioned.',
+      broke: 'You successfully got staff to trust a fake source',
+      failed: "You couldn't get staff to trust your source",
+      held: 'You successfully stopped staff trusting a fake source',
+      lost: "You couldn't stop staff trusting a fake source",
     },
     infra: {
-      broke: 'The sync brought it in overnight.',
-      failed: 'The feed rejected it outright.',
-      held: 'Only approved sources get through.',
-      lost: 'The feed was left open.',
+      broke: 'You successfully got past their source checks',
+      failed: 'Your attack on their Infra was blocked',
+      held: 'You successfully blocked the attack on your Infra',
+      lost: "You couldn't block the attack on your Infra",
     },
   },
 }
