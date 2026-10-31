@@ -226,6 +226,8 @@ describe('the trust scale', () => {
 
       const start = await page.evaluate(() => {
         const input = document.querySelector('.hallu__range')
+        const question = document.querySelector('.hallu__question')
+        const readout = document.querySelector('.hallu__readout')
         return {
           kind: input?.type,
           min: input?.min,
@@ -234,6 +236,10 @@ describe('the trust scale', () => {
           value: input?.value,
           labels: [...document.querySelectorAll('.hallu__label')].map((l) => l.textContent),
           readout: document.querySelector('.hallu__readout')?.innerText.replace(/\s+/g, ' '),
+          question: question?.textContent,
+          lockedIn: /lock/i.test(document.querySelector('.hallu__choices')?.innerText ?? ''),
+          questionGap: parseFloat(getComputedStyle(question).marginBottom),
+          readoutGap: parseFloat(getComputedStyle(readout).marginTop),
         }
       })
       assert.equal(start.kind, 'range', 'the five buttons should be one slider')
@@ -244,6 +250,10 @@ describe('the trust scale', () => {
       assert.deepEqual(start.labels, ['Doubt', 'Not sure', 'Trust'])
       assert.match(start.readout ?? '', /0/)
       assert.match(start.readout ?? '', /nothing either way/)
+      assert.equal(start.question, 'Can you trust this AI response, or should you doubt it?')
+      assert.equal(start.lockedIn, false, 'nothing tells players to lock in any more')
+      assert.equal(start.questionGap, 8)
+      assert.equal(start.readoutGap, 16)
 
       const at = async (value) => {
         await page.evaluate((v) => {
@@ -259,6 +269,15 @@ describe('the trust scale', () => {
         return page.evaluate(() => {
           const track = document.querySelector('.hallu__track').getBoundingClientRect()
           const fill = document.querySelector('.hallu__fill').getBoundingClientRect()
+          const probe = document.createElement('div')
+          document.body.appendChild(probe)
+          probe.style.backgroundColor = getComputedStyle(
+            document.querySelector('.hallu__slider'),
+          )
+            .getPropertyValue('--lean-deep')
+            .trim()
+          const deep = getComputedStyle(probe).backgroundColor
+          probe.remove()
           return {
             gain: document.querySelector('.hallu__gain')?.textContent,
             note: document.querySelector('.hallu__gainnote')?.textContent ?? '',
@@ -267,8 +286,16 @@ describe('the trust scale', () => {
             )?.textContent,
             from: Math.round(((fill.left - track.left) / track.width) * 100),
             width: Math.round((fill.width / track.width) * 100),
+            deep,
           }
         })
+      }
+
+      // Depth is the magnitude in colour: a timid bet is a pale tint, a full one
+      // is the real yellow/green. Compare channels on the same side only.
+      const channels = (colour) => {
+        const nums = (colour.match(/-?[\d.]+/g) ?? []).map(Number)
+        return colour.startsWith('rgb(') ? nums.map((n) => n / 255) : nums
       }
 
       const trust = await at(140)
@@ -285,6 +312,20 @@ describe('the trust scale', () => {
       assert.equal(doubt.lit, 'Doubt')
       assert.equal(doubt.from, 15)
       assert.equal(doubt.width, 35)
+
+      const trustsHarder = channels((await at(200)).deep)
+      const trustsSoftly = channels((await at(40)).deep)
+      assert.ok(
+        trustsHarder[0] < trustsSoftly[0] - 0.05,
+        `trust should deepen as you drag: ${trustsSoftly} → ${trustsHarder}`,
+      )
+
+      const doubtsHarder = channels((await at(-200)).deep)
+      const doubtsSoftly = channels((await at(-40)).deep)
+      assert.ok(
+        doubtsHarder[2] < doubtsSoftly[2] - 0.05,
+        `doubt should deepen as you drag: ${doubtsSoftly} → ${doubtsHarder}`,
+      )
       await snap(page, 'ipad-trust-scale.png')
     } finally {
       await context.close()

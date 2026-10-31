@@ -64,7 +64,6 @@ export default function HallucinationGame({
   // sits in a "waiting" state until everyone has had their time. A player who
   // never picks is simply scored zero when the clock hits zero.
   const expired = timeLeftMs === 0
-  const waiting = picked !== undefined && !expired
   const revealed = expired
   // The verdict owns the last five seconds of the cycle, then the next question
   // takes over without anyone touching the screen.
@@ -152,7 +151,8 @@ export default function HallucinationGame({
   const points = picked === undefined ? 0 : scoreFor(picked, question.truth)
   const right = picked === undefined ? false : isCorrect(picked, question.truth)
   const gain = gainIfCorrect(trust)
-  const fillPct = Math.min(50, (Math.abs(trust) / MAX_TRUST) * 50)
+  const intensity = Math.abs(trust) / MAX_TRUST
+  const fillPct = Math.min(50, intensity * 50)
 
   return (
     <div className="hud hud--game hallu">
@@ -235,13 +235,18 @@ export default function HallucinationGame({
 
       {!revealed ? (
         <div className="hallu__choices">
-          <p className="hallu__question">How much do you trust this answer?</p>
+          <p className="hallu__question">
+            Can you trust this AI response, or should you doubt it?
+          </p>
 
           {/* One control, read left to right: the further you drag, the more you
               stand to win or lose. The old five buttons committed on the first
               tap; a slider should let you think, so the answer is locked in when
               the clock runs out, not when you first touch it. */}
-          <div className={`hallu__slider is-${lean}`}>
+          <div
+            className={`hallu__slider is-${lean}`}
+            style={{ '--intensity': intensity } as CSSProperties}
+          >
             <div className="hallu__labels" aria-hidden="true">
               <span className={`hallu__label ${lean === 'doubt' ? 'is-on' : ''}`}>Doubt</span>
               <span className={`hallu__label ${lean === 'unsure' ? 'is-on' : ''}`}>Not sure</span>
@@ -292,15 +297,9 @@ export default function HallucinationGame({
             </p>
           </div>
 
-          {waiting ? (
-            <p className="hallu__waiting">
-              Locked in when the timer ends — you can still move it.
-            </p>
-          ) : (
-            <p className="hallu__hint">
-              Drag left if you think it is made up, right if you believe it. Every step is +10.
-            </p>
-          )}
+          <p className="hallu__hint">
+            Drag left if you think it is made up, right if you believe it. Every step is +10.
+          </p>
         </div>
       ) : (
         <div className={`hallu__reveal ${right ? 'is-good' : 'is-bad'}`}>
