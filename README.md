@@ -43,6 +43,34 @@ npm run dev     # 5070（在 vite.config.ts 里固定，strictPort）
 
 `vite.config.ts` 里配了 dev proxy，把 `/health` 与 `/api` 转发到 `http://localhost:5071`，所以**本地与线上跑的是同一套相对路径代码**（见 `arcade_ftw_be`）。
 
+## 端到端测试
+
+`e2e/` 跑的是**真后端 + 真前端代理**，不是 stub：一个路由挂错前缀、引擎忘了装填时钟、
+大屏和平板抽到不同的题，都会在这里失败而不是在台上。
+
+```bash
+# 前后端都要先起来（5070 / 5071）
+npm run test:e2e        # 全部，约 3 分钟
+npm run test:e2e:api    # 只有 HTTP/WS 层，约 35 秒
+npm run test:e2e:ui     # 只有浏览器层，约 2 分钟
+```
+
+两套的分工：
+
+| 文件 | 覆盖 |
+|---|---|
+| `e2e/framework.test.mjs` | 同源与 `/api` 前缀、鉴权边界、13 节点 rundown 的形状与总时长、引擎推进 / 暂停 / 跳转 / 结算、四个 section 榜单、Sabotage 分队与阶段、单人跳过、房间生命周期、静态资源 |
+| `e2e/ui.test.mjs` | 13 个节点在大屏上都能画出来（没有落到 placeholder）、欢迎页四张卡是「编号 + 图标 + 名称」、opening 第 3 秒交棒给规则且只有 3–4 点、Ultimate 大屏与平板同一道题、第 5 题带 ×3 且结算 `/160`、控制台的跳转板与题库表格、玩家登录进等待室 |
+
+浏览器用 `playwright-core` + **本机已装的 Chrome**（`channel: 'chrome'`），不下载 Chromium。
+CI 里要跑得先装浏览器，所以 CI 目前**不跑 E2E**。
+
+失败时会把截图写进 `e2e/artifacts/`（已 gitignore）。
+
+**测试自己建房、自己删房、自己删玩家**，不会碰 `main`。如果看到
+「`current` 不是服务器在服务的房间」，是本机上一次 `pytest` 留下的房间：
+`pytest` 现在退出时会清理自己建的房间并重新打开 `main`。
+
 ## 部署
 
 ### 基础设施（CloudFormation）
@@ -75,4 +103,5 @@ aws cloudformation deploy \
 | `npm run build` | `tsc -b` + `vite build` |
 | `npm run lint` | oxlint |
 | `npm run preview` | 预览产物 |
+| `npm run test:e2e` | 端到端：HTTP/WS + 浏览器（需要前后端都在跑）|
 

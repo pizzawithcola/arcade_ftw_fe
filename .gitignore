@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# E2E screenshots, written only when a browser test fails
+e2e/artifacts

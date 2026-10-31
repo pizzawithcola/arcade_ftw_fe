@@ -4,10 +4,10 @@ import './DesignBackground.css'
 
 /** Art in public/, served from the site root. */
 const ARTWORK = [
-  { src: '/hallucination_icon.PNG', label: 'Hallucination', note: 'game icon' },
-  { src: '/data_icon.PNG', label: 'Data Shadow', note: 'game icon' },
-  { src: '/sabotage_icon.PNG', label: 'Sabotage', note: 'game icon' },
-  { src: '/ultimate_icon.PNG', label: 'Ultimate Quiz', note: 'game icon' },
+  { src: '/game_icons/hallucination_icon.PNG', label: 'Hallucination', note: 'game icon' },
+  { src: '/game_icons/data_icon.PNG', label: 'Data Shadow', note: 'game icon' },
+  { src: '/game_icons/sabotage_icon.PNG', label: 'Sabotage', note: 'game icon' },
+  { src: '/game_icons/ultimate_icon.PNG', label: 'Ultimate Quiz', note: 'game icon' },
   { src: '/city_skyline.PNG', label: 'City skyline', note: 'scene' },
 ]
 
