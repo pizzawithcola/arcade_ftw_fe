@@ -9,10 +9,10 @@
  * file owns the words, because copy changes more often than the rundown.
  *
  * The wording below is the client's, supplied verbatim - including its
- * punctuation and its two known slips ("trust(green)", "choices loses points").
- * Do not copy-edit it: only the person whose show this is may change how it
- * reads. Everything else in this file (structure, timings, the welcome map) is
- * fair game.
+ * punctuation and its remaining slip ("choices loses points"). Do not
+ * copy-edit it: only the person whose show this is may change how it reads.
+ * Everything else in this file (structure, timings, the welcome map) is fair
+ * game.
  *
  * The name card carries the name and nothing else: three seconds is long enough
  * for a title and not long enough for a sentence under it.
@@ -47,9 +47,10 @@ const OPENINGS: GameOpening[] = [
     icon: '/game_icons/hallucination_icon.PNG',
     rules: [
       'Review the AI response',
-      // "(green)" and "(yellow)" are instructions about the word before them.
+      // The words still carry their colours; the brackets that named the colour
+      // have been removed on request.
       {
-        text: 'Drag right if you trust(green), and drag left if you have doubts (yellow)',
+        text: 'Drag right if you trust, and drag left if you have doubts',
         trust: 'trust',
         doubt: 'doubts',
       },

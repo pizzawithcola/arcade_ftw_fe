@@ -454,9 +454,6 @@ export default function ThemePreview() {
                           </span>
                         </p>
                       </div>
-                      <p className="hallu__hint">
-                        Drag left to doubt, right to trust. Every step is +10.
-                      </p>
                     </div>
                   </div>
                 </div>

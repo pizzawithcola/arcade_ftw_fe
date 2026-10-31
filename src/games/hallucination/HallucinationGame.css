@@ -223,7 +223,9 @@
 }
 
 .hallu__question {
-  margin: 0 0 8px;
+  /* 8px + 32px: the question is the header of the control, and it needs to stop
+     looking welded to the scale underneath it. */
+  margin: 0 0 40px;
   font-family: 'Orbitron', ui-monospace, monospace;
   font-size: clamp(0.62rem, 1.5vw, 0.78rem);
   letter-spacing: 0.16em;
@@ -492,12 +494,6 @@
 .hallu__gainnote {
   font-size: clamp(0.68rem, 1.6vw, 0.82rem);
   color: var(--c-text-muted);
-}
-
-.hallu__hint {
-  margin: 0;
-  font-size: 0.7rem;
-  color: var(--c-text-dim);
 }
 
 /* ─── reveal ────────────────────────────────────────────────────────────────── */

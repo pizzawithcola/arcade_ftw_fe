@@ -217,7 +217,7 @@ describe('an opening hands over from its name to its rules', () => {
       // If this assertion trips, someone copy-edited supplied copy: put it back.
       assert.deepEqual(rules.points, [
         'Review the AI response',
-        'Drag right if you trust(green), and drag left if you have doubts (yellow)',
+        'Drag right if you trust, and drag left if you have doubts',
         'Your confidence affects your score',
       ])
     } finally {
@@ -249,6 +249,7 @@ describe('the trust scale', () => {
           question: question?.textContent,
           lockedIn: /lock/i.test(document.querySelector('.hallu__choices')?.innerText ?? ''),
           questionGap: parseFloat(getComputedStyle(question).marginBottom),
+          hint: Boolean(document.querySelector('.hallu__hint')),
           readoutGap: parseFloat(getComputedStyle(readout).marginTop),
         }
       })
@@ -262,7 +263,10 @@ describe('the trust scale', () => {
       assert.match(start.readout ?? '', /nothing either way/)
       assert.equal(start.question, 'Can you trust this AI response, or should you doubt it?')
       assert.equal(start.lockedIn, false, 'nothing tells players to lock in any more')
-      assert.equal(start.questionGap, 8)
+      // 8px plus the 32px the question was opened up by, so it stops looking
+      // welded to the scale underneath it.
+      assert.equal(start.questionGap, 40)
+      assert.equal(start.hint, false, 'the drag hint is gone; the scale says it itself')
       assert.equal(start.readoutGap, 16)
 
       const at = async (value) => {

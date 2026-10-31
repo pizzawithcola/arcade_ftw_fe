@@ -804,7 +804,9 @@
   padding: 0;
   list-style: none;
   display: grid;
-  gap: clamp(0.45rem, 1.4vh, 0.8rem);
+  /* Fifty per cent more air than before: three points on one screen read as a
+     list, not a paragraph, and the gap is what says so. */
+  gap: clamp(0.675rem, 2.1vh, 1.2rem);
   counter-reset: brief;
   width: 100%;
 }

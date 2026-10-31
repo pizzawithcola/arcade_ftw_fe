@@ -233,10 +233,6 @@ export default function HallucinationGame({
               </span>
             </p>
           </div>
-
-          <p className="hallu__hint">
-            Drag left if you think it is made up, right if you believe it. Every step is +10.
-          </p>
         </div>
       ) : (
         <div className={`hallu__reveal ${right ? 'is-good' : 'is-bad'}`}>
