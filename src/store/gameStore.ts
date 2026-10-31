@@ -10,6 +10,8 @@ export interface QuestionState {
   remaining_ms: number
   /** Milliseconds left on the quiz's title card; 0 once the questions start. */
   intro_ms?: number
+  /** Milliseconds left on a bonus card in front of the question; 0 otherwise. */
+  bonus_ms?: number
 }
 
 export interface FlowNode {
@@ -28,6 +30,10 @@ export interface FlowNode {
   seconds_each?: number
   /** Quiz nodes: a title card before the first question. */
   intro_sec?: number
+  /** Quiz nodes: how long the card announcing a bonus question holds. */
+  bonus_intro_sec?: number
+  /** Quiz nodes: which questions (1-based) open with that card. */
+  bonus_questions?: number[]
 }
 interface StateMessage {
   phase: Phase

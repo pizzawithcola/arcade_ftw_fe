@@ -690,3 +690,176 @@
 .display__dims li.is-hold em {
   color: var(--c-text);
 }
+
+/* ─── the bonus card, at wall size ─────────────────────────────────────────── */
+
+/* Same beat as the tablet's card, sized for a projector: the multiplier has to
+   be readable from the back of the room, and the sweep is what carries the
+   motion at that distance. Keyframes are local - a display sheet that borrowed
+   another module's animation would break the day that module is refactored. */
+.display__bonus {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(0.6rem, 1.6vh, 1.2rem);
+  width: min(100%, 72rem);
+  min-height: min(52vh, 26rem);
+  padding: clamp(1rem, 3vh, 2.4rem);
+  overflow: hidden;
+  text-align: center;
+  animation: display-bonus-land 0.5s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.display__bonusgrid {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    linear-gradient(to right, var(--c-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--c-grid-line) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 0%, transparent 70%);
+  opacity: 0.65;
+}
+
+.display__bonusring {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.display__bonusring span {
+  position: absolute;
+  width: min(64vh, 30rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  animation: display-bonus-spin 2.6s linear infinite;
+}
+
+.display__bonusring span:last-child {
+  width: min(46vh, 21rem);
+  border-color: color-mix(in srgb, var(--c-brand) 32%, transparent);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  animation-direction: reverse;
+  animation-duration: 1.7s;
+}
+
+.display__bonus::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--c-brand) 85%, transparent) 50%,
+    transparent
+  );
+  box-shadow: 0 0 24px color-mix(in srgb, var(--c-brand) 70%, transparent);
+  animation: display-bonus-scan 1.1s ease-in-out 2;
+}
+
+.display__bonustag {
+  position: relative;
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.8rem, 1.4vw, 1.1rem);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.display__bonusmult {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.04em;
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-weight: 700;
+  line-height: 1;
+  font-size: clamp(5rem, 18vh, 12rem);
+  color: var(--c-text);
+  text-shadow:
+    0 0 24px color-mix(in srgb, var(--c-brand) 70%, transparent),
+    0 0 90px color-mix(in srgb, var(--c-brand) 40%, transparent);
+  animation: display-bonus-pop 0.62s cubic-bezier(0.16, 1.2, 0.3, 1) both;
+}
+
+.display__bonusmult span {
+  font-size: 0.46em;
+  color: var(--c-brand);
+}
+
+.display__bonusworth {
+  position: relative;
+  margin: 0;
+  font-size: clamp(1rem, 1.8vw, 1.5rem);
+  letter-spacing: 0.05em;
+  color: var(--c-text-muted);
+}
+
+.display__bonusworth b {
+  color: var(--c-text);
+  font-family: 'Orbitron', ui-monospace, monospace;
+}
+
+@keyframes display-bonus-land {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes display-bonus-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes display-bonus-scan {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(60vh);
+    opacity: 0;
+  }
+}
+
+@keyframes display-bonus-pop {
+  from {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .display__bonus,
+  .display__bonusring span,
+  .display__bonusmult {
+    animation: none;
+  }
+
+  .display__bonus::after {
+    display: none;
+  }
+}

@@ -172,7 +172,11 @@ describe('the rundown is the 13-node show the frontend draws', () => {
 
   test('every question node leaves a readable tail after its last verdict', () => {
     for (const node of state.flow.filter((n) => n.questions)) {
-      const content = (node.intro_sec ?? 0) + node.questions * node.seconds_each
+      // Bonus cards are part of the round's content, not part of its tail: a
+      // three second card in front of two questions is six seconds nobody can
+      // answer in.
+      const cards = (node.bonus_questions?.length ?? 0) * (node.bonus_intro_sec ?? 0)
+      const content = (node.intro_sec ?? 0) + node.questions * node.seconds_each + cards
       // A round may cut its closing score page on purpose and say so with
       // `closing_sec`; everything else still owes a readable tail.
       const wanted = node.closing_sec ?? 3
@@ -190,6 +194,20 @@ describe('the rundown is the 13-node show the frontend draws', () => {
     assert.equal(quiz.seconds_each, 25)
     assert.equal(quiz.intro_sec ?? 0, 0)
     assert.equal(quiz.score, 'ultimate')
+  })
+
+  test('the two bonus questions open with a card the whole room can see', () => {
+    const quiz = state.flow.find((node) => node.type === 'quiz')
+    // The slots that pay more than x1 are 4 and 5; the card is what says so out
+    // loud. If these drift, the wall announces a bonus in front of a question
+    // that pays nothing.
+    assert.deepEqual(quiz.bonus_questions, [4, 5])
+    assert.equal(quiz.bonus_intro_sec, 3)
+    const schedule = quiz.questions * quiz.seconds_each + quiz.bonus_questions.length * quiz.bonus_intro_sec
+    assert.ok(
+      quiz.duration_sec - schedule >= 3,
+      `${quiz.duration_sec} - ${schedule} leaves no score page`,
+    )
   })
 
   test('the sabotage slot outlasts the engine clock', () => {

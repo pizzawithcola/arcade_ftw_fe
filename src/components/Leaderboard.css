@@ -1,15 +1,64 @@
-/* A name card stretched to the full width of a projector scattered the eye:
-   the row is a name, a number and nothing else, so it stops at a readable
-   measure and the whole board centres. */
+/* The standings board.
+ *
+ * A ranking is a wall of numbers, and a wall of numbers is what it looked like
+ * before: three grey rows and a circle. This is the same data drawn as an
+ * instrument - a live rail, a numbered plate, a bar that shows the spread at a
+ * glance - so a board sitting on a projector reads as something measuring the
+ * room rather than as a printout.
+ */
+
 .ldb {
+  position: relative;
   width: min(100%, 46rem);
   margin: clamp(1rem, 3vh, 2.2rem) auto 0;
 }
 
+/* A single illuminated edge across the top: the one line that says "powered". */
+.ldb__rail {
+  position: relative;
+  height: 2px;
+  margin-bottom: clamp(0.9rem, 2.4vh, 1.6rem);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--c-brand-deep) 90%, transparent) 18%,
+    var(--c-brand) 50%,
+    color-mix(in srgb, var(--c-brand-deep) 90%, transparent) 82%,
+    transparent
+  );
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-brand) 55%, transparent);
+  overflow: hidden;
+}
+
+/* A highlight travelling along that edge, so the board looks awake without any
+   number having to move. */
+.ldb__rail::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 22%;
+  background: linear-gradient(90deg, transparent, var(--c-text), transparent);
+  opacity: 0.85;
+  animation: ldb-rail 4.5s linear infinite;
+}
+
+@keyframes ldb-rail {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(460%);
+  }
+}
+
 .ldb__title {
-  margin: 0 0 clamp(1.4rem, 4vh, 2.4rem);
-  font-size: 1.25rem;
-  letter-spacing: 0.06em;
+  margin: 0 0 clamp(1rem, 3vh, 1.8rem);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
   color: var(--c-text);
   text-align: center;
 }
@@ -19,8 +68,91 @@
   text-align: center;
 }
 
-/* One column by default; `--split` only appears when the stack would overflow
-   the window, so a short board never splits on a wide screen. */
+/* The plate the rows sit in: corner ticks and a hairline rule under the legend. */
+.ldb__frame {
+  position: relative;
+  padding: clamp(0.5rem, 1.4vh, 0.9rem);
+  border: 1px solid var(--c-border);
+  background: color-mix(in srgb, var(--c-surface) 80%, transparent);
+}
+
+.ldb__frame::before,
+.ldb__frame::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--c-brand-deep);
+  pointer-events: none;
+}
+
+.ldb__frame::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.ldb__frame::after {
+  right: -1px;
+  bottom: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.ldb__live {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+/* Same columns as a row: the label has to sit over the thing it names. */
+.ldb__legend {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 0.6rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-text-dim);
+  text-align: left;
+}
+
+.ldb__legend span:last-child {
+  text-align: right;
+}
+
+.ldb__pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-brand);
+  box-shadow: 0 0 10px var(--c-brand);
+  animation: ldb-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ldb-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
 .ldb__list {
   margin: 0;
   padding: 0;
@@ -33,73 +165,128 @@
 }
 
 .ldb__row {
+  position: relative;
   display: grid;
-  grid-template-columns: 2.5rem 1fr auto;
+  grid-template-columns: 2.6rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.6rem 0.9rem;
-  margin-bottom: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.4rem;
   border: 1px solid var(--c-border);
-  border-radius: 8px;
-  background: var(--c-surface);
+  background: var(--c-surface-raised);
   break-inside: avoid;
-  /* Always on, so releasing the offset at the end of a round is what animates
-     the cards into their new places. */
+  overflow: hidden;
+  /* The board hangs inside shells that centre their text; a name has to start
+     where the rank plate ends, whatever the host page does. */
+  text-align: left;
+  /* The bar is the row's own score against the leader, so the spread is
+     readable without comparing two numbers down a column. */
   transition:
     transform 700ms cubic-bezier(0.2, 0.9, 0.25, 1),
     border-color 400ms ease-out;
+  /* Opacity only, and `backwards` so the row is still hidden during its own
+     delay. A keyframe that touched `transform` would outrank the inline
+     translateY the slide sets, and the move - which is the whole point - would
+     never happen. */
+  animation: ldb-row-in 0.4s ease-out backwards;
+  animation-delay: calc(var(--row, 0) * 40ms);
+}
+
+@keyframes ldb-row-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ldb__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill, 0%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--c-brand-deep) 26%, transparent),
+    color-mix(in srgb, var(--c-brand) 14%, transparent)
+  );
+  border-right: 1px solid color-mix(in srgb, var(--c-brand) 55%, transparent);
+  pointer-events: none;
+}
+
+/* Everything above the bar. */
+.ldb__row > :not(.ldb__fill) {
+  position: relative;
 }
 
 .ldb__rank {
-  width: 2.2rem;
-  height: 2.2rem;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: var(--c-surface-raised);
+  height: 1.9rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-black);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
   color: var(--c-text-muted);
-  font-weight: 600;
+  /* Notched on the right, the way a plate is cut on a console. */
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 50%, calc(100% - 7px) 100%, 0 100%);
 }
 
 .ldb__name {
   color: var(--c-text);
   font-size: 1rem;
+  letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .ldb__score {
-  color: var(--c-text);
+  text-align: right;
+  font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--c-text);
 }
 
-/* The podium reads leader / next / next without a second accent: only the
-   winner earns red, the rest step down through the neutrals. */
+/* The podium reads first / next / next without a second accent: only the winner
+   earns the bright red, the rest step down through the neutrals. */
 .ldb__row.is-rank-1 {
-  border-color: var(--c-brand-deep);
+  border-color: color-mix(in srgb, var(--c-brand) 70%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--c-brand) 22%, transparent),
+    0 0 26px color-mix(in srgb, var(--c-brand) 18%, transparent);
 }
 
 .ldb__row.is-rank-1 .ldb__rank {
+  border-color: transparent;
   background: var(--c-brand-deep);
   color: var(--c-text);
 }
 
-.ldb__row.is-rank-2 {
-  border-color: var(--c-text-muted);
+.ldb__row.is-rank-1 .ldb__score {
+  color: var(--c-text);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--c-brand) 75%, transparent);
 }
 
 .ldb__row.is-rank-2 .ldb__rank {
-  background: var(--c-text-muted);
-  color: var(--c-black);
-}
-
-.ldb__row.is-rank-3 {
-  border-color: var(--c-text-dim);
+  border-color: var(--c-text-muted);
+  color: var(--c-text);
 }
 
 .ldb__row.is-rank-3 .ldb__rank {
-  background: var(--c-text-dim);
+  border-color: var(--c-text-dim);
   color: var(--c-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ldb__rail::after,
+  .ldb__pulse,
+  .ldb__row {
+    animation: none;
+  }
 }

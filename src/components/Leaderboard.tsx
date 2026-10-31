@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import './Leaderboard.css'
 
 export interface LeaderboardEntry {
@@ -102,6 +103,11 @@ export default function Leaderboard({
   const playing = animated && !split && stride > 0
   const counted = playing ? Math.min(1, Math.max(0, (clock - HOLD_MS) / COUNT_MS)) : 1
   const settled = !playing || clock >= HOLD_MS + COUNT_MS
+  // The rows are held in their old places while the scores roll up, then
+  // released: releasing the offset is the slide, because the transform has a
+  // transition on it. Holding it past `settled` froze the board in the order it
+  // arrived in, with the new numbers already on the wrong names.
+  const held = playing && clock < HOLD_MS + COUNT_MS
 
   // Where each player stood before this section. Both orders are stable, so the
   // only thing that moves is where the cards are drawn.
@@ -111,33 +117,58 @@ export default function Leaderboard({
     before.forEach((row, at) => beforeIndex.set(row.nickname, at))
   }
 
+  // Every row's bar is measured against the leader, so the board reads as a
+  // spread rather than as a list of numbers.
+  const leader = Math.max(1, ...rows.map((row) => Math.max(0, row.total ?? row.score)))
+
   return (
     <div className="ldb">
+      <div className="ldb__rail" aria-hidden="true" />
       {title && <h2 className="ldb__title">{title}</h2>}
       {rows.length === 0 ? (
         <p className="ldb__empty">No scores yet.</p>
       ) : (
-        <ol className={`ldb__list${split ? ' ldb__list--split' : ''}`} ref={list}>
-          {rows.map((row, at) => {
-            const standing = row.total ?? row.score
-            const start = row.previous ?? standing
-            const shown = Math.round(start + (standing - start) * counted)
-            const was = beforeIndex.get(row.nickname)
-            const rank = settled || was === undefined ? row.rank : was + 1
-            const shift = was === undefined ? 0 : (was - at) * stride
-            return (
-              <li
-                key={row.nickname}
-                className={`ldb__row is-rank-${rank}${playing ? ' is-moving' : ''}`}
-                style={playing ? { transform: `translateY(${shift}px)` } : undefined}
-              >
-                <span className="ldb__rank">{rank}</span>
-                <span className="ldb__name">{row.nickname}</span>
-                <span className="ldb__score">{shown}</span>
-              </li>
-            )
-          })}
-        </ol>
+        <div className="ldb__frame">
+          <p className="ldb__live">
+            <span className="ldb__pulse" aria-hidden="true" />
+            Live standings
+          </p>
+          {/* The columns, labelled in the same grid the rows use, so the header
+              sits over the data it names instead of over the middle of it. */}
+          <div className="ldb__legend" aria-hidden="true">
+            <span>rank</span>
+            <span>player</span>
+            <span>score</span>
+          </div>
+          <ol className={`ldb__list${split ? ' ldb__list--split' : ''}`} ref={list}>
+            {rows.map((row, at) => {
+              const standing = row.total ?? row.score
+              const start = row.previous ?? standing
+              const shown = Math.round(start + (standing - start) * counted)
+              const was = beforeIndex.get(row.nickname)
+              const rank = settled || was === undefined ? row.rank : was + 1
+              const shift = held && was !== undefined ? (was - at) * stride : 0
+              const share = Math.min(1, Math.max(0, shown / leader))
+              const style = {
+                '--fill': `${(share * 100).toFixed(1)}%`,
+                '--row': at,
+                ...(playing ? { transform: `translateY(${shift}px)` } : {}),
+              } as CSSProperties
+              return (
+                <li
+                  key={row.nickname}
+                  className={`ldb__row is-rank-${rank}${playing ? ' is-moving' : ''}`}
+                  style={style}
+                >
+                  <span className="ldb__fill" aria-hidden="true" />
+                  <span className="ldb__rank">{String(rank).padStart(2, '0')}</span>
+                  <span className="ldb__name">{row.nickname}</span>
+                  <span className="ldb__score">{shown}</span>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
       )}
     </div>
   )

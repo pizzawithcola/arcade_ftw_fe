@@ -4,7 +4,8 @@ import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { bankOptions } from '../../games/quiz/bank'
-import { drawQuestions, slotAt } from '../../games/quiz/draw'
+import { BASE_POINTS, drawQuestions, pointsFor, slotAt } from '../../games/quiz/draw'
+import { quizTimeline, sittingAt } from '../../games/quiz/timeline'
 import { theBet } from '../../games/sabotage/revealCopy'
 import Welcome from '../../games/Welcome'
 import Opening from '../../games/Opening'
@@ -161,12 +162,30 @@ function questionOnScreen(
   const introMs = (node?.intro_sec ?? 0) * 1000
   const stage = Math.max(0, elapsed - introMs)
   const eachMs = each * 1000
+  // The round is a line of segments, not a division: a bonus question opens
+  // with a three second card. Walking the same schedule the iPads walk is the
+  // only way the wall and the tablets cannot end up a question apart.
+  const sitting = sittingAt(
+    quizTimeline({
+      count,
+      secondsEachMs: eachMs,
+      bonusIntroMs: (node?.bonus_intro_sec ?? 0) * 1000,
+      bonusQuestions: node?.bonus_questions ?? [],
+    }),
+    stage,
+  )
+  if (!sitting) return null
+  const { kind, index, ms } = sitting.segment
+  const leftMs = Math.max(0, Math.round(ms - sitting.inMs))
   return {
-    index: Math.min(count - 1, Math.floor(stage / eachMs)),
+    index,
     count,
     seconds_each: each,
-    remaining_ms: Math.max(0, Math.round(eachMs - (stage % eachMs))),
+    // A bonus card is not question time, so the question's own clock has not
+    // started: report it full, and nothing thinks the answers have closed.
+    remaining_ms: kind === 'bonus' ? eachMs : leftMs,
     intro_ms: Math.max(0, Math.round(introMs - elapsed)),
+    bonus_ms: kind === 'bonus' ? leftMs : 0,
   }
 }
 
@@ -189,6 +208,27 @@ function inQuestionMs(question: QuestionState): number {
  * round is the one people want to read along with, so its four answers are on the
  * wall too - lettered, so the host can say "B" and everyone looks at the same box.
  */
+/** The bonus card, sized for a projector rather than a tablet. */
+function BonusOnScreen({ index, multiplier }: { index: number; multiplier: number }) {
+  return (
+    <article className="display__bonus">
+      <div className="display__bonusgrid" aria-hidden="true" />
+      <div className="display__bonusring" aria-hidden="true">
+        <span />
+        <span />
+      </div>
+      <p className="display__bonustag">Bonus round</p>
+      <p className="display__bonusmult">
+        <span>×</span>
+        {multiplier}
+      </p>
+      <p className="display__bonusworth">
+        Pays <b>{pointsFor(index)}</b> instead of {BASE_POINTS}
+      </p>
+    </article>
+  )
+}
+
 function QuestionOnScreen({
   kind,
   index,
@@ -549,7 +589,12 @@ export default function DisplayPage() {
 
           {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
             <>
-              {quizReviewing ? (
+              {question.bonus_ms ? (
+                // The card that opens a bonus question. The tablets are showing
+                // the same thing, so the room and the screens agree on why the
+                // next answer is worth more.
+                <BonusOnScreen index={question.index} multiplier={slotAt(question.index).multiplier} />
+              ) : quizReviewing ? (
                 // The answer is closed: the room gets the standings for the five
                 // seconds the iPads spend on the verdict.
                 <div className="display__liveboard">
@@ -564,7 +609,9 @@ export default function DisplayPage() {
                 />
               )}
               <p className="display__kicker">
-                question {question.index + 1} / {question.count}
+                {question.bonus_ms
+                  ? `bonus ×${slotAt(question.index).multiplier} before question ${question.index + 1}`
+                  : `question ${question.index + 1} / ${question.count}`}
               </p>
             </>
           )}

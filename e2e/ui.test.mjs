@@ -675,13 +675,14 @@ describe('the Ultimate round', () => {
     }
   })
 
-  test('five questions, a bonus badge on the last two, and /800 at the end', async () => {
+  test('a bonus card opens each bonus question, and the round closes on /800', async () => {
     const errors = []
     const { context, page } = await stage(IPAD, {
       path: `/r/${ROOM}`,
       as: 'player',
       onError: (error) => errors.push(error),
     })
+    const wall = await stage(WALL, { path: `/display/${ROOM}` })
     try {
       await api.jump(ROOM, 10)
       await page.waitForTimeout(800)
@@ -694,22 +695,68 @@ describe('the Ultimate round', () => {
       assert.equal(first.bonus, null, 'question one is not a bonus')
       assert.ok(first.from.length > 0, 'question one does not say where it came from')
 
-      // Question 5 is the ×3 bonus; waiting through four 25s cycles is the only
-      // honest way to reach it, so the node is paused once it is on screen.
-      await page.waitForTimeout(4 * 25_000)
+      // Waiting through the real cycles is the only honest way to reach a bonus:
+      // the cards cannot be seeked to, and faking the clock would test nothing.
+      const readCard = () =>
+        page.evaluate(() => ({
+          mult: document.querySelector('.quiz__bonusmult')?.textContent ?? null,
+          worth: document.querySelector('.quiz__bonusworth')?.textContent ?? '',
+          count: document.querySelector('.quiz__count')?.innerText.replace(/\s+/g, ' ') ?? '',
+          options: document.querySelectorAll('.quiz__option').length,
+        }))
+
+      // `waitForFunction(fn, arg, options)`: the options object is the third
+      // argument, and a long bonus wait needs its own budget.
+      await page.waitForFunction(
+        () => document.querySelector('.quiz__bonusmult')?.textContent === '×2',
+        null,
+        { timeout: 95_000 },
+      )
+      const twice = await readCard()
+      assert.equal(twice.count, '4 / 5', 'the card belongs to question four')
+      assert.match(twice.worth, /200/, 'the card says what it pays')
+      assert.equal(twice.options, 0, 'a card is not answerable')
+      // The wall shows the same card, or the room is told a different story.
+      // Its clock ticks on a 250ms timer, so the card can land a beat after the
+      // tablet's: poll rather than sampling the frame the iPad happened to win.
+      await wall.page.waitForFunction(
+        () => document.querySelector('.display__bonusmult')?.textContent === '×2',
+        null,
+        { timeout: 3_500 },
+      )
+      await snap(page, 'ipad-quiz-bonus-card.png')
+
+      await page.waitForFunction(
+        () => document.querySelector('.quiz__bonusmult')?.textContent === '×3',
+        null,
+        { timeout: 45_000 },
+      )
+      const thrice = await readCard()
+      assert.equal(thrice.count, '5 / 5')
+      assert.match(thrice.worth, /300/)
+
+      // Then the question itself, with the badge that says why it matters. The
+      // count reads 5 / 5 during the card as well, so the options are what says
+      // the card has handed over.
+      await page.waitForFunction(
+        () => document.querySelectorAll('.quiz__option').length === 4,
+        null,
+        { timeout: 20_000 },
+      )
       await api.pause(ROOM)
       await page.waitForTimeout(900)
       const last = await page.evaluate(() => ({
-        count: document.querySelector('.quiz__count')?.innerText.replace(/\s+/g, ' ') ?? '',
         bonus: document.querySelector('.quiz__bonus')?.textContent ?? null,
-        from: document.querySelector('.quiz__from')?.textContent ?? '',
+        count: document.querySelector('.quiz__count')?.innerText.replace(/\s+/g, ' ') ?? '',
+        options: document.querySelectorAll('.quiz__option').length,
       }))
-      await snap(page, 'ipad-quiz-bonus.png')
       assert.equal(last.count, '5 / 5')
       assert.match(last.bonus ?? '', /×3/)
+      assert.equal(last.options, 4, 'the question is back')
       assert.deepEqual(errors, [])
     } finally {
       await context.close()
+      await wall.context.close()
     }
   })
 })

@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
+import { useGameStore } from '../../store/gameStore'
 import { bankOptions } from './bank'
-import { drawQuestions, perfectScore, slotAt } from './draw'
+import { BASE_POINTS, drawQuestions, perfectScore, pointsFor, slotAt, ULTIMATE_SLOTS } from './draw'
 import { questionScore } from './scoring'
+import { quizTimeline, sittingAt, timelineLength } from './timeline'
 import './QuizGame.css'
 
 type Picks = Record<string, string>
@@ -11,6 +13,9 @@ type Picks = Record<string, string>
 /** After the answer is shown the round moves on by itself - five seconds, no
  *  button, because half the room is still reading when the next one lands. */
 const REVIEW_SECONDS = 5
+
+/** One question's cycle, used only until the node arrives with its own figure. */
+const FALLBACK_SECONDS_EACH = 20 + REVIEW_SECONDS
 
 export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex: number }) {
   const [picks, setPicks] = useState<Picks>({})
@@ -25,37 +30,48 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   // The five questions are drawn from the seed `room:node`, the same seed the
   // wall uses. `Math.random()` here would give every iPad its own round.
   const questions = useMemo(() => drawQuestions(`${room}:${nodeIndex}`), [room, nodeIndex])
-  const { cycles, totalMs } = useMemo(
-    () => ({
-      cycles: questions.map((item) => (item.time_limit + REVIEW_SECONDS) * 1000),
-      totalMs: questions.reduce(
-        (sum, item) => sum + (item.time_limit + REVIEW_SECONDS) * 1000,
-        0,
-      ),
-    }),
-    [questions],
-  )
+  // The schedule is the flow node's, not this screen's: it carries the bonus
+  // cards' length and which questions they open, and the wall and the engine
+  // read the same two fields. A disagreement would put the room a question
+  // apart, so it is reported where a developer will see it.
+  const node = useGameStore((state) => state.node)
+  const segments = useMemo(() => {
+    const bonusQuestions = node?.bonus_questions ?? []
+    const fromSlots = ULTIMATE_SLOTS.map((slot, at) => (slot.multiplier > 1 ? at + 1 : 0))
+      .filter((number) => number > 0)
+    if (
+      import.meta.env?.DEV &&
+      bonusQuestions.length > 0 &&
+      bonusQuestions.join(',') !== fromSlots.join(',')
+    ) {
+      console.error(
+        `[quiz] bonus_questions ${bonusQuestions.join(',')} does not match the slots ${fromSlots.join(',')}`,
+      )
+    }
+    return quizTimeline({
+      count: node?.questions ?? questions.length,
+      secondsEachMs: (node?.seconds_each ?? FALLBACK_SECONDS_EACH) * 1000,
+      bonusIntroMs: (node?.bonus_intro_sec ?? 0) * 1000,
+      bonusQuestions,
+    })
+  }, [node?.bonus_questions, node?.bonus_intro_sec, node?.seconds_each, node?.questions, questions.length])
+  const totalMs = useMemo(() => timelineLength(segments), [segments])
 
   // Frozen while the operator has the show paused, so a pause stops the
   // questions too instead of letting them expire off-screen.
   const elapsed = useNodeElapsed()
 
   // Read off the node clock, exactly as the engine derives it for the big
-  // screen: one cycle per question from the first second.
+  // screen: walk the schedule from the first second.
   const stageMs = elapsed
   const finished = stageMs >= totalMs
 
-  const index = useMemo(() => {
-    let end = 0
-    for (let at = 0; at < cycles.length; at += 1) {
-      end += cycles[at]
-      if (stageMs < end) return at
-    }
-    return questions.length - 1
-  }, [stageMs, cycles, questions.length])
-
-  const cycleStart = cycles.slice(0, index).reduce((sum, cycle) => sum + cycle, 0)
-  const inCycleMs = stageMs - cycleStart
+  const sitting = sittingAt(segments, stageMs)
+  const index = sitting?.segment.index ?? 0
+  // A bonus card is its own stretch of the round, not part of the question's
+  // clock: the countdown has not started yet.
+  const onBonusCard = sitting?.segment.kind === 'bonus'
+  const inCycleMs = !onBonusCard && sitting ? sitting.inMs : 0
 
   const question = questions[index]
   const picked = picks[question.id]
@@ -141,14 +157,14 @@ return (
 
         <div className="hud__bar">
           <span className="hud__chevrons" aria-hidden="true" />
-          <span className="hud__event">Pick one</span>
-          {slotAt(index).multiplier > 1 && (
+          <span className="hud__event">{onBonusCard ? 'Bonus' : 'Pick one'}</span>
+          {slotAt(index).multiplier > 1 && !onBonusCard && (
             <span className="quiz__bonus">bonus ×{slotAt(index).multiplier}</span>
           )}
           <span className="quiz__count">
             {index + 1} / {questions.length}
           </span>
-          {!revealed && (
+          {!revealed && !onBonusCard && (
             <span className={`quiz__timer ${secondsLeft <= 5 ? 'is-urgent' : ''}`}>
               {secondsLeft}s
             </span>
@@ -156,6 +172,14 @@ return (
         </div>
 
         <div className="hud__stage quiz__stage">
+          {onBonusCard ? (
+            <BonusCard
+              index={index}
+              multiplier={slotAt(index).multiplier}
+              seconds={node?.bonus_intro_sec ?? 3}
+            />
+          ) : (
+            <>
           <p className="quiz__from">{slotAt(index).label}</p>
           <p className="quiz__question">{question.text}</p>
           <div className="quiz__options">
@@ -210,9 +234,48 @@ return (
               </p>
             </div>
           )}
+            </>
+          )}
         </div>
       </div>
     </div>
   </div>
 )
+}
+
+/** The three seconds in front of a bonus question.
+ *
+ * The badge in the bar says "bonus ×2" quietly, which nobody reads once they are
+ * answering. This is the same fact at the size of the whole screen, for as long
+ * as the flow allows, so the jump in stakes lands before the question does.
+ */
+function BonusCard({
+  index,
+  multiplier,
+  seconds,
+}: {
+  index: number
+  multiplier: number
+  seconds: number
+}) {
+  return (
+    <section className="quiz__bonuscard" aria-live="polite">
+      <div className="quiz__bonusgrid" aria-hidden="true" />
+      <div className="quiz__bonusring" aria-hidden="true">
+        <span />
+        <span />
+      </div>
+      <p className="quiz__bonustag">Bonus round</p>
+      <p className="quiz__bonusmult">
+        <span className="quiz__bonussign">×</span>
+        <span className="quiz__bonusdigit">{multiplier}</span>
+      </p>
+      <p className="quiz__bonusworth">
+        Pays <b>{pointsFor(index)}</b> instead of {BASE_POINTS}
+      </p>
+      <div className="quiz__bonusmeter" aria-hidden="true">
+        <span style={{ animationDuration: `${seconds}s` }} />
+      </div>
+    </section>
+  )
 }
