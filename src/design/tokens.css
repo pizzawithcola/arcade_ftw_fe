@@ -18,6 +18,12 @@
   --c-warning: #e8b33a;      /* paused, countdown caution, lost socket */
   --c-team-alt: #e9e9ec;     /* the second team on a red/black board */
 
+  /* Results on the Sabotage reveal. Brighter than the brand red, which is
+     2.83:1 on black and unreadable at label size; these are the only two
+     colours in the app that mean "you won" and "you lost". */
+  --c-win: #35d07f;          /* a column your side took */
+  --c-lose: #ff5257;         /* a column your side did not */
+
   /* Sabotage's two jobs. Purple attacks, cyan defends. They have to appear side
      by side — the rules and the round legend name both at once — so they cannot
      ride on --c-brand, which flips to whichever side the reader is on. */

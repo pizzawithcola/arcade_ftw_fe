@@ -35,8 +35,8 @@ const COPY: Record<number, Record<string, Record<SabotageVoice, string>>> = {
     data: {
       broke: 'You successfully got the data from phishing emails',
       failed: "You couldn't get any data from phishing emails",
-      held: 'You successfully stopped them taking your data',
-      lost: "You couldn't stop them taking your data",
+      held: 'You successfully kept your data out of the phishing emails',
+      lost: "You couldn't keep your data out of the phishing emails",
     },
     people: {
       broke: 'You successfully got an employee to click',
@@ -45,31 +45,31 @@ const COPY: Record<number, Record<string, Record<SabotageVoice, string>>> = {
       lost: "You couldn't stop an employee clicking",
     },
     infra: {
-      broke: 'You successfully got past their email filter',
-      failed: 'Your attack on their Infra was blocked',
-      held: 'You successfully blocked the attack on your Infra',
-      lost: "You couldn't block the attack on your Infra",
+      broke: 'You successfully got your phishing email past their filter',
+      failed: 'Their email filter blocked your phishing email',
+      held: 'Your email filter blocked the phishing email',
+      lost: 'The phishing email got past your email filter',
     },
   },
   2: {
     // CEO impersonation - the only control is a callback.
     data: {
-      broke: 'You successfully got the money released',
-      failed: "You couldn't get the money released",
+      broke: 'You successfully got the money sent to your account',
+      failed: "You couldn't get any money sent",
       held: 'You successfully kept the money in the company',
-      lost: "You couldn't stop the money leaving",
+      lost: "You couldn't stop the money leaving the company",
     },
     people: {
-      broke: 'You successfully got an employee to authorise it',
-      failed: "You couldn't get any employee to authorise it",
-      held: 'You successfully stopped every employee authorising it',
-      lost: "You couldn't stop an employee authorising it",
+      broke: 'You successfully got an employee to approve the payment',
+      failed: "You couldn't get any employee to approve the payment",
+      held: 'You successfully stopped every employee approving it',
+      lost: "You couldn't stop an employee approving the payment",
     },
     infra: {
-      broke: 'You successfully got past their approval checks',
-      failed: 'Your attack on their Infra was blocked',
-      held: 'You successfully blocked the attack on your Infra',
-      lost: "You couldn't block the attack on your Infra",
+      broke: 'You successfully got past their payment checks',
+      failed: 'Their payment checks blocked your fake CEO request',
+      held: 'Your payment checks blocked the fake CEO request',
+      lost: 'The fake CEO request got past your payment checks',
     },
   },
   3: {
@@ -87,10 +87,10 @@ const COPY: Record<number, Record<string, Record<SabotageVoice, string>>> = {
       lost: "You couldn't keep control of the AI",
     },
     infra: {
-      broke: "You successfully got past the AI's rules",
-      failed: 'Your attack on their Infra was blocked',
-      held: 'You successfully blocked the attack on your Infra',
-      lost: "You couldn't block the attack on your Infra",
+      broke: "You successfully got past the AI's safety rules",
+      failed: "The AI's safety rules blocked your instructions",
+      held: "Your AI's safety rules blocked the instructions",
+      lost: "The instructions got past your AI's safety rules",
     },
   },
   4: {
@@ -108,10 +108,10 @@ const COPY: Record<number, Record<string, Record<SabotageVoice, string>>> = {
       lost: "You couldn't stop staff trusting a fake source",
     },
     infra: {
-      broke: 'You successfully got past their source checks',
-      failed: 'Your attack on their Infra was blocked',
-      held: 'You successfully blocked the attack on your Infra',
-      lost: "You couldn't block the attack on your Infra",
+      broke: 'You successfully got your fake source past their checks',
+      failed: 'Their source checks blocked your fake source',
+      held: 'Your source checks blocked the fake source',
+      lost: 'The fake source got past your source checks',
     },
   },
 }

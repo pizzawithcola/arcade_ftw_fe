@@ -474,13 +474,20 @@ describe('the sabotage draw', () => {
         assert.match(row.attack ?? '', /^\d+$/, 'each row leads with the attack score')
         assert.match(row.defence ?? '', /^\d+$/, 'then the defence score')
         assert.ok(['WIN', 'LOSE'].includes(row.verdict ?? ''), `row verdict: ${row.verdict}`)
-        // Plain English, same shape every time: what your side did, or did not.
+        // Plain English, no metaphor: whoever the sentence is about, it says
+        // what happened in the words a first-time player already knows.
         assert.match(
           row.sentence ?? '',
-          /^(You successfully |You couldn't |Your attack on their Infra was blocked)/,
+          /^(You successfully|You couldn't|Your |Their |The )/,
           `row copy stays literal: ${row.sentence}`,
         )
       }
+      // Round 1 is phishing, and every line has to say so in its own column's
+      // terms - the generic fallback this replaced was true of nothing.
+      assert.match(reveal.rows[0].sentence ?? '', /phishing/i)
+      assert.match(reveal.rows[1].sentence ?? '', /employee/i)
+      assert.match(reveal.rows[2].sentence ?? '', /filter/i)
+
       assert.match(
         reveal.score ?? '',
         /^Attacker( \(You\))?\+\d+\$[\d,]+ spent \(\$[\d,]+ left\):Defender( \(You\))?\+\d+\$[\d,]+ spent \(\$[\d,]+ left\)$/,

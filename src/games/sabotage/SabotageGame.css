@@ -840,20 +840,27 @@
   color: var(--c-text-dim);
 }
 
+/* Green or red, and boxed: the five-second read is "did I win this column", so
+   the answer is a badge rather than a word that has to be found first. */
 .sab__linewin {
   justify-self: end;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: 0.72em;
+  font-size: 0.8em;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
 }
 
 .sab__linewin.is-win {
-  color: var(--c-text);
+  color: var(--c-win);
+  background: color-mix(in srgb, var(--c-win) 16%, transparent);
 }
 
 .sab__linewin.is-lose {
-  color: var(--c-text-dim);
+  color: var(--c-lose);
+  background: color-mix(in srgb, var(--c-lose) 16%, transparent);
 }
 
 /* Both sides on one row: who, what the round paid them, and what it cost them.
