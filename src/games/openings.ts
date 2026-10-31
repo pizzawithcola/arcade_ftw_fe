@@ -8,13 +8,11 @@
  * backend owns the slot (`type: "opening"` plus `title_sec` in the flow); this
  * file owns the words, because copy changes more often than the rundown.
  *
- * Three rules for the copy, learned from running the show:
- *   1. **Three points, never more than four.** Twelve seconds is one glance: if
- *      a point needs a second reading it will not be read at all.
- *   2. Every point names the physical action ("rate", "drag", "tap"), because
- *      people read this while holding the iPad and nothing else.
- *   3. No jargon. "Flagging innocent text costs you" lands; "false positive
- *      penalty" does not.
+ * The wording below is the client's, supplied verbatim - including its
+ * punctuation and its two known slips ("trust(green)", "choices loses points").
+ * Do not copy-edit it: only the person whose show this is may change how it
+ * reads. Everything else in this file (structure, timings, the welcome map) is
+ * fair game.
  *
  * The name card carries the name and nothing else: three seconds is long enough
  * for a title and not long enough for a sentence under it.
@@ -37,9 +35,9 @@ const OPENINGS: GameOpening[] = [
     name: 'AI Hallucination',
     icon: '/game_icons/hallucination_icon.PNG',
     rules: [
-      'Three AI answers. Some of them are completely made up.',
-      'Drag the trust scale: left to doubt it, right to believe it.',
-      'Trusting a fake and doubting a fact cost you the same.',
+      'Review the AI response',
+      'Drag right if you trust(green), and drag left if you have doubts (yellow)',
+      'Your confidence affects your score',
     ],
   },
   {
@@ -47,9 +45,9 @@ const OPENINGS: GameOpening[] = [
     name: 'Data Shadow',
     icon: '/game_icons/data_icon.PNG',
     rules: [
-      'One post from the AI assistant, with private details left in it.',
-      'Drag over anything that identifies a person.',
-      'Real leaks score. Flagging innocent text costs you.',
+      'AI has generated content for your social media',
+      'Drag and click to report the data breach',
+      'Correct answers get points, incorrect choices loses points',
     ],
   },
   {
@@ -65,9 +63,9 @@ const OPENINGS: GameOpening[] = [
     name: 'Ultimate Showdown',
     icon: '/game_icons/ultimate_icon.PNG',
     rules: [
-      'Five questions from everything tonight. Four answers each.',
-      'Only a correct answer scores - speed does not matter.',
-      'Question four is worth double. Question five is worth triple.',
+      'Five chances to test your knowledge',
+      'Fast and correct answers gain more points',
+      'Bonus rounds can shake up the rankings on the leaderboard',
     ],
   },
 ]

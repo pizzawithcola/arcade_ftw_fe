@@ -213,10 +213,13 @@ describe('an opening hands over from its name to its rules', () => {
       await snap(page, 'ipad-opening-rules.png')
       assert.match(rules.tab, /how to play/i)
       assert.equal(rules.lead, null, 'the rules half still has a lead line')
-      assert.ok(rules.points.length >= 3 && rules.points.length <= 4, `${rules.points.length} points`)
-      for (const point of rules.points) {
-        assert.ok(point.length < 100, `a point is too long to read in 12s: "${point}"`)
-      }
+      // The three points are the client's own wording, character for character.
+      // If this assertion trips, someone copy-edited supplied copy: put it back.
+      assert.deepEqual(rules.points, [
+        'Review the AI response',
+        'Drag right if you trust(green), and drag left if you have doubts (yellow)',
+        'Your confidence affects your score',
+      ])
     } finally {
       await context.close()
     }
