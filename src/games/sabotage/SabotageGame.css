@@ -38,6 +38,29 @@
   gap: clamp(0.4rem, 1vw, 0.8rem);
 }
 
+/* Left cell of the header: the chevrons, and the pause badge when the operator
+   has stopped the clock. */
+.sab__headleft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.sab__paused {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--c-warning);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c-warning) 16%, transparent);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.55rem, 1.2vw, 0.68rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--c-warning);
+}
+
 .sab__headright {
   display: flex;
   align-items: center;
@@ -299,38 +322,13 @@
   );
 }
 
-.sab__scenehead {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.34rem 0.65rem;
-  min-width: 0;
-  padding-bottom: 0.1rem;
-}
-
-.sab__sceneround {
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.6rem, 1.25vw, 0.72rem);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--c-text-dim);
-}
-
-.sab__sceneattacker {
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.6rem, 1.25vw, 0.72rem);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--c-brand);
-}
-
 /* The scenario name is the one line that has to survive a projector: it wraps
    rather than clipping, and it is the loudest thing in the card. */
 .sab__scenetitle {
   margin: 0;
-  /* The panel is a third of the stage height and holds three lines, so the
-     theme name takes the space rather than leaving a band of nothing. */
-  font-size: clamp(1.25rem, 3.4vw, 2.05rem);
+  /* Two lines only now - the name, then what to do with the cards - so the name
+     stops trying to fill the panel and shrinks back to a headline. */
+  font-size: clamp(1.25rem, 3.2vw, 1.9rem);
   font-weight: 700;
   line-height: 1.12;
   overflow-wrap: break-word;
@@ -344,47 +342,6 @@
   /* The one sentence that explains the round, so it is body copy rather than a
      caption: the labels above it already carry the dim weight. */
   color: var(--c-text);
-}
-
-.sab__targetbadge {
-  padding: 0.13rem 0.55rem;
-  border-radius: 4px;
-  background: var(--c-brand-deep);
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.6rem, 1.25vw, 0.72rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--c-text);
-}
-
-.sab__myrole {
-  margin-left: auto;
-  text-transform: uppercase;
-  padding: 0.12rem 0.55rem;
-  border: 1px solid var(--c-border);
-  border-radius: 999px;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.65rem, 1.4vw, 0.78rem);
-  letter-spacing: 0.12em;
-  color: var(--c-text);
-  white-space: nowrap;
-}
-
-/* The badge says what you do, not which side you are on - the side is already
-   on the reveal and the final board. Attacking is the brand fill, defending is
-   the light fill, so the two jobs are told apart at a glance from across a
-   table. */
-.sab__myrole.is-attacker,
-.sab__myrole.is-defender {
-  border-color: var(--c-brand);
-  color: var(--c-brand);
-}
-
-.sab__myrole.is-spectator {
-  border-color: var(--c-warning);
-  color: var(--c-warning);
 }
 
 .sab__spectator {
@@ -406,7 +363,7 @@
      stretch it into a sliver. The hand is centred in what the stage has left;
      at this size the slack is only a few dozen pixels a side, so the gap under
      the build panel stays tight. */
-  grid-template-rows: minmax(auto, clamp(9rem, 40vh, 20rem));
+  grid-template-rows: minmax(auto, clamp(11rem, 50vh, 26rem));
   align-content: center;
   gap: clamp(0.3rem, 0.75vw, 0.6rem);
   /* Takes whatever height the stage has left, so the row grows with the iPad
@@ -417,9 +374,10 @@
 
 .sab__card {
   display: grid;
-  /* Title, detail, then the numbers pinned to the bottom edge - the shape of a
-     playing card, with the blank space in the middle where it belongs. */
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* The art takes the top; everything else hangs off the bottom edge, so the
+     name and the detail sit against the numbers they belong to instead of
+     floating up under the icon with a void underneath. */
+  grid-template-rows: minmax(0, 1fr) auto auto;
   gap: 0.28rem;
   min-height: 0;
   /* A grid item defaults to min-width: auto, which lets the price badge push
@@ -453,7 +411,7 @@
    pay for artwork it does not have. A deck is one side of one round, so the
    hand is never half dressed. */
 .sab__card.has-icon {
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
 }
 
 .sab__card.is-locked {
@@ -468,7 +426,7 @@
      be clamped in the same unit: a percentage inside this box resolves against
      an auto-sized grid row and is ignored, which let square art paint over the
      card name. */
-  --icon: clamp(3.2rem, 9vh, 5.2rem);
+  --icon: clamp(6.4rem, 18vh, 10.4rem);
   display: grid;
   place-items: center;
   height: var(--icon);
@@ -486,10 +444,12 @@
   border-radius: 4px;
 }
 
-/* The name owns the first line and the whole card width. */
+/* The name owns the first line and the whole card width. It is bottom-aligned
+   in the flexible row so the copy hugs the score lines. */
 .sab__cardtop {
   display: flex;
   align-items: flex-start;
+  align-self: end;
   min-width: 0;
 }
 
@@ -504,6 +464,12 @@
 .sab__cardname {
   flex: 1;
   min-width: 0;
+  /* Two lines are always reserved and the text sits on the bottom of them, so
+     a one-line name and a two-line name start their description at the same
+     height instead of the short ones riding up. */
+  display: flex;
+  align-items: flex-end;
+  min-height: 2.4em;
   font-size: clamp(0.78rem, 1.7vw, 0.98rem);
   font-weight: 600;
   line-height: 1.2;
@@ -628,9 +594,8 @@
   gap: 0 0.4rem;
 }
 
-/* Two lines of spend, right-aligned: what the earlier rounds already took and
-   what the hand on the table costs so far. Tabular figures so the two numbers
-   sit on the same column as the hand changes. */
+/* One line of spend: what the hand on the table costs so far. Tabular figures
+   so the number does not jitter as cards go on and off. */
 .sab__spend {
   display: grid;
   gap: 0.1rem;
@@ -671,15 +636,6 @@
   gap: 0.5rem;
 }
 
-.sab__buildlabel {
-  margin-right: 0.2rem;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.58rem, 1.3vw, 0.72rem);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-}
-
 .sab__budgetnum {
   /* A number was three glyphs wide; $100,000 is eight, so the panel sizes the
      badge down rather than letting it walk into the label. */
@@ -688,13 +644,6 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--c-text);
-}
-
-.sab__budgetlabel {
-  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--c-text-dim);
 }
 
 .sab__picked {
@@ -794,22 +743,16 @@
   color: var(--c-text);
 }
 
-.sab__reveal.is-breached .sab__verdict {
+/* The headline is about the reader, not about the attacker, so it lights up in
+   whichever colour the reader is wearing: purple for an attack that landed, cyan
+   for a defence that held, and plain white for the side that just lost. */
+.sab__reveal.is-my-win .sab__verdict {
   color: var(--c-brand);
   text-shadow: 0 0 30px color-mix(in srgb, var(--c-brand) 50%, transparent);
 }
 
-.sab__verdictsub {
-  margin: 0;
-  font-size: clamp(0.72rem, 1.6vw, 0.86rem);
-  letter-spacing: 0.06em;
-  color: var(--c-text-muted);
-}
-
-.sab__dims {
-  display: grid;
-  gap: 0.25rem;
-  width: min(100%, 30rem);
+.sab__reveal.is-my-loss .sab__verdict {
+  color: var(--c-text);
 }
 
 /* The reveal speaks in sentences now: one line a column, in the reader's own
@@ -826,9 +769,9 @@
 
 .sab__line {
   display: grid;
-  grid-template-columns: 4.2rem minmax(0, 1fr);
+  grid-template-columns: 4.4rem 5rem minmax(0, 1fr) auto;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.55rem;
   padding: 0.3rem 0.55rem;
   border: 1px solid var(--c-border);
   border-left-width: 3px;
@@ -869,73 +812,99 @@
   color: var(--c-text);
 }
 
-.sab__dim {
-  display: grid;
-  grid-template-columns: 4rem 1.6rem 1.4rem 1.6rem 1fr;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  background: var(--c-surface-raised);
-  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
-}
-
-.sab__dim.is-target {
-  border-color: var(--c-text-muted);
-}
-
-.sab__dimname {
-  text-align: left;
-  letter-spacing: 0.1em;
-  color: var(--c-text-muted);
-}
-
-.sab__dimnum {
+/* The two numbers, attacker first. The side that took the column is the only
+   bold one; a tie leaves both bold, because neither gave ground. */
+.sab__linescore {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3rem;
   font-variant-numeric: tabular-nums;
-  text-align: right;
-  color: var(--c-text);
+  white-space: nowrap;
 }
 
-.sab__dimvs {
-  font-size: 0.7em;
+.sab__linescore b {
+  font-size: 1.15em;
+  font-weight: 400;
   color: var(--c-text-dim);
 }
 
-.sab__dimmark {
-  text-align: right;
-  font-size: 0.82em;
-  letter-spacing: 0.1em;
-  color: var(--c-text-muted);
-}
-
-.sab__dim.is-break .sab__dimmark {
-  color: var(--c-brand);
-}
-
-.sab__dim.is-hold .sab__dimmark {
+.sab__linescore b.is-ahead {
+  font-weight: 800;
   color: var(--c-text);
 }
 
-.sab__points {
-  display: flex;
-  gap: clamp(0.8rem, 3vw, 2rem);
-  font-size: clamp(0.85rem, 2vw, 1.1rem);
-  letter-spacing: 0.08em;
-  color: var(--c-text-muted);
+.sab__linescore em {
+  font-style: normal;
+  font-size: 0.8em;
+  color: var(--c-text-dim);
 }
 
-.sab__points .is-me {
+.sab__linewin {
+  justify-self: end;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.sab__linewin.is-win {
   color: var(--c-text);
 }
 
-/* What the round cost and what is left. Sits under the points because the
-   money is the reason the next round looks different. */
-.sab__spend {
-  margin: 0;
-  font-size: clamp(0.66rem, 1.5vw, 0.84rem);
+.sab__linewin.is-lose {
+  color: var(--c-text-dim);
+}
+
+/* Both sides on one row: who, what the round paid them, and what it cost them.
+   The two columns are read across, so the colon between them is the only
+   separator the block needs. */
+.sab__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(0.5rem, 1.6vw, 1.2rem);
+  width: min(100%, 40rem);
+  padding-top: clamp(0.3rem, 0.8vh, 0.5rem);
+  border-top: 1px solid var(--c-border);
+}
+
+.sab__scorecol {
+  display: grid;
+  justify-items: start;
+  gap: 0.1rem;
+  min-width: 0;
+  opacity: 0.62;
+}
+
+.sab__scorecol.is-me {
+  opacity: 1;
+}
+
+.sab__scorediv {
+  font-size: clamp(1rem, 2.4vw, 1.5rem);
+  color: var(--c-text-dim);
+}
+
+.sab__scorewho {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.6rem, 1.35vw, 0.74rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.sab__scorepts {
+  font-size: clamp(1.1rem, 2.8vw, 1.7rem);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  line-height: 1.05;
+  color: var(--c-text);
+}
+
+.sab__scorespend {
+  font-size: clamp(0.64rem, 1.45vw, 0.8rem);
+  font-variant-numeric: tabular-nums;
   color: var(--c-text-dim);
 }
 

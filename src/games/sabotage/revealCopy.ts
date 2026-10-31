@@ -121,6 +121,48 @@ const THE_BET: Record<number, string> = {
   4: 'The bet: one bad source makes a confident wrong answer.',
 }
 
+/** What the round asks of you, said as an instruction rather than a story.
+ *  It sits under the round's name on the picking screen, where the player has
+ *  just looked up from the draw and needs to know what to do with the cards. */
+const SELECT_BRIEF: Record<number, Record<'attacker' | 'defender', string>> = {
+  1: {
+    attacker: 'Choose the cards below to prepare a strong phishing email',
+    defender: 'Choose the cards below to defend from the threats of phishing emails',
+  },
+  2: {
+    attacker: 'Choose the cards below to prepare a convincing CEO impersonation',
+    defender: 'Choose the cards below to defend from the threats of CEO impersonation',
+  },
+  3: {
+    attacker: 'Choose the cards below to manipulate the AI assistant',
+    defender: 'Choose the cards below to defend the AI assistant from manipulation',
+  },
+  4: {
+    attacker: "Choose the cards below to poison the AI's sources",
+    defender: "Choose the cards below to defend the AI's sources from poisoning",
+  },
+}
+
+/** The round's name as a heading. The engine's theme strings are sentence case
+ *  ("Phishing email"), which is right mid-sentence and wrong as a title, and
+ *  CSS `capitalize` would also give us "Manipulating The AI Assistant". */
+const ROUND_TITLE: Record<number, string> = {
+  1: 'Phishing Email',
+  2: 'CEO Impersonation',
+  3: 'Manipulating the AI Assistant',
+  4: "Poisoning the AI's Sources",
+}
+
+export function roundTitle(round: number, fallback: string): string {
+  return ROUND_TITLE[round] ?? fallback
+}
+
+/** The instruction for this round and this side; undefined for a spectator. */
+export function selectBrief(round: number, role: string | undefined): string | undefined {
+  if (role !== 'attacker' && role !== 'defender') return undefined
+  return SELECT_BRIEF[round]?.[role]
+}
+
 /**
  * Which voice a side reads for one column.
  *

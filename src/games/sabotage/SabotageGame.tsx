@@ -9,7 +9,7 @@ import {
   type SabotageTeam,
 } from '../../store/gameStore'
 import { CARD_ICONS, deckHasArt } from './cardIcons'
-import { revealLine } from './revealCopy'
+import { revealLine, roundTitle, selectBrief } from './revealCopy'
 import './SabotageGame.css'
 
 const DOMAIN_LABEL: Record<SabotageDomain, string> = {
@@ -209,7 +209,12 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
           <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
           <div className="sab__head">
-            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="sab__headleft">
+              <span className="hud__chevrons" aria-hidden="true" />
+              {/* The only place the pause shows. It used to sit in the corner of
+                  the spend card, where it read as part of the money. */}
+              {sabotage.paused && <span className="sab__paused">Game Paused</span>}
+            </span>
             <div className="hud__tab">AI Sabotage</div>
             <div className="sab__headright">
               <span className="sab__round">
@@ -258,27 +263,22 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                   I still afford", and the hand underneath is where both are
                   acted on. */}
               <div className="sab__top">
-                {/* Which round, who attacks, what it is scored on, and the one
-                    line that says what is happening. A player who reads nothing
-                    else on this screen still knows what they are doing. */}
+                {/* The round's name, then one instruction that starts with who
+                    you are. Everything else the header used to carry - the round
+                    number, the target badge, who attacks - is gone: the cards are
+                    the only thing to act on, so nothing may compete with them. */}
                 <div className="sab__scene">
-                  <div className="sab__scenehead">
-                    <span className="sab__sceneround">
-                      Round {sabotage.round} of {sabotage.rounds}
-                    </span>
-                    <span className="sab__sceneattacker">
-                      {teamName(sabotage.attacker)} attacks
-                    </span>
-                    <span className={`sab__targetbadge is-${sabotage.target}`}>
-                      Target · {DOMAIN_LABEL[sabotage.target]}
-                    </span>
-                    <span className={`sab__myrole is-${myRole ?? 'spectator'}`}>
-                      You are {roleName(myRole).toLowerCase()}
-                    </span>
-                  </div>
-                  <p className="sab__scenetitle">{sabotage.theme}</p>
+                  <p className="sab__scenetitle">{roundTitle(sabotage.round, sabotage.theme)}</p>
                   <p className="sab__scenebrief">
-                    {myRole === 'defender' ? sabotage.defence_brief : sabotage.attack_brief}
+                    You are the{' '}
+                    <b
+                      className={
+                        myRole === 'defender' ? 'sab__roleword is-def' : 'sab__roleword is-atk'
+                      }
+                    >
+                      {myRole === 'defender' ? 'Defender' : 'Attacker'}
+                    </b>
+                    . {selectBrief(sabotage.round, myRole)}
                   </p>
                   {!myTeam && (
                     <p className="sab__spectator">
@@ -287,22 +287,16 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                   )}
                 </div>
 
-                {/* The live cost of the hand being assembled: what the team has
-                    already committed, what this round costs so far, and what is
-                    left to spend for the rest of the match. */}
+                {/* The live cost of the hand being assembled. Two numbers, not
+                    four: what is left for the match, and what this round costs
+                    so far. */}
                 <div className="sab__build">
                   <div className="sab__buildhead">
-                    <span className="sab__buildlabel">Live spend</span>
                     <span className="sab__budgetnum">{money(budgetLeft)}</span>
-                    <span className="sab__budgetlabel">left for all four rounds</span>
                   </div>
                   <div className="sab__spend">
-                    <span className="sab__spendrow">
-                      <b>Earlier rounds</b>
-                      <em>{money(build?.spent ?? 0)}</em>
-                    </span>
                     <span className="sab__spendrow is-now">
-                      <b>This round</b>
+                      <b>Spend for this round</b>
                       <em>{money(mineCost)}</em>
                     </span>
                   </div>
@@ -418,63 +412,86 @@ function Reveal({
 }) {
   const result = sabotage.last_result
   if (!result) return null
-  const iWon = result.winner !== null && result.winner === myTeam
   const attacker = result.attacker
   const defender = result.defender
   // A device with no team (a spectator) reads the attack's side of the story.
   const asAttacker = myTeam === undefined || myTeam === attacker
+  const mineWon = result.winner !== null && result.winner === myTeam
   const rows: SabotageDomain[] = ['data', 'people', 'infra']
-  return (
-    <div className={`sab__reveal ${result.broke_target ? 'is-breached' : 'is-held'}`}>
-      <p className="sab__verdict">{result.outcome.toUpperCase()}</p>
-      <p className="sab__verdictsub">
-        {teamName(attacker)} attacked {teamName(defender)} on{' '}
-        {DOMAIN_LABEL[result.target].toUpperCase()}
-      </p>
 
-      {/* One sentence a column, in this side's own voice: what happened beats
-          three numbers nobody has time to compare in five seconds. */}
+  // The headline is the same fact told from whichever side is holding the
+  // tablet: breaking the target is a success for one and a failure for the
+  // other, and "Narrow breach" said neither of those things to either of them.
+  const headline = asAttacker
+    ? result.broke_target
+      ? 'Successfully Attacked'
+      : 'Attack Failed'
+    : result.broke_target
+      ? 'Defense Failed'
+      : 'Successfully Defended'
+
+  return (
+    <div
+      className={`sab__reveal ${result.broke_target ? 'is-breached' : 'is-held'} ${
+        myTeam ? (mineWon ? 'is-my-win' : 'is-my-loss') : ''
+      }`}
+    >
+      <p className="sab__verdict">{headline}</p>
+
+      {/* One row a column: the two numbers first, then one sentence in this
+          side's voice, then the win or the loss of that column. The target is
+          the only row that carries the brand, because it is the row that
+          decided the round. */}
       <ul className="sab__lines">
         {rows.map((domain) => {
           const dim = result.dims.find((entry) => entry.domain === domain)
           if (!dim) return null
-          const line = revealLine(
-            result.round,
-            domain,
-            dim.result === 'break',
-            asAttacker,
-          )
+          const broke = dim.result === 'break'
+          const line = revealLine(result.round, domain, broke, asAttacker)
+          const mine = asAttacker ? broke : !broke
           return (
             <li
               key={domain}
               className={`sab__line is-${dim.result} ${dim.target ? 'is-target' : ''}`}
             >
               <span className="sab__linename">{DOMAIN_LABEL[domain]}</span>
+              <span className="sab__linescore">
+                <b className={broke ? 'is-ahead' : ''}>{dim.attack}</b>
+                <em>vs</em>
+                <b className={!broke ? 'is-ahead' : ''}>{dim.defence}</b>
+              </span>
               <span className="sab__linetext">{line}</span>
+              <span className={`sab__linewin ${mine ? 'is-win' : 'is-lose'}`}>
+                {mine ? 'WIN' : 'LOSE'}
+              </span>
             </li>
           )
         })}
       </ul>
 
-      <div className="sab__points">
-        <span className={attacker === myTeam ? 'is-me' : ''}>
-          {teamName(attacker)} +{result.points[attacker]}
+      {/* Both sides on one line each: what the round paid, then what it cost
+          and what it left. Read across, the two columns are the whole round. */}
+      <div className="sab__score">
+        <span className={`sab__scorecol ${attacker === myTeam ? 'is-me' : ''}`}>
+          <span className="sab__scorewho">
+            Attacker{attacker === myTeam ? ' (You)' : ''}
+          </span>
+          <span className="sab__scorepts">+{result.points[attacker]}</span>
+          <span className="sab__scorespend">
+            {money(result.attack_cost)} spent ({money(sabotage.budget[attacker] ?? 0)} left)
+          </span>
         </span>
-        <span className={defender === myTeam ? 'is-me' : ''}>
-          {teamName(defender)} +{result.points[defender]}
+        <span className="sab__scorediv" aria-hidden="true">:</span>
+        <span className={`sab__scorecol ${defender === myTeam ? 'is-me' : ''}`}>
+          <span className="sab__scorewho">
+            Defender{defender === myTeam ? ' (You)' : ''}
+          </span>
+          <span className="sab__scorepts">+{result.points[defender]}</span>
+          <span className="sab__scorespend">
+            {money(result.defence_cost)} spent ({money(sabotage.budget[defender] ?? 0)} left)
+          </span>
         </span>
       </div>
-      <p className="sab__spend">
-        {teamName(attacker)} spent {money(result.attack_cost)} · {teamName(defender)} spent{' '}
-        {money(result.defence_cost)}
-      </p>
-      <p className="sab__spend">
-        Left to spend — {TEAM_LABEL.red} {money(sabotage.budget.red ?? 0)} · {TEAM_LABEL.blue}{' '}
-        {money(sabotage.budget.blue ?? 0)}
-      </p>
-      {myTeam && (
-        <p className="sab__verdictsub">{iWon ? 'Your side won the round' : 'Your side lost the round'}</p>
-      )}
     </div>
   )
 }

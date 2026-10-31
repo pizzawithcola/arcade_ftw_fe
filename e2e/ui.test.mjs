@@ -406,6 +406,79 @@ describe('the sabotage draw', () => {
         'one line every two seconds, so each gets read',
       )
       assert.equal(rules.lastOpacity, '0', 'the last line is still waiting its turn')
+
+      // Then the cards. Everything the header used to carry is gone: one round
+      // name, one instruction that starts with who you are, two money numbers.
+      await page.waitForSelector('.sab__cards', { timeout: 30000 })
+      const pick = await page.evaluate(() => {
+        const text = (sel) => document.querySelector(sel)?.textContent?.replace(/\s+/g, ' ').trim()
+        const stage = document.querySelector('.sab__stage')
+        const icon = document.querySelector('.sab__cardicon img')
+        return {
+          title: text('.sab__scenetitle'),
+          brief: text('.sab__scenebrief'),
+          head: Boolean(document.querySelector('.sab__scenehead')),
+          build: text('.sab__build'),
+          iconHeight: icon ? Math.round(icon.getBoundingClientRect().height) : 0,
+          cardHeight: Math.round(document.querySelector('.sab__card').getBoundingClientRect().height),
+          overflow: stage.scrollHeight > stage.clientHeight,
+        }
+      })
+      assert.equal(pick.title, 'Phishing Email')
+      assert.match(pick.brief ?? '', /^You are the (Attacker|Defender)\. Choose the cards below to /)
+      assert.equal(pick.head, false, 'the round number and the target badge are gone')
+      assert.match(pick.build ?? '', /^\$[\d,]+Spend for this round/)
+      assert.equal(
+        (pick.build ?? '').includes('all four rounds'),
+        false,
+        'the budget carries no label any more',
+      )
+      assert.equal((pick.build ?? '').includes('Earlier rounds'), false)
+      assert.ok(pick.iconHeight >= 140, `the card art doubles: ${pick.iconHeight}px`)
+      assert.ok(pick.cardHeight >= 380, `the cards got taller: ${pick.cardHeight}px`)
+      assert.equal(pick.overflow, false, 'the stage still fits an iPad without scrolling')
+
+      await api.pause(ROOM)
+      await page.waitForSelector('.sab__paused', { timeout: 5000 })
+      const paused = await page.evaluate(
+        () => document.querySelector('.sab__paused')?.textContent?.trim(),
+      )
+      assert.equal(paused, 'Game Paused')
+      await api.resume(ROOM)
+
+      // Round 1 gives the picking screen 35s; the reveal lands after that.
+      await page.waitForSelector('.sab__reveal', { timeout: 60000 })
+      const reveal = await page.evaluate(() => {
+        const text = (sel) => document.querySelector(sel)?.textContent?.replace(/\s+/g, ' ').trim()
+        return {
+          verdict: text('.sab__verdict'),
+          rows: [...document.querySelectorAll('.sab__line')].map((li) => ({
+            name: li.querySelector('.sab__linename')?.textContent?.trim(),
+            attack: li.querySelector('.sab__linescore b')?.textContent?.trim(),
+            defence: li.querySelectorAll('.sab__linescore b')[1]?.textContent?.trim(),
+            verdict: li.querySelector('.sab__linewin')?.textContent?.trim(),
+          })),
+          score: text('.sab__score'),
+        }
+      })
+      assert.match(
+        reveal.verdict ?? '',
+        /^(Successfully Attacked|Attack Failed|Successfully Defended|Defense Failed)$/,
+      )
+      assert.deepEqual(
+        reveal.rows.map((row) => row.name),
+        ['Data', 'People', 'Infra'],
+      )
+      for (const row of reveal.rows) {
+        assert.match(row.attack ?? '', /^\d+$/, 'each row leads with the attack score')
+        assert.match(row.defence ?? '', /^\d+$/, 'then the defence score')
+        assert.ok(['WIN', 'LOSE'].includes(row.verdict ?? ''), `row verdict: ${row.verdict}`)
+      }
+      assert.match(
+        reveal.score ?? '',
+        /^Attacker( \(You\))?\+\d+\$[\d,]+ spent \(\$[\d,]+ left\):Defender( \(You\))?\+\d+\$[\d,]+ spent \(\$[\d,]+ left\)$/,
+        `both sides, one line each: ${reveal.score}`,
+      )
     } finally {
       await context.close()
     }
