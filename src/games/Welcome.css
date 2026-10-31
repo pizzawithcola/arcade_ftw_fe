@@ -274,3 +274,11 @@
   .welcome__title::after {
     animation: none;
   }
+
+  /* The cards still appear on the clock, just without the travel. */
+  .wcard,
+  .welcome__sub,
+  .welcome__rule {
+    transform: none;
+  }
+}
