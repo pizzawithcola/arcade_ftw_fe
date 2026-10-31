@@ -20,9 +20,7 @@
    and without this the stage lands in the middle row and is sized to its
    content, leaving the bottom third of the chassis empty. */
 .hud--game .hud__inner.sab__inner {
-  /* Header, the stage, and the colour legend pinned to the foot. The legend is
-     a reminder of where to sit, so it belongs under everything else. */
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .sab__syncing {
@@ -145,9 +143,14 @@
 
 /* Which colour is attacking this round. Both halves on one line, each in its own
    colour, because the player has to find the matching table before they sit. */
+/* Pinned to the foot of the frame on the draw screen. Absolutely positioned
+   rather than given a grid row: a third row would cost a `gap` even when the
+   legend is not rendered, which shortened the picking screen by 13px on every
+   other phase. */
 .sab__legend {
+  position: absolute;
+  inset: auto 0 clamp(0.9rem, 2.2vh, 1.4rem) 0;
   margin: 0;
-  align-self: end;
   padding-top: clamp(0.4rem, 1.2vh, 0.8rem);
   border-top: 1px solid var(--c-border);
   display: flex;
