@@ -181,7 +181,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     option_a: 'Whether the logo at the top looks correct',
     option_b: 'Whether the email greets you by your name',
     option_c: 'Whether it arrived during working hours',
-    option_d: 'Always verify the domain is really the company one',
+    option_d: 'Always verify the domain really belongs to the company',
     correct_option: 'D',
     time_limit: 20,
     explain:
