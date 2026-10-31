@@ -57,9 +57,26 @@
   font-weight: 600;
 }
 
+/* On the wall the card is the only thing on screen, so the points are set for
+   the back row and the block is centred in the frame rather than pinned to the
+   top. The numbers and the text are the same as the iPad's. */
+.opening--display {
+  align-content: center;
+  justify-items: center;
+}
+
+.opening--display .brief__rules {
+  width: auto;
+  max-width: 100%;
+}
+
 .opening--display .opening__point {
-  font-size: clamp(1rem, 1.35vw, 1.5rem);
+  font-size: clamp(1.15rem, 1.65vw, 1.9rem);
   line-height: 1.5;
+}
+
+.opening--display .brief__rules li {
+  font-size: clamp(1.15rem, 1.65vw, 1.9rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

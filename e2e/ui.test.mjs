@@ -521,13 +521,44 @@ describe('the Ultimate round', () => {
       await page.waitForTimeout(900)
       await device.page.waitForTimeout(900)
       const onWall = await page.evaluate(
-        () => document.querySelector('.display__question .display__prompt')?.textContent ?? '',
+        () => document.querySelector('.display__quiz .display__prompt')?.textContent ?? '',
       )
       const onIpad = await device.page.evaluate(
         () => document.querySelector('.quiz__question')?.textContent ?? '',
       )
       assert.ok(onWall.length > 0, 'the wall drew no question')
       assert.equal(onIpad.trim(), onWall.trim(), 'the iPad and the wall disagree')
+
+      // The Ultimate wall carries the four answers too, lettered like the
+      // iPads, so the room can read along and the host can call one out.
+      const options = await page.evaluate(() =>
+        [...document.querySelectorAll('.display__option')].map((li) => [
+          li.querySelector('.display__optionletter')?.textContent?.trim(),
+          li.querySelector('.display__optiontext')?.textContent?.trim(),
+        ]),
+      )
+      assert.equal(options.length, 4, 'the wall shows four options')
+      assert.deepEqual(
+        options.map(([letter]) => letter),
+        ['A', 'B', 'C', 'D'],
+      )
+      const onIpadOptions = await device.page.evaluate(() =>
+        [...document.querySelectorAll('.quiz__optiontext')].map((el) => el.textContent?.trim()),
+      )
+      assert.deepEqual(
+        options.map(([, text]) => text),
+        onIpadOptions,
+        'the wall and the iPad list the same four answers',
+      )
+
+      // Once the answers close, the wall swaps the question for the standings.
+      await page.waitForTimeout(21_000)
+      const board = await page.evaluate(() => ({
+        head: document.querySelector('.display__liveboardhead')?.textContent?.trim() ?? '',
+        rows: document.querySelectorAll('.display__liveboard .ldb__row').length,
+      }))
+      assert.equal(board.head, 'Standings')
+      assert.ok(board.rows > 0, 'the standings are empty')
     } finally {
       await context.close()
       await device.context.close()

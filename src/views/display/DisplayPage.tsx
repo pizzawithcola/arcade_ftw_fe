@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
+import { bankOptions } from '../../games/quiz/bank'
 import { drawQuestions, slotAt } from '../../games/quiz/draw'
 import { theBet } from '../../games/sabotage/revealCopy'
 import Welcome from '../../games/Welcome'
@@ -97,20 +98,27 @@ function OpeningOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: n
   return <Opening node={node} elapsedMs={elapsedMs} size="display" />
 }
 
-/** The Data Shadow post is one static page, so the big screen can show it whole. */
+/** The Data Shadow post is one static page, so the big screen can show it whole.
+ *
+ *  There is no report panel on the wall - reporting happens on the iPad - so the
+ *  right-hand column that the tablets give to that panel is free. The pictures
+ *  move into it and the copy gets the width, which is what lets the type be
+ *  readable from the back of the room. */
 function PostOnScreen() {
   return (
-    <article className="display__post">
-      <header className="display__posthead">
-        <span className="display__avatar">{POST_META.initials}</span>
-        <span>
-          <strong>{POST_META.author}</strong>
-          <em>{POST_META.headline}</em>
-        </span>
-      </header>
-      {BLOCKS.map((block, index) => (
-        <p key={index}>{block}</p>
-      ))}
+    <article className="display__post display__post--split">
+      <div className="display__posttext">
+        <header className="display__posthead">
+          <span className="display__avatar">{POST_META.initials}</span>
+          <span>
+            <strong>{POST_META.author}</strong>
+            <em>{POST_META.headline}</em>
+          </span>
+        </header>
+        {BLOCKS.map((block, index) => (
+          <p key={index}>{block}</p>
+        ))}
+      </div>
       {/* The wall shows the same pictures the players are judging. Read-only:
           nobody taps a projector, and the flag control stays on the iPad. */}
       <div className="display__postshots">
@@ -162,12 +170,24 @@ function questionOnScreen(
   }
 }
 
+/** Where in a question's own cycle we are, in milliseconds.
+ *
+ *  A quiz question is twenty seconds of answering and five of verdict, the same
+ *  split the iPad runs. The wall uses it to swap the options for the standings
+ *  once the answers are closed. */
+function inQuestionMs(question: QuestionState): number {
+  return question.seconds_each * 1000 - question.remaining_ms
+}
+
 /**
  * The question the whole room is answering.
  *
  * The engine says which one is current, so the screen and the iPads cannot
- * disagree. Options stay on the iPad: the screen is there to be read from six
- * metres away, and four options are not.
+ * disagree.
+ *
+ * Options belong on the iPad for a game the room plays at once, but the Ultimate
+ * round is the one people want to read along with, so its four answers are on the
+ * wall too - lettered, so the host can say "B" and everyone looks at the same box.
  */
 function QuestionOnScreen({
   kind,
@@ -176,7 +196,7 @@ function QuestionOnScreen({
 }: {
   kind: 'hallucination' | 'quiz'
   index: number
-  /** `room:node` - the wall draws the same five questions as the iPads. */
+  /** `room:node` - the wall draws the same questions as the iPads. */
   seed: string
 }) {
   if (kind === 'hallucination') {
@@ -209,7 +229,14 @@ function QuestionOnScreen({
             </div>
           </div>
         </div>
-        <p className="display__look">Trust it, or doubt it — on your iPad.</p>
+        {/* The two answers, in the colours the iPad's scale uses: green is
+            trust, amber is doubt. A reader at the back sees which way the room
+            is being asked to push before reading a single word. */}
+        <p className="display__choice">
+          <span className="display__choicetrust">Trust</span>
+          <span className="display__choiceor">or</span>
+          <span className="display__choicedoubt">Doubt</span>
+        </p>
       </article>
     )
   }
@@ -218,10 +245,18 @@ function QuestionOnScreen({
   if (!question) return null
   const slot = slotAt(index)
   return (
-    <article className="display__question">
+    <article className="display__quiz">
       <p className="display__prompt">{question.text}</p>
+      <ol className="display__options">
+        {bankOptions(question).map((option) => (
+          <li key={option.letter} className="display__option">
+            <span className="display__optionletter">{option.letter}</span>
+            <span className="display__optiontext">{option.text}</span>
+          </li>
+        ))}
+      </ol>
       <p className="display__look">
-        {slot.multiplier > 1 ? `BONUS ×${slot.multiplier} · ` : ''}Pick A, B, C or D on your iPad.
+        {slot.multiplier > 1 ? `BONUS ×${slot.multiplier} · ` : ''}Answer on your iPad.
       </p>
     </article>
   )
@@ -440,6 +475,13 @@ export default function DisplayPage() {
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
   const question = questionOnScreen(node, remaining) ?? broadcast
+  // The Ultimate wall shows the four options while the room is answering, then
+  // swaps them for the standings once the answers close - the same five seconds
+  // the iPads hold a verdict for.
+  const quizReviewing =
+    node?.type === 'quiz' &&
+    question !== null &&
+    inQuestionMs(question) >= (node.seconds_each ?? 0) * 1000 - 5_000
   // Sabotage has its own per-phase countdown; show that instead of the node's
   // 170-second slot, which only matters for when the flow moves on.
   const sabotageRemaining = sabotage
@@ -506,17 +548,25 @@ export default function DisplayPage() {
           )}
 
           {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
-            <QuestionOnScreen
-              kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
-              index={question.index}
-              seed={`${code}:${nodeIndex}`}
-            />
-          )}
-
-          {question && (node?.game === 'hallucination' || node?.type === 'quiz') && (
-            <p className="display__kicker">
-              question {question.index + 1} / {question.count}
-            </p>
+            <>
+              {quizReviewing ? (
+                // The answer is closed: the room gets the standings for the five
+                // seconds the iPads spend on the verdict.
+                <div className="display__liveboard">
+                  <p className="display__liveboardhead">Standings</p>
+                  <RoomLeaderboard key={`live-${question.index}`} code={code} section="ultimate" />
+                </div>
+              ) : (
+                <QuestionOnScreen
+                  kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
+                  index={question.index}
+                  seed={`${code}:${nodeIndex}`}
+                />
+              )}
+              <p className="display__kicker">
+                question {question.index + 1} / {question.count}
+              </p>
+            </>
           )}
 
           {phase === 'playing' &&

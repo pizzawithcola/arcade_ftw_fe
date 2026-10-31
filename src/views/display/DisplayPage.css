@@ -254,6 +254,50 @@
   text-align: left;
 }
 
+/* The wall has no report panel, so the column the iPads give it goes to the
+   pictures and the copy gets the rest. Wider measure, bigger type. */
+.display__post--split {
+  width: min(84rem, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 2rem);
+  align-items: stretch;
+}
+
+/* Two classes: `.display__post p` is declared further down and would win.
+   Sized to fit - a projector does not scroll. */
+.display__post.display__post--split p {
+  margin: 0 0 0.5rem;
+  font-size: clamp(0.95rem, 1.34vw, 1.24rem);
+  line-height: 1.48;
+}
+
+/* Three pictures stacked down the right edge, each a third of the column's
+   height: the column is as tall as the copy, so all three land inside the frame
+   whatever the copy runs to. */
+.display__post--split .display__postshots {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  gap: 0.55rem;
+  min-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* A definite height per picture, because three `1fr` rows in an auto-height
+   column resolve to the images' own size and push the post past the frame. */
+.display__post--split .display__postshot {
+  aspect-ratio: auto;
+  height: clamp(9rem, 19.5vh, 15rem);
+  min-height: 0;
+}
+
+.display__post--split .display__postshot img {
+  object-fit: cover;
+}
+
 .display__posthead {
   display: flex;
   align-items: center;
@@ -400,6 +444,106 @@
   width: 0.6rem;
   height: 2px;
   background: var(--c-brand-deep);
+}
+
+/* The two answers under the Hallucination conversation, in the colours the
+   iPad's scale paints them: green for trust, amber for doubt. */
+.display__choice {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(0.8rem, 2vw, 1.8rem);
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(2.2rem, 5.2vw, 4.4rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.display__choicetrust {
+  color: var(--c-win);
+  text-shadow: 0 0 28px color-mix(in srgb, var(--c-win) 45%, transparent);
+}
+
+.display__choicedoubt {
+  color: var(--c-warning);
+  text-shadow: 0 0 28px color-mix(in srgb, var(--c-warning) 45%, transparent);
+}
+
+.display__choiceor {
+  font-size: 0.42em;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--c-text-dim);
+}
+
+/* ─── the Ultimate round on the wall ──────────────────────────────────────────
+   Question, then the four answers in two columns, lettered like the iPads so a
+   host can read one out and the whole room looks at the same box. */
+.display__quiz {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.9rem, 2.2vh, 1.8rem);
+  width: min(100%, 72rem);
+}
+
+.display__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.5rem, 1.2vw, 0.9rem);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.display__option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.8rem;
+  padding: clamp(0.5rem, 1.3vh, 0.85rem) clamp(0.7rem, 1.4vw, 1.1rem);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
+}
+
+.display__optionletter {
+  display: grid;
+  place-items: center;
+  width: clamp(1.6rem, 2.2vw, 2.1rem);
+  height: clamp(1.6rem, 2.2vw, 2.1rem);
+  border: 1px solid var(--c-brand-deep);
+  border-radius: 5px;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.75rem, 1.1vw, 0.95rem);
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.display__optiontext {
+  font-size: clamp(0.95rem, 1.35vw, 1.25rem);
+  line-height: 1.4;
+  color: var(--c-text);
+}
+
+/* Between questions the wall shows the standings instead: five seconds is
+   enough to see who moved, not enough to read a paragraph. */
+.display__liveboard {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.5rem, 1.4vh, 1rem);
+  width: min(100%, 60rem);
+}
+
+.display__liveboardhead {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1rem, 1.8vw, 1.5rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--c-text);
 }
 
 /* ─── the wall's version of a game question ───────────────────────────────────
