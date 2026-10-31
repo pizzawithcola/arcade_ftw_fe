@@ -217,6 +217,18 @@
   color: var(--c-text-muted);
 }
 
+/* Sabotage's two jobs, named at a distance. Same tokens the tablet uses, so the
+   colour a player is told to look for is the colour they are already holding. */
+.display__atk {
+  color: var(--c-attack);
+  font-weight: 600;
+}
+
+.display__def {
+  color: var(--c-defend);
+  font-weight: 600;
+}
+
 /* One line about what the round was really testing, under the round's numbers.
    Red, because it is the one thing on the screen worth remembering. */
 .display__bet {

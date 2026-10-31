@@ -236,17 +236,29 @@ function sabMoney(amount: number): string {
   return `$${Math.max(0, amount).toLocaleString('en-US')}`
 }
 
+/** Side names as the room reads them. The engine still calls them red and blue;
+ *  the room never does, because the tablet draws them as TEAM A and TEAM B. */
+const SAB_TEAM: Record<string, string> = { red: 'TEAM A', blue: 'TEAM B' }
+
+function sabTeam(key: string): string {
+  return SAB_TEAM[key] ?? key.toUpperCase()
+}
+
 function SabotageOnScreen() {
   const sabotage = useGameStore((state) => state.sabotage)
   if (!sabotage) return null
 
   if (sabotage.phase === 'team_reveal') {
+    // The colour does the naming here: this round one whole team is purple and
+    // the other is blue, so the tablet in your hand matches the table to walk to.
+    const attacking = sabotage.teams[sabotage.attacker]?.length ?? 0
+    const defending = sabotage.teams[sabotage.attacker === 'red' ? 'blue' : 'red']?.length ?? 0
     return (
       <article className="display__question">
-        <p className="display__prompt">Look at your tablet. Find your team.</p>
+        <p className="display__prompt">Find the screen in your colour, and regroup.</p>
         <p className="display__look">
-          {sabotage.teams.red?.length ?? 0} on Red · {sabotage.teams.blue?.length ?? 0} on Blue
-          · sit with them
+          <span className="display__atk">{attacking} on Purple</span> ·{' '}
+          <span className="display__def">{defending} on Blue</span>
         </p>
       </article>
     )
@@ -275,15 +287,15 @@ function SabotageOnScreen() {
           Round {sabotage.round} · {sabotage.theme}
         </p>
         <p className="display__reply">
-          TARGET · {SAB_DOMAIN[sabotage.target]?.toUpperCase()} — {sabotage.attacker.toUpperCase()}{' '}
+          TARGET · {SAB_DOMAIN[sabotage.target]?.toUpperCase()} — {sabTeam(sabotage.attacker)}{' '}
           attacks
         </p>
         <p className="display__look">
           {sabotage.attacker === 'red' ? sabotage.attack_brief : sabotage.defence_brief}
         </p>
         <p className="display__look">
-          Left to spend — RED {sabMoney(sabotage.budget.red ?? 0)} · BLUE{' '}
-          {sabMoney(sabotage.budget.blue ?? 0)}
+          Left to spend — {sabTeam('red')} {sabMoney(sabotage.budget.red ?? 0)} ·{' '}
+          {sabTeam('blue')} {sabMoney(sabotage.budget.blue ?? 0)}
         </p>
       </article>
     )
@@ -308,12 +320,13 @@ function SabotageOnScreen() {
           ))}
         </ul>
         <p className="display__look">
-          Red {sabotage.scores.red} · Blue {sabotage.scores.blue}
+          {sabTeam('red')} {sabotage.scores.red} · {sabTeam('blue')} {sabotage.scores.blue}
         </p>
         <p className="display__look">
-          {r.attacker.toUpperCase()} spent {sabMoney(r.attack_cost)} ·{' '}
-          {r.defender.toUpperCase()} spent {sabMoney(r.defence_cost)} · left RED{' '}
-          {sabMoney(sabotage.budget.red ?? 0)} / BLUE {sabMoney(sabotage.budget.blue ?? 0)}
+          {sabTeam(r.attacker)} spent {sabMoney(r.attack_cost)} · {sabTeam(r.defender)} spent{' '}
+          {sabMoney(r.defence_cost)} · left {sabTeam('red')}{' '}
+          {sabMoney(sabotage.budget.red ?? 0)} / {sabTeam('blue')}{' '}
+          {sabMoney(sabotage.budget.blue ?? 0)}
         </p>
         {/* The phone tells each side what happened to them; the wall says what
             the round was about, so both rooms leave with one line to remember. */}
@@ -324,12 +337,12 @@ function SabotageOnScreen() {
 
   const red = sabotage.scores.red ?? 0
   const blue = sabotage.scores.blue ?? 0
-  const leader = red === blue ? null : red > blue ? 'RED' : 'BLUE'
+  const leader = red === blue ? null : sabTeam(red > blue ? 'red' : 'blue')
   return (
     <article className="display__question">
-      <p className="display__prompt">{leader ? `${leader} TEAM WINS` : 'DRAWN'}</p>
+      <p className="display__prompt">{leader ? `${leader} WINS` : 'DRAWN'}</p>
       <p className="display__reply">
-        Red {red} · Blue {blue}
+        {sabTeam('red')} {red} · {sabTeam('blue')} {blue}
       </p>
       <p className="display__look">{sabotage.rounds} rounds played</p>
     </article>

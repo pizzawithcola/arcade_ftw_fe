@@ -29,6 +29,8 @@ const api = new Api()
 let ROOM = null
 let HOST = null
 let browser = null
+/** Extra players a test brings in to fill a side; cleaned up after the file. */
+const EXTRAS = ['Ux-b', 'Ux-c', 'Ux-d', 'Ux-e', 'Ux-f']
 
 before(async () => {
   await mkdir(ARTIFACTS, { recursive: true })
@@ -54,12 +56,17 @@ after(async () => {
     /* already gone */
   }
   try {
-    const found = await api.get(`/api/players?q=${encodeURIComponent(HOST)}`, {
-      token: api.adminToken,
-      expect: 200,
-    })
-    for (const player of found.players ?? []) {
-      if (player.nickname === HOST) await api.deletePlayer(player.player_id)
+    // The roster a test invents for itself is deleted here rather than inside
+    // the test: deleting a player mid-show leaves the room pointing at someone
+    // who is gone, and the next test inherits the wreckage.
+    for (const query of [HOST, ...EXTRAS]) {
+      const found = await api.get(`/api/players?q=${encodeURIComponent(query)}`, {
+        token: api.adminToken,
+        expect: 200,
+      })
+      for (const player of found.players ?? []) {
+        if (player.nickname === query) await api.deletePlayer(player.player_id)
+      }
     }
   } catch {
     /* best effort */
@@ -327,6 +334,78 @@ describe('the trust scale', () => {
         `doubt should deepen as you drag: ${doubtsSoftly} → ${doubtsHarder}`,
       )
       await snap(page, 'ipad-trust-scale.png')
+    } finally {
+      await context.close()
+    }
+  })
+})
+
+describe('the sabotage draw', () => {
+  test('names the side, the job and the colour, then opens the rules one line at a time', async () => {
+    // Sabotage needs a side to draw: one lone player resolves all four rounds
+    // before the draw screen has finished painting.
+    for (const name of EXTRAS) await api.join(ROOM, name)
+    await api.assignTeams(ROOM)
+    const { context, page } = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
+    try {
+      // Node 7 is Sabotage; its first ten seconds are the draw, then the rules.
+      await api.jump(ROOM, 7)
+      await page.waitForTimeout(900)
+
+      const draw = await page.evaluate(() => {
+        const team = document.querySelector('.sab__teamname')
+        const word = document.querySelector('.sab__roleword')
+        return {
+          team: team?.textContent?.trim(),
+          teamColour: team && getComputedStyle(team).color,
+          role: document.querySelector('.sab__role')?.textContent?.replace(/\s+/g, ' ').trim(),
+          wordColour: word && getComputedStyle(word).color,
+          legend: [...document.querySelectorAll('.sab__legend > span')].map((s) => ({
+            text: s.textContent.trim(),
+            colour: getComputedStyle(s).color,
+          })),
+          sidenote: Boolean(document.querySelector('.sab__intro .sab__sidenote')),
+        }
+      })
+
+      assert.match(draw.team ?? '', /^TEAM [AB]$/, 'sides are named A and B, never by colour')
+      assert.equal(draw.teamColour, 'rgb(244, 244, 246)', 'the team name is white, not tinted')
+      assert.match(draw.role ?? '', /^You are (ATTACKER|DEFENDER) in round I$/)
+      assert.ok(
+        ['rgb(226, 28, 226)', 'rgb(22, 198, 226)'].includes(draw.wordColour ?? ''),
+        `the job carries its own colour: ${draw.wordColour}`,
+      )
+      assert.deepEqual(
+        draw.legend.map((entry) => entry.text),
+        ['Purple round to attack', '·', 'Blue round to defend'],
+      )
+      assert.equal(draw.legend[0].colour, 'rgb(226, 28, 226)')
+      assert.equal(draw.legend[2].colour, 'rgb(22, 198, 226)')
+      assert.equal(draw.sidenote, false, 'nothing sits under the legend any more')
+
+      await page.waitForSelector('.sab__rules', { timeout: 15000 })
+      const rules = await page.evaluate(() => {
+        const steps = [...document.querySelectorAll('.sab__rulestep')]
+        return {
+          texts: steps.map((s) => s.textContent.replace(/\s+/g, ' ').trim()),
+          delays: steps.map((s) => getComputedStyle(s).animationDelay),
+          lastOpacity: getComputedStyle(steps[steps.length - 1]).opacity,
+        }
+      })
+      assert.deepEqual(rules.texts, [
+        'Four Rounds, One Team Wins',
+        'Your team will share a $100,000 budget for all four rounds',
+        'You will switch between Attacker and Defender',
+        'Choose your cards to build your Attack / Defense, up to four cards each round',
+        'Discuss with your teammates, for the best combination',
+        'Sharpest Spear vs Most Balanced Shield',
+      ])
+      assert.deepEqual(
+        rules.delays,
+        ['0s', '2s', '4s', '6s', '8s', '10s'],
+        'one line every two seconds, so each gets read',
+      )
+      assert.equal(rules.lastOpacity, '0', 'the last line is still waiting its turn')
     } finally {
       await context.close()
     }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { sabotageTeam, sabotageVote } from '../../api'
 import { useTicker } from '../../hooks/useTicker'
 import {
@@ -27,8 +27,15 @@ function clock(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
+const TEAM_LABEL: Record<SabotageTeam, string> = { red: 'Team A', blue: 'Team B' }
+
 function teamName(team: SabotageTeam | undefined): string {
-  return team === 'red' ? 'RED' : team === 'blue' ? 'BLUE' : '—'
+  return team ? TEAM_LABEL[team].toUpperCase() : '—'
+}
+
+/** Round numbers in the game-show register the rest of this screen is written in. */
+function roman(value: number): string {
+  return ['I', 'II', 'III', 'IV'][value - 1] ?? String(value)
 }
 
 /** Money as the players think about it: $14,000, never 14000. */
@@ -218,13 +225,26 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
           {sabotage.phase === 'team_reveal' && (
             <div className="sab__intro">
               <p className="sab__kicker">You are</p>
-              <p className={`sab__teamname is-${myTeam ?? 'red'}`}>{teamName(myTeam)}</p>
+              <p className="sab__teamname">{teamName(myTeam)}</p>
               <p className="sab__role">
-                {roleName(myRole)} in round {sabotage.round}
+                You are{' '}
+                <b
+                  className={`sab__roleword ${
+                    myRole === 'attacker' ? 'is-atk' : myRole === 'defender' ? 'is-def' : ''
+                  }`}
+                >
+                  {roleName(myRole)}
+                </b>{' '}
+                in round {roman(sabotage.round)}
               </p>
-              <p className="sab__sidenote">
-                {build ? `${build.members} on your side` : 'Finding your side'} · sit with
-                your team
+              {/* Both colours, side by side: the player has to walk to the table
+                  painted the same colour as this tablet before the round opens. */}
+              <p className="sab__legend">
+                <span className="sab__legendatk">Purple round to attack</span>
+                <span className="sab__legendsep" aria-hidden="true">
+                  ·
+                </span>
+                <span className="sab__legenddef">Blue round to defend</span>
               </p>
             </div>
           )}
@@ -247,7 +267,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                       Round {sabotage.round} of {sabotage.rounds}
                     </span>
                     <span className="sab__sceneattacker">
-                      {sabotage.attacker.toUpperCase()} attacks
+                      {teamName(sabotage.attacker)} attacks
                     </span>
                     <span className={`sab__targetbadge is-${sabotage.target}`}>
                       Target · {DOMAIN_LABEL[sabotage.target]}
@@ -359,29 +379,31 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
 
 /** The rules, on one screen, readable in twenty seconds. */
 function Rules({ sabotage }: { sabotage: SabotageState & { endsAt: number | null; heldMs: number } }) {
+  const step = (index: number) => ({ '--step': index }) as CSSProperties
   return (
     <div className="sab__rules">
-      <h2 className="sab__rulestitle">Four rounds. One budget.</h2>
+      <h2 className="sab__rulestitle sab__rulestep" style={step(0)}>
+        Four Rounds, One Team Wins
+      </h2>
       <ul className="sab__rulelist">
-        <li>
-          Your team has <b>{money(sabotage.total_budget)}</b> for <b>all four rounds</b>. What
-          you spend now is gone in round four.
+        <li className="sab__rulestep" style={step(1)}>
+          Your team will share a <b>{money(sabotage.total_budget)}</b> budget for all four
+          rounds
         </li>
-        <li>
-          Every card scores in <b>Data</b>, <b>People</b> and <b>Infra</b>. Each round names
-          <b> one target</b>, and only that column decides who wins.
+        <li className="sab__rulestep" style={step(2)}>
+          You will switch between <b className="is-atk">Attacker</b> and{' '}
+          <b className="is-def">Defender</b>
         </li>
-        <li>
-          <b>Up to 4 cards a round.</b> A dearer card is not a stronger one.
+        <li className="sab__rulestep" style={step(3)}>
+          Choose your cards to build your <b className="is-atk">Attack</b> /{' '}
+          <b className="is-def">Defense</b>, up to four cards each round
         </li>
-        <li>
-          Your team votes; the most-voted cards get bought. <b>Talk to each other.</b>
+        <li className="sab__rulestep" style={step(4)}>
+          Discuss with your teammates, for the best combination
         </li>
       </ul>
-      <p className="sab__rulesfoot">
-        Four rounds: attack, defend, attack, defend · round 1 is{' '}
-        <b>{sabotage.theme}</b> · target <b>{DOMAIN_LABEL[sabotage.target]}</b> ·{' '}
-        {sabotage.attacker.toUpperCase()} attacks
+      <p className="sab__rulesfoot sab__rulestep" style={step(5)}>
+        Sharpest Spear vs Most Balanced Shield
       </p>
     </div>
   )
@@ -406,7 +428,7 @@ function Reveal({
     <div className={`sab__reveal ${result.broke_target ? 'is-breached' : 'is-held'}`}>
       <p className="sab__verdict">{result.outcome.toUpperCase()}</p>
       <p className="sab__verdictsub">
-        {attacker.toUpperCase()} attacked {defender.toUpperCase()} on{' '}
+        {teamName(attacker)} attacked {teamName(defender)} on{' '}
         {DOMAIN_LABEL[result.target].toUpperCase()}
       </p>
 
@@ -436,18 +458,19 @@ function Reveal({
 
       <div className="sab__points">
         <span className={attacker === myTeam ? 'is-me' : ''}>
-          {attacker.toUpperCase()} +{result.points[attacker]}
+          {teamName(attacker)} +{result.points[attacker]}
         </span>
         <span className={defender === myTeam ? 'is-me' : ''}>
-          {defender.toUpperCase()} +{result.points[defender]}
+          {teamName(defender)} +{result.points[defender]}
         </span>
       </div>
       <p className="sab__spend">
-        {attacker.toUpperCase()} spent {money(result.attack_cost)} · {defender.toUpperCase()}{' '}
-        spent {money(result.defence_cost)}
+        {teamName(attacker)} spent {money(result.attack_cost)} · {teamName(defender)} spent{' '}
+        {money(result.defence_cost)}
       </p>
       <p className="sab__spend">
-        Left to spend — RED {money(sabotage.budget.red ?? 0)} · BLUE {money(sabotage.budget.blue ?? 0)}
+        Left to spend — {TEAM_LABEL.red} {money(sabotage.budget.red ?? 0)} · {TEAM_LABEL.blue}{' '}
+        {money(sabotage.budget.blue ?? 0)}
       </p>
       {myTeam && (
         <p className="sab__verdictsub">{iWon ? 'Your side won the round' : 'Your side lost the round'}</p>
@@ -476,7 +499,7 @@ function Final({
         <span className={`is-blue ${leader === 'blue' ? 'is-ahead' : ''}`}>{blue}</span>
       </div>
       <p className="sab__role">
-        {leader ? `${leader.toUpperCase()} wins` : 'Drawn'} · your side scored {mine}
+        {leader ? `${TEAM_LABEL[leader]} wins` : 'Drawn'} · your side scored {mine}
       </p>
       <ol className="sab__recap">
         {sabotage.history.map((entry) => (
@@ -491,8 +514,8 @@ function Final({
         ))}
       </ol>
       <p className="sab__sidenote">
-        Red finished with {money(sabotage.budget.red ?? 0)} · Blue with{' '}
-        {money(sabotage.budget.blue ?? 0)}
+        {TEAM_LABEL.red} finished with {money(sabotage.budget.red ?? 0)} · {TEAM_LABEL.blue}{' '}
+        with {money(sabotage.budget.blue ?? 0)}
       </p>
       <p className="sab__sidenote">Your team score is already on the board.</p>
     </div>

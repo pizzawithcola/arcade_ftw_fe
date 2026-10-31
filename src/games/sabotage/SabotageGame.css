@@ -100,11 +100,6 @@
   color: var(--c-text);
 }
 
-.sab__teamname.is-red {
-  color: var(--sab-team-red);
-  text-shadow: 0 0 40px color-mix(in srgb, var(--sab-team-red) 55%, transparent);
-}
-
 .sab__role {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
@@ -112,6 +107,42 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--c-text);
+}
+
+/* The one word on this line that carries a colour: the job you were given. */
+.sab__roleword.is-atk {
+  color: var(--c-attack);
+}
+
+.sab__roleword.is-def {
+  color: var(--c-defend);
+}
+
+/* Which colour is attacking this round. Both halves on one line, each in its own
+   colour, because the player has to find the matching table before they sit. */
+.sab__legend {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.7rem, 1.7vw, 0.9rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sab__legendatk {
+  color: var(--c-attack);
+}
+
+.sab__legenddef {
+  color: var(--c-defend);
+}
+
+.sab__legendsep {
+  color: var(--c-text-dim);
 }
 
 .sab__sidenote {
@@ -167,6 +198,41 @@
   color: var(--c-text);
 }
 
+/* The rules arrive one line at a time, two seconds apart, so nobody is reading
+   six lines at once on a screen they just picked up. Fifteen seconds of brief:
+   the title lands at 0s, the last line at 10s, and that leaves five to read it
+   back. `both` keeps the line hidden until its turn. */
+.sab__rulestep {
+  animation: sab-step-in 0.45s ease-out both;
+  animation-delay: calc(var(--step, 0) * 2s);
+}
+
+@keyframes sab-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sab__rulestep {
+    animation: none;
+  }
+}
+
+/* The two jobs, named in their own colours inside a sentence. */
+.sab__rulelist b.is-atk {
+  color: var(--c-attack);
+}
+
+.sab__rulelist b.is-def {
+  color: var(--c-defend);
+}
+
 /* ─── select ──────────────────────────────────────────────────────────────── */
 
 .sab__stage {
@@ -199,14 +265,14 @@
 }
 
 .sab.is-attacker {
-  --c-brand: #e21ce2;
+  --c-brand: var(--c-attack);
   --c-brand-deep: #820c82;
 }
 
 .sab.is-defender {
   /* Cyan rather than azure: it is the colour the defender card art is drawn
      in, and a page in one blue next to art in another reads as a mistake. */
-  --c-brand: #16c6e2;
+  --c-brand: var(--c-defend);
   --c-brand-deep: #0a5566;
 }
 
