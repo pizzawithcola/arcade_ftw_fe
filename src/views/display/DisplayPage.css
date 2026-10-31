@@ -217,6 +217,16 @@
   color: var(--c-text-muted);
 }
 
+/* One line about what the round was really testing, under the round's numbers.
+   Red, because it is the one thing on the screen worth remembering. */
+.display__bet {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.7rem);
+  font-weight: 600;
+  color: var(--c-brand);
+  text-wrap: balance;
+}
+
 /* The post, sized for reading at distance while players work on their iPads.
    Dark, like the player's card, so the wall does not flash a white block at the
    room - and bounded in height, because the cards are already the brightest

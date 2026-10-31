@@ -9,6 +9,7 @@ import {
   type SabotageTeam,
 } from '../../store/gameStore'
 import { CARD_ICONS, deckHasArt } from './cardIcons'
+import { revealLine } from './revealCopy'
 import './SabotageGame.css'
 
 const DOMAIN_LABEL: Record<SabotageDomain, string> = {
@@ -398,6 +399,8 @@ function Reveal({
   const iWon = result.winner !== null && result.winner === myTeam
   const attacker = result.attacker
   const defender = result.defender
+  // A device with no team (a spectator) reads the attack's side of the story.
+  const asAttacker = myTeam === undefined || myTeam === attacker
   const rows: SabotageDomain[] = ['data', 'people', 'infra']
   return (
     <div className={`sab__reveal ${result.broke_target ? 'is-breached' : 'is-held'}`}>
@@ -407,26 +410,29 @@ function Reveal({
         {DOMAIN_LABEL[result.target].toUpperCase()}
       </p>
 
-      <div className="sab__dims">
-        {rows.map((domain, index) => {
+      {/* One sentence a column, in this side's own voice: what happened beats
+          three numbers nobody has time to compare in five seconds. */}
+      <ul className="sab__lines">
+        {rows.map((domain) => {
           const dim = result.dims.find((entry) => entry.domain === domain)
           if (!dim) return null
+          const line = revealLine(
+            result.round,
+            domain,
+            dim.result === 'break',
+            asAttacker,
+          )
           return (
-            <div
+            <li
               key={domain}
-              className={`sab__dim is-${dim.result} ${dim.target ? 'is-target' : ''}`}
+              className={`sab__line is-${dim.result} ${dim.target ? 'is-target' : ''}`}
             >
-              <span className="sab__dimname">{DOMAIN_LABEL[rows[index]]}</span>
-              <span className="sab__dimnum">{dim.attack}</span>
-              <span className="sab__dimvs">vs</span>
-              <span className="sab__dimnum">{dim.defence}</span>
-              <span className="sab__dimmark">
-                {dim.result === 'break' ? 'BREACH' : dim.result === 'tie' ? 'TIE' : 'HELD'}
-              </span>
-            </div>
+              <span className="sab__linename">{DOMAIN_LABEL[domain]}</span>
+              <span className="sab__linetext">{line}</span>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       <div className="sab__points">
         <span className={attacker === myTeam ? 'is-me' : ''}>
@@ -441,23 +447,10 @@ function Reveal({
         spent {money(result.defence_cost)}
       </p>
       <p className="sab__spend">
-        Left to spend — RED {money(sabotage.budget.red ?? 0)} · BLUE{' '}
-        {money(sabotage.budget.blue ?? 0)}
+        Left to spend — RED {money(sabotage.budget.red ?? 0)} · BLUE {money(sabotage.budget.blue ?? 0)}
       </p>
-      <p className="sab__verdictsub">
-        {result.void
-          ? 'Neither side bought a card, so the round scores nothing'
-          : myTeam
-            ? iWon
-              ? 'Your side won the round'
-              : 'Your side lost the round'
-            : ''}
-      </p>
-      {sabotage.no_bid?.[result.attacker] && (
-        <p className="sab__nobid">{result.attacker.toUpperCase()} bought no cards</p>
-      )}
-      {sabotage.no_bid?.[result.defender] && (
-        <p className="sab__nobid">{result.defender.toUpperCase()} bought no cards</p>
+      {myTeam && (
+        <p className="sab__verdictsub">{iWon ? 'Your side won the round' : 'Your side lost the round'}</p>
       )}
     </div>
   )

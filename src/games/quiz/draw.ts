@@ -41,8 +41,9 @@ export interface DrawSlot {
   multiplier: number
 }
 
-/** Base points for a correct answer, before the slot's multiplier. */
-export const BASE_POINTS = 20
+/** Base points for a correct answer, before the slot's multiplier. Five slots
+ *  at 1/1/1/2/3 make a perfect round 800. */
+export const BASE_POINTS = 100
 
 export const ULTIMATE_SLOTS: DrawSlot[] = [
   {

@@ -58,10 +58,10 @@ export const POST_TEXT = BLOCKS.join('')
  *      vendor, a colleague's name) are what stop "select every number" from
  *      being a winning strategy.
  *
- * `weight` is the severity of the leak: 20 for the two that carry legal or
- * regulatory exposure, 10 for commercial and personal ones. A decoy is worth
- * nothing to catch and -10 to flag, so the two sides are not symmetric on
- * purpose.
+ * `weight` is the severity of the leak: 120 for the four that carry legal or
+ * regulatory exposure, 80 for the commercial and personal ones - a perfect
+ * report is 4 x 120 + 4 x 80 = 800. A decoy is worth nothing to catch and -80 to
+ * flag, so the two sides are not symmetric on purpose.
  *
  * `alt` holds second anchors for the same mistake. Either anchor counts, and
  * catching both does not double the score - they are one error seen from two
@@ -72,39 +72,39 @@ export const LEAKS: LeakSpec[] = [
   {
     id: 'customer-data',
     text: 'real customer conversations',
-    weight: 15,
+    weight: 120,
     why: 'Training on real customer conversations is a regulatory matter, not an achievement. Said publicly, with no mention of consent or legal basis, it invites the privacy regulator to ask how those conversations were obtained.',
   },
   {
     id: 'regulator',
     text: 'the regulator verbally approved it',
     alt: ['formal notice will be announced soon'],
-    weight: 15,
+    weight: 120,
     why: 'Verbal approval has no legal force, and the formal notice is not out yet. Saying "approved" before the regulator says it is selective disclosure - the timing of the gap is the violation, not the information.',
   },
   {
     id: 'forecast',
     text: 'our internal forecasting',
     alt: ['2.4 million conversations'],
-    weight: 10,
+    weight: 80,
     why: 'The volume is sensitive, but the method is worse: this tells the market the bank runs its own demand model. That is a capability disclosure, and it is the line a competitor reads twice.',
   },
   {
     id: 'aht',
     text: '35.65%',
-    weight: 10,
+    weight: 80,
     why: 'Two decimal places is not a marketing number - it is a figure lifted straight from an internal dashboard. The precision is the tell that this was never meant to be published.',
   },
   {
     id: 'markets',
     text: '19 markets',
-    weight: 10,
+    weight: 80,
     why: 'How many markets the group operates in is in the annual report. How far this particular pilot has spread is not: it hands a competitor the rollout shape without them doing any work.',
   },
   {
     id: 'client',
     text: 'a top-3 HK retail bank',
-    weight: 10,
+    weight: 80,
     why: 'A sector, a rank and a city narrow a client down to a handful of names. Naming a client alongside how you tested on them needs their consent, and this post does not suggest anyone asked.',
   },
 ]
@@ -126,7 +126,7 @@ export const IMAGES: ImageSpec[] = [
     label: 'Team Photo',
     src: '/data_shadow/not_risk_group_photo.JPG',
     alt: 'Photo attached to the post: Team Photo.',
-    weight: -10,
+    weight: -80,
     why: 'Safe. It is a team photo with no screen, no badge and no document in frame - nothing here was not already visible to anyone who walked past the room.',
   },
   {
@@ -134,7 +134,7 @@ export const IMAGES: ImageSpec[] = [
     label: 'Meeting Memory',
     src: '/data_shadow/risk_id_card.JPG',
     alt: 'Photo attached to the post: Meeting Memory.',
-    weight: 15,
+    weight: 120,
     why: 'The badges are the leak, not the people. A readable pass shows the naming convention, the access level and often a QR code - which is the first thing anyone needs to walk in behind you.',
   },
   {
@@ -142,7 +142,7 @@ export const IMAGES: ImageSpec[] = [
     label: 'Sprint Review',
     src: '/data_shadow/risk_dashboard_leak.JPG',
     alt: 'Photo attached to the post: Sprint Review.',
-    weight: 15,
+    weight: 120,
     why: 'Nobody redacts a screen before taking the photo. Volume, handling time and unit cost in one frame is the operating picture of the business, and it stays legible at full size forever.',
   },
 ]

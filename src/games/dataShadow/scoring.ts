@@ -68,7 +68,7 @@ export interface Selection extends Span {
   text: string
 }
 
-export const FALSE_ALARM_POINTS = -10
+export const FALSE_ALARM_POINTS = -80
 /**
  * The longest drag still treated as "one thing the player pointed at".
  *

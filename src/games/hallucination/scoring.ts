@@ -12,6 +12,11 @@ export interface TrustLevel {
 }
 
 /**
+ * A question is worth 200 either way: the ladder is symmetric, so the extreme at
+ * each end carries the same weight. It used to be -10 .. +20, which made a
+ * fabricated sentence worth half an honest one and capped the round at 40
+ * instead of three times 200.
+ *
  * Five fixed levels rather than a slider.
  *
  * A slider turns "how much do you trust this" into a number nobody can defend,
@@ -19,11 +24,11 @@ export interface TrustLevel {
  * Five buttons are the same decision, callable out loud.
  */
 export const TRUST_LEVELS: TrustLevel[] = [
-  { key: 'very_doubt', label: 'Very Doubt', points: -10 },
-  { key: 'doubt', label: 'Doubt', points: -5 },
+  { key: 'very_doubt', label: 'Very Doubt', points: -200 },
+  { key: 'doubt', label: 'Doubt', points: -100 },
   { key: 'not_sure', label: 'Not Sure', points: 0 },
-  { key: 'partial_trust', label: 'Partial Trust', points: 10 },
-  { key: 'full_trust', label: 'Full Trust', points: 20 },
+  { key: 'partial_trust', label: 'Partial Trust', points: 100 },
+  { key: 'full_trust', label: 'Full Trust', points: 200 },
 ]
 
 export function levelByKey(key: string): TrustLevel | undefined {

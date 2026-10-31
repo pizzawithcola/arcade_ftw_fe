@@ -4,6 +4,7 @@ import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { drawQuestions, slotAt } from '../../games/quiz/draw'
+import { theBet } from '../../games/sabotage/revealCopy'
 import Welcome from '../../games/Welcome'
 import Opening from '../../games/Opening'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
@@ -314,6 +315,9 @@ function SabotageOnScreen() {
           {r.defender.toUpperCase()} spent {sabMoney(r.defence_cost)} · left RED{' '}
           {sabMoney(sabotage.budget.red ?? 0)} / BLUE {sabMoney(sabotage.budget.blue ?? 0)}
         </p>
+        {/* The phone tells each side what happened to them; the wall says what
+            the round was about, so both rooms leave with one line to remember. */}
+        {theBet(r.round) && <p className="display__bet">{theBet(r.round)}</p>}
       </article>
     )
   }

@@ -746,6 +746,63 @@
   width: min(100%, 30rem);
 }
 
+/* The reveal speaks in sentences now: one line a column, in the reader's own
+   voice. The old numeric rows are gone from the phone - the wall keeps them,
+   because the wall is read by both teams and has to stay neutral. */
+.sab__lines {
+  display: grid;
+  gap: 0.3rem;
+  width: min(100%, 34rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sab__line {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--c-border);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: var(--c-surface-raised);
+  text-align: left;
+  font-size: clamp(0.72rem, 1.5vw, 0.88rem);
+  line-height: 1.35;
+}
+
+.sab__line.is-break {
+  border-left-color: var(--c-brand);
+}
+
+.sab__line.is-hold {
+  border-left-color: var(--c-text-muted);
+}
+
+.sab__line.is-tie {
+  border-left-color: var(--c-border);
+}
+
+/* The round's target is the column that decides it, so it is marked before the
+   reader gets to the sentence. */
+.sab__line.is-target {
+  background: color-mix(in srgb, var(--c-brand) 10%, var(--c-surface-raised));
+}
+
+.sab__linename {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.72em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.sab__linetext {
+  color: var(--c-text);
+}
+
 .sab__dim {
   display: grid;
   grid-template-columns: 4rem 1.6rem 1.4rem 1.6rem 1fr;

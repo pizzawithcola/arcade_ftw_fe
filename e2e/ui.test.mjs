@@ -238,7 +238,7 @@ describe('the Ultimate round', () => {
     }
   })
 
-  test('five questions, a bonus badge on the last two, and /160 at the end', async () => {
+  test('five questions, a bonus badge on the last two, and /800 at the end', async () => {
     const errors = []
     const { context, page } = await stage(IPAD, {
       path: `/r/${ROOM}`,
@@ -318,7 +318,7 @@ describe('the console', () => {
       assert.equal(settings.bankRows, 22, 'the bank table should have 22 questions')
       // The heading is uppercased by CSS, so `innerText` comes back shouting.
       assert.match(settings.head, /5 questions/i)
-      assert.match(settings.head, /160/i)
+      assert.match(settings.head, /800/i)
       assert.deepEqual(errors, [])
     } finally {
       await context.close()
