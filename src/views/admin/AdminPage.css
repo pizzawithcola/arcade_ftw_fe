@@ -100,6 +100,10 @@
 .admin__content {
   min-width: 0;
   display: grid;
+  /* One column that fills the panel area. Left as `auto`, the column sized
+     itself to its widest child, so a table with fixed layout and long prose
+     came out half the width of the window. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -624,3 +628,145 @@
   border-color: var(--c-brand-press);
   background: var(--c-brand-press);
 }
+
+/* ─── game setting: the quiz content ──────────────────────────────────────── */
+
+/* The generic table is built for numbers: right-aligned and nowrap. Questions
+   are prose, so this variant wraps and left-aligns everything after the index.
+   `table-layout: fixed` matters: with auto layout the question column claimed
+   almost the whole width and the options wrapped every two words. Columns
+   without a width share what is left, which is exactly question and options. */
+.admin__qtable {
+  table-layout: fixed;
+}
+
+.admin__qtable th:not(:first-child),
+.admin__qtable td:not(:first-child) {
+  text-align: left;
+  white-space: normal;
+}
+
+.admin__qtable th:nth-child(1),
+.admin__qtable td:nth-child(1) {
+  width: 2.5rem;
+}
+
+.admin__qtable th:nth-last-child(2),
+.admin__qtable td:nth-last-child(2) {
+  width: 4.5rem;
+}
+
+.admin__qtable th:last-child,
+.admin__qtable td:last-child {
+  width: 4rem;
+}
+
+/* The bank carries a category column, so its question starts one place later.
+   The width is set by the longest label ("CEO IMPERSONATION" in caps, plus the
+   badge's padding), not by the shortest: a tag that wraps looks broken. */
+.admin__qtable--bank th:nth-child(2),
+.admin__qtable--bank td:nth-child(2) {
+  width: 11.5rem;
+}
+
+.admin__qtable td {
+  vertical-align: top;
+  line-height: 1.35;
+}
+
+/* The options are a list, not prose: the letter sits in its own column so the
+   four of them line up and the right one is obvious at a glance. */
+.admin__opts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+}
+
+.admin__opts li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.admin__opts li span {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+}
+
+.admin__opts li.is-correct {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.admin__opts li.is-correct span {
+  color: var(--c-brand);
+}
+
+.admin__answer {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-weight: 700;
+  color: var(--c-brand) !important;
+}
+
+/* Category chips: one per category, count first, so the balance is readable
+   without counting rows. */
+.admin__cats {
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin__cats li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  white-space: nowrap;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface-raised);
+  font-size: 0.74rem;
+  color: var(--c-text-muted);
+}
+
+.admin__cats b {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+/* The category key on each row, tinted by its own hue so the columns of one
+   category read as a block. */
+.admin__cat {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+/* One hue per category, keyed off the data attribute so adding a category is a
+   one-line change here rather than a matching CSS class in the component. */
+.admin__cat[data-category='data-shadow'],
+.admin__cats li[data-category='data-shadow'] { border-color: #16c6e2; color: #7fe0ee; }
+.admin__cat[data-category='hallucination'],
+.admin__cats li[data-category='hallucination'] { border-color: #a259ff; color: #c79bff; }
+.admin__cat[data-category='phishing-email'],
+.admin__cats li[data-category='phishing-email'] { border-color: var(--c-brand); color: #ff8a92; }
+.admin__cat[data-category='ceo-impersonation'],
+.admin__cats li[data-category='ceo-impersonation'] { border-color: #f0a028; color: #ffc46b; }
+.admin__cat[data-category='ai-assistant'],
+.admin__cats li[data-category='ai-assistant'] { border-color: #4a6cff; color: #93a7ff; }
+.admin__cat[data-category='knowledge-base'],
+.admin__cats li[data-category='knowledge-base'] { border-color: #35c46a; color: #86e6a8; }

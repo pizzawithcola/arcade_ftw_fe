@@ -1,4 +1,4 @@
-import { GAME_ORDER } from './titles'
+import { GAME_ORDER } from './openings'
 import './Welcome.css'
 
 /**
@@ -19,11 +19,18 @@ import './Welcome.css'
  * every iPad unfurl the same list at the same moment.
  */
 
-/** When the subhead lands, when the first card does, and the beat between them. */
-const SUBHEAD_AT = 1000
-const CARD_AT = 2200
-const CARD_STAGGER = 1000
-const FOOTER_AT = 6400
+/**
+ * When the subhead lands, when the first card does, and the beat between them.
+ *
+ * The four cards have to be finished by the fifth second of a ten-second node:
+ * each one lands in 520ms and sweeps its rule for another 880ms, so the last
+ * card (1.2 + 3 x 0.9 = 3.9s) is fully settled at 4.8s and the footer has
+ * arrived with it. The remaining five seconds are for reading, not animation.
+ */
+const SUBHEAD_AT = 500
+const CARD_AT = 1200
+const CARD_STAGGER = 900
+const FOOTER_AT = 4200
 
 export default function Welcome({
   elapsedMs,

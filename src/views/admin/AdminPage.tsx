@@ -18,7 +18,9 @@ import {
   type RoomSnapshot,
   type Session,
 } from '../../api'
-import { BRIEF_LABEL } from '../../games/briefs'
+import { OPENING_LABEL } from '../../games/openings'
+import { bankCounts, bankOptions, QUIZ_CATEGORIES, QUESTION_BANK } from '../../games/quiz/bank'
+import { BASE_POINTS, perfectScore, ULTIMATE_SLOTS } from '../../games/quiz/draw'
 import StaffLogin from '../StaffLogin'
 import DesignPage from './DesignPage'
 import './AdminPage.css'
@@ -56,8 +58,7 @@ const SECTION_TITLES: Record<string, string> = {
 
 /** What a node is inside its section. */
 function nodeKind(node: FlowNode): string {
-  if (node.type === 'title') return 'title'
-  if (node.type === 'brief') return BRIEF_LABEL
+  if (node.type === 'opening') return OPENING_LABEL
   if (node.type === 'leaderboard') return 'ranking'
   if (node.type === 'quiz') return 'quiz'
   if (node.type === 'game') return 'challenge'
@@ -107,7 +108,7 @@ interface PlayerDraft {
 const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
   { key: 'data', label: 'Arcade Data', note: 'Rooms and players' },
-  { key: 'settings', label: 'Game Setting', note: 'Coming later' },
+  { key: 'settings', label: 'Game Setting', note: 'Quiz bank' },
   { key: 'design', label: 'Design', note: 'Tokens and palette' },
 ]
 
@@ -838,17 +839,134 @@ function PlayersTable({
   )
 }
 
+/**
+ * Game Setting: the quiz content, in full.
+ *
+ * Two tables, because there are two things an operator needs to know: what the
+ * Ultimate Quiz is asking tonight, and what else is available to swap in. Both
+ * live in the frontend (`games/quiz/`), so this is a view of the source rather
+ * than of a database - which is exactly why it can show the answer key.
+ */
 function SettingsView() {
+  const counts = bankCounts()
   return (
-    <section className="admin__panel admin__panel--wide">
-      <h2>Game Setting</h2>
-      <p className="admin__placeholder">
-        Room setup, node durations and event defaults will live here.
-      </p>
-      <p className="admin__hint">
-        Nothing is wired up yet - the flow and its timings are still in
-        <code> arcade_ftw_be/app/flow.py</code>.
-      </p>
-    </section>
+    <>
+      <section className="admin__panel admin__panel--wide">
+        <div className="admin__panel-head">
+          <h2>Ultimate Quiz · how it draws</h2>
+          <span className="admin__phase">{ULTIMATE_SLOTS.length} questions · {perfectScore()} max</span>
+        </div>
+        <p className="admin__table-note">
+          Five questions, each drawn at random from one category, so no two rooms sit the same
+          round. The draw is seeded on the room code and the node index, which is what keeps
+          the wall and every iPad on the same question. Re-running the node replays the same
+          five. Row 1 pools Data Shadow and phishing email together: both are about information
+          leaving the building on someone else's instruction. Edited in
+          <code> src/games/quiz/draw.ts</code>.
+        </p>
+        <div className="admin__table-wrap">
+          <table className="admin__table admin__qtable admin__qtable--draw">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Drawn from</th>
+                <th scope="col">Pool</th>
+                <th scope="col">Points</th>
+                <th scope="col">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ULTIMATE_SLOTS.map((slot, at) => {
+                const pool = QUESTION_BANK.filter((question) =>
+                  slot.categories.includes(question.category),
+                )
+                return (
+                  <tr key={slot.key} className={slot.multiplier > 1 ? 'is-bonus' : ''}>
+                    <td className="admin__dim">{at + 1}</td>
+                    <td>{slot.label}</td>
+                    <td>
+                      <span className="admin__pool">
+                        {pool.length} question{pool.length === 1 ? '' : 's'}
+                      </span>
+                    </td>
+                    <td>{BASE_POINTS}</td>
+                    <td className="admin__answer">
+                      {slot.multiplier > 1 ? `×${slot.multiplier}` : '—'}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="admin__panel admin__panel--wide">
+        <div className="admin__panel-head">
+          <h2>Question bank · {QUESTION_BANK.length} available</h2>
+          <span className="admin__phase">{QUIZ_CATEGORIES.length} categories</span>
+        </div>
+        <p className="admin__table-note">
+          Twenty-five questions written against the four games: five each for Data Shadow
+          and Hallucination, ten across Sabotage&rsquo;s four rounds, and five on Hong Kong
+          for the final slot. This is the pool the Ultimate round draws from. Edited in
+          <code> src/games/quiz/bank.ts</code>.
+        </p>
+        <ul className="admin__cats">
+          {QUIZ_CATEGORIES.map((category) => (
+            <li key={category.key} data-category={category.key} title={category.game}>
+              <b>{counts[category.key]}</b>
+              {category.label}
+            </li>
+          ))}
+        </ul>
+        <div className="admin__table-wrap">
+          <table className="admin__table admin__qtable admin__qtable--bank">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Category</th>
+                <th scope="col">Question</th>
+                <th scope="col">Options</th>
+                <th scope="col">Answer</th>
+                <th scope="col">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {QUESTION_BANK.map((question, at) => (
+                <tr key={question.id}>
+                  <td className="admin__dim">{at + 1}</td>
+                  <td>
+                    <span className="admin__cat" data-category={question.category}>
+                      {categoryLabel(question.category)}
+                    </span>
+                  </td>
+                  <td>{question.text}</td>
+                  <td>
+                    <ol className="admin__opts">
+                      {bankOptions(question).map((option) => (
+                        <li
+                          key={option.letter}
+                          className={option.letter === question.correct_option ? 'is-correct' : ''}
+                        >
+                          <span>{option.letter}</span>
+                          {option.text}
+                        </li>
+                      ))}
+                    </ol>
+                  </td>
+                  <td className="admin__answer">{question.correct_option}</td>
+                  <td className="admin__dim">{question.time_limit}s</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
   )
+}
+
+function categoryLabel(key: string): string {
+  return QUIZ_CATEGORIES.find((category) => category.key === key)?.label ?? key
 }

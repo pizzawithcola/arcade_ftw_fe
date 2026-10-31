@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { findBrief } from '../../games/briefs'
+import { findOpening } from '../../games/openings'
 import { BLOCKS, IMAGES, LEAKS, POST_META } from '../../games/dataShadow/content'
 import { targetCount } from '../../games/dataShadow/scoring'
 import { ReportKindIcon } from '../../games/dataShadow/ReportKindIcon'
@@ -309,13 +309,14 @@ export default function ThemePreview() {
             </div>
           </section>
 
-          <Section title="Rules card">
+          <Section title="Opening · rules half">
             <p className="admin__hint">
-              15s in front of each game, in the same chassis as the waiting room.
+              The last 12s of the 15s opening: the name has already held for 3s, then
+              these points arrive one at a time.
             </p>
             {['hallucination'].map((key) => {
-              const brief = findBrief(key)
-              if (!brief) return null
+              const entry = findOpening(key)
+              if (!entry) return null
               return (
                 <div className="hud hud--brief" key={key}>
                   <div className="hud__matrix" aria-hidden="true" />
@@ -328,7 +329,7 @@ export default function ThemePreview() {
                       <div className="hud__tab">How to play</div>
                       <div className="hud__bar">
                         <span className="hud__chevrons" aria-hidden="true" />
-                        <span className="hud__event">{brief.title}</span>
+                        <span className="hud__event">{entry.name}</span>
                         <span className="hud__status">
                           <span className="hud__dot" aria-hidden="true" />
                           briefing
@@ -336,9 +337,9 @@ export default function ThemePreview() {
                         <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
                       </div>
                       <div className="hud__stage hud__stage--brief">
-                        <p className="brief__lead">{brief.lead}</p>
+                        <p className="brief__lead">{entry.lead}</p>
                         <ul className="brief__rules">
-                          {brief.rules.map((rule) => (
+                          {(entry.rules ?? []).map((rule) => (
                             <li key={rule}>{rule}</li>
                           ))}
                         </ul>

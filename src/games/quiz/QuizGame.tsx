@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
-import { optionsOf, QUIZ_QUESTIONS } from './content'
+import { bankOptions } from './bank'
+import { drawQuestions, perfectScore, slotAt } from './draw'
 import { questionScore } from './scoring'
 import './QuizGame.css'
 
@@ -20,7 +21,10 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   // from the flow node for the same reason - the engine and the wall both
   // subtract it, and a card here without it there would put them one question
   // apart.
-  const questions = QUIZ_QUESTIONS
+  //
+  // The five questions are drawn from the seed `room:node`, the same seed the
+  // wall uses. `Math.random()` here would give every iPad its own round.
+  const questions = useMemo(() => drawQuestions(`${room}:${nodeIndex}`), [room, nodeIndex])
   const { cycles, totalMs } = useMemo(
     () => ({
       cycles: questions.map((item) => (item.time_limit + REVIEW_SECONDS) * 1000),
@@ -71,14 +75,15 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   const total = useMemo(
     () =>
       questions.reduce(
-        (sum, item) => sum + questionScore(picks[item.id], item.correct_option),
+        (sum, item, at) =>
+          sum + questionScore(picks[item.id], item.correct_option, slotAt(at).multiplier),
         0,
       ),
     [picks, questions],
   )
 
   if (finished) {
-    const perfect = questions.length * 20
+    const perfect = perfectScore()
     return (
       <div className="hud hud--game quiz">
         <div className="hud__matrix" aria-hidden="true" />
@@ -101,13 +106,14 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
           {total} / {perfect}
         </p>
         <ul className="quiz__review">
-          {questions.map((item) => {
+          {questions.map((item, at) => {
             const letter = picks[item.id]
             const correct = letter === item.correct_option
             const missed = letter === undefined
             return (
               <li key={item.id} className={correct ? 'is-good' : 'is-bad'}>
                 <span className="quiz__reviewmark">{correct ? '✓' : missed ? '—' : '✗'}</span>
+                <span className="quiz__reviewmult">×{slotAt(at).multiplier}</span>
                 <span>{item.text}</span>
               </li>
             )
@@ -136,6 +142,9 @@ return (
         <div className="hud__bar">
           <span className="hud__chevrons" aria-hidden="true" />
           <span className="hud__event">Pick one</span>
+          {slotAt(index).multiplier > 1 && (
+            <span className="quiz__bonus">bonus ×{slotAt(index).multiplier}</span>
+          )}
           <span className="quiz__count">
             {index + 1} / {questions.length}
           </span>
@@ -147,9 +156,10 @@ return (
         </div>
 
         <div className="hud__stage quiz__stage">
+          <p className="quiz__from">{slotAt(index).label}</p>
           <p className="quiz__question">{question.text}</p>
           <div className="quiz__options">
-            {optionsOf(question).map((option) => {
+            {bankOptions(question).map((option) => {
               const isPicked = picked === option.letter
               const isAnswer = revealed && option.letter === question.correct_option
               const isWrongPick =

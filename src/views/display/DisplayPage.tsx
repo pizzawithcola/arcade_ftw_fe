@@ -3,11 +3,9 @@ import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
-import { QUIZ_QUESTIONS } from '../../games/quiz/content'
-import TitleCard from '../../games/TitleCard'
+import { drawQuestions, slotAt } from '../../games/quiz/draw'
 import Welcome from '../../games/Welcome'
-import { findTitle, GAME_COUNT, gameNumber } from '../../games/titles'
-import { findBrief } from '../../games/briefs'
+import Opening from '../../games/Opening'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import '../../games/hallucination/HallucinationGame.css'
 import '../hud.css'
@@ -90,35 +88,12 @@ function formatClock(ms: number): string {
 }
 
 /** The 15s rules card: the iPad's words, sized for the back row. */
-function BriefOnScreen({ brief: key }: { brief?: string }) {
-  const brief = findBrief(key)
-  if (!brief) return null
-  return (
-    <section className="display__brief">
-      <p className="display__briefLead">{brief.lead}</p>
-      <ul className="display__briefRules">
-        {brief.rules.map((rule) => (
-          <li key={rule}>{rule}</li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/** The wall's version of the name card in front of each game. */
-function GameTitleOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: number }) {
-  const entry = findTitle(node.title)
-  if (!entry) return null
-  const at = gameNumber(node.title, node.section)
-  return (
-    <TitleCard
-      title={entry.name}
-      kicker={at ? `game ${at} of ${GAME_COUNT}` : 'next up'}
-      note={entry.note}
-      countdown={Math.max(0, Math.ceil(remainingMs / 1000))}
-      size="display"
-    />
-  )
+/** The wall's version of the fifteen seconds that open a game: name, then rules. */
+function OpeningOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: number }) {
+  // Same derivation the player screen uses: elapsed is what the wall has already
+  // burned of the node, which is the clock the opening is paced by.
+  const elapsedMs = Math.max(0, (node.duration_sec ?? 0) * 1000 - remainingMs)
+  return <Opening node={node} elapsedMs={elapsedMs} size="display" />
 }
 
 /** The Data Shadow post is one static page, so the big screen can show it whole. */
@@ -196,9 +171,12 @@ function questionOnScreen(
 function QuestionOnScreen({
   kind,
   index,
+  seed,
 }: {
   kind: 'hallucination' | 'quiz'
   index: number
+  /** `room:node` - the wall draws the same five questions as the iPads. */
+  seed: string
 }) {
   if (kind === 'hallucination') {
     const question = HALLUCINATION_QUESTIONS[index]
@@ -235,12 +213,15 @@ function QuestionOnScreen({
     )
   }
 
-  const question = QUIZ_QUESTIONS[index]
+  const question = drawQuestions(seed)[index]
   if (!question) return null
+  const slot = slotAt(index)
   return (
     <article className="display__question">
       <p className="display__prompt">{question.text}</p>
-      <p className="display__look">Pick A, B, C or D on your iPad.</p>
+      <p className="display__look">
+        {slot.multiplier > 1 ? `BONUS ×${slot.multiplier} · ` : ''}Pick A, B, C or D on your iPad.
+      </p>
     </article>
   )
 }
@@ -365,6 +346,9 @@ export default function DisplayPage() {
 
   const phase = useGameStore((state) => state.phase)
   const node = useGameStore((state) => state.node)
+  // The node index is half the draw seed for the Ultimate round: the wall and
+  // the iPads must derive the same five questions from the same pair.
+  const nodeIndex = useGameStore((state) => state.index)
   const endsAt = useGameStore((state) => state.endsAt)
   const heldMs = useGameStore((state) => state.heldMs)
   const broadcast = useGameStore((state) => state.question)
@@ -487,9 +471,7 @@ export default function DisplayPage() {
 
               <div className="hud__stage display__stage" data-screen={node?.game ?? node?.type ?? 'none'}>
 
-          {node?.type === 'brief' && <BriefOnScreen brief={node.brief} />}
-
-          {node?.game === 'data_shadow' && <PostOnScreen />}
+          {node?.type === 'game' && node?.game === 'data_shadow' && <PostOnScreen />}
 
           {node?.game === 'sabotage' && <SabotageOnScreen />}
 
@@ -497,7 +479,7 @@ export default function DisplayPage() {
             <RoomLeaderboard key={node.section} code={code} section={node.section} />
           )}
 
-          {node?.type === 'title' && <GameTitleOnScreen node={node} remainingMs={remaining} />}
+          {node?.type === 'opening' && <OpeningOnScreen node={node} remainingMs={remaining} />}
 
           {node?.type === 'intro' && (
             <Welcome
@@ -510,6 +492,7 @@ export default function DisplayPage() {
             <QuestionOnScreen
               kind={node?.game === 'hallucination' ? 'hallucination' : 'quiz'}
               index={question.index}
+              seed={`${code}:${nodeIndex}`}
             />
           )}
 
@@ -521,7 +504,7 @@ export default function DisplayPage() {
 
           {phase === 'playing' &&
             !question &&
-            !['leaderboard', 'brief', 'title', 'intro'].includes(node?.type ?? '') && (
+            !['leaderboard', 'opening', 'intro'].includes(node?.type ?? '') && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (

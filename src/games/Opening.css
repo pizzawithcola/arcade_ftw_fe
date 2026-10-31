@@ -1,0 +1,57 @@
+/**
+ * The rules half of an opening: one lead line, then the points arriving.
+ *
+ * The points are hidden by CSS and released by an `is-in` class the component
+ * sets off the node clock, so pausing the show freezes the build instead of
+ * letting it finish behind a frozen screen.
+ */
+
+.opening {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: clamp(0.3rem, 1vh, 0.6rem);
+  width: 100%;
+  text-align: left;
+}
+
+/* Both halves start invisible and rise a little: the same entrance as the
+   welcome cards, so the show has one motion vocabulary rather than two. */
+.opening__lead,
+.opening__point {
+  opacity: 0;
+  transform: translateY(0.6rem);
+  transition:
+    opacity 380ms ease-out,
+    transform 380ms cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
+.opening__lead.is-in,
+.opening__point.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* The number badge is drawn by `brief__rules li::before`; it must not pop in
+   before its own line does. */
+.opening__point::before {
+  opacity: 0;
+  transition: opacity 380ms ease-out;
+}
+
+.opening__point.is-in::before {
+  opacity: 1;
+}
+
+.opening--display .opening__point {
+  font-size: clamp(1rem, 1.35vw, 1.5rem);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opening__lead,
+  .opening__point,
+  .opening__point::before {
+    transition: none;
+  }
+}

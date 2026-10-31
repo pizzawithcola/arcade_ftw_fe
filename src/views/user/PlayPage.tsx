@@ -12,10 +12,9 @@ import DataShadowGame from '../../games/dataShadow/DataShadowGame'
 import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
 import SabotageGame from '../../games/sabotage/SabotageGame'
-import { findBrief } from '../../games/briefs'
-import TitleCard from '../../games/TitleCard'
 import Welcome from '../../games/Welcome'
-import { findTitle, GAME_COUNT, gameNumber } from '../../games/titles'
+import { GAME_COUNT, findOpening, gameNumber, openingPhase } from '../../games/openings'
+import Opening from '../../games/Opening'
 import '../hud.css'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import { useGameSocket } from '../../hooks/useGameSocket'
@@ -128,13 +127,15 @@ function NodeStage({
     )
   }
 
-  // The five seconds before each game: its name, and one line about it.
-  if (node.type === 'title') {
-    const entry = findTitle(node.title)
+  // The fifteen seconds that open a game: three of name, twelve of rules. One
+  // node, so the chrome switches with the half rather than with the flow.
+  if (node.type === 'opening') {
+    const entry = findOpening(node.game ?? node.title)
     if (!entry) return null
-    const at = gameNumber(node.title, node.section)
+    const at = gameNumber(entry.key, node.section)
+    const half = openingPhase(node.title_sec, elapsed)
     return (
-      <div className="hud hud--game" key={nodeIndex}>
+      <div className={`hud ${half === 'title' ? 'hud--game' : 'hud--brief'}`} key={nodeIndex}>
         <div className="hud__matrix" aria-hidden="true" />
         <div className="hud__frame">
           <div className="hud__inner">
@@ -142,69 +143,27 @@ function NodeStage({
             <span className="hud__corner hud__corner--tr" aria-hidden="true" />
             <span className="hud__corner hud__corner--bl" aria-hidden="true" />
             <span className="hud__corner hud__corner--br" aria-hidden="true" />
-            <div className="hud__tab">Up next</div>
+
+            <div className="hud__tab">{half === 'title' ? 'Up next' : 'How to play'}</div>
+
             <div className="hud__bar">
               <span className="hud__chevrons" aria-hidden="true" />
               <span className="hud__event">
-                {at ? `Round ${at} of ${GAME_COUNT}` : 'Next game'}
+                {half === 'title'
+                  ? at
+                    ? `Round ${at} of ${GAME_COUNT}`
+                    : 'Next game'
+                  : entry.name}
               </span>
               <span className="hud__status">
                 <span className="hud__dot" aria-hidden="true" />
-                starting
-              </span>
-              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
-            </div>
-            <div className="hud__stage">
-              <TitleCard
-                title={entry.name}
-                kicker={at ? `game ${at} of ${GAME_COUNT}` : 'next up'}
-                note={entry.note}
-                countdown={Math.max(0, Math.ceil(((node.duration_sec ?? 0) * 1000 - elapsed) / 1000))}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // The nine seconds before a game: what it is and what to press. Rendered
-  // before the game branches so a brief never falls through to a game screen.
-  if (node.type === 'brief') {
-    const brief = findBrief(node.brief)
-    return (
-      <div className="hud hud--brief" key={nodeIndex}>
-        <div className="hud__matrix" aria-hidden="true" />
-        <div className="hud__frame">
-          <div className="hud__inner">
-            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
-            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
-            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
-            <span className="hud__corner hud__corner--br" aria-hidden="true" />
-
-            <div className="hud__tab">How to play</div>
-
-            <div className="hud__bar">
-              <span className="hud__chevrons" aria-hidden="true" />
-              <span className="hud__event">{brief?.title ?? node.title ?? 'Up next'}</span>
-              <span className="hud__status">
-                <span className="hud__dot" aria-hidden="true" />
-                briefing
+                {half === 'title' ? 'starting' : 'briefing'}
               </span>
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>
 
-            <div className="hud__stage hud__stage--brief">
-              {brief && (
-                <>
-                  <p className="brief__lead">{brief.lead}</p>
-                  <ul className="brief__rules">
-                    {brief.rules.map((rule) => (
-                      <li key={rule}>{rule}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
+            <div className={`hud__stage ${half === 'title' ? '' : 'hud__stage--brief'}`}>
+              <Opening node={node} elapsedMs={elapsed} />
             </div>
           </div>
         </div>

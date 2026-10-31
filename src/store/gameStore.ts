@@ -20,8 +20,8 @@ export interface FlowNode {
   section?: string
   /** Scored nodes: which score column they add to. */
   score?: string
-  /** Brief nodes: which game's "how to play" copy to show. */
-  brief?: string
+  /** Opening nodes: how long the name holds before the rules take over. */
+  title_sec?: number
   duration_sec?: number
   /** Question nodes: how many, and how long each cycle runs. */
   questions?: number

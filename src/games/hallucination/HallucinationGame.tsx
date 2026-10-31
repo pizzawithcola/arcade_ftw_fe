@@ -8,7 +8,7 @@ import './HallucinationGame.css'
 type Picks = Record<string, string>
 
 /** Each reply gets this long before the round moves on without an answer. */
-const SELECT_SECONDS = 25
+const SELECT_SECONDS = 20
 
 /**
  * The verdict then holds for five seconds and moves on by itself: a reader who

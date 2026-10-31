@@ -447,6 +447,13 @@
 }
 
 /* Tick marks under the status bar: a scale nobody reads, which is the point. */
+/* The label already truncates, but a flex item will not shrink past its
+   content unless it is told to - without this the bonus badge pushes the
+   question counter onto a second line. */
+.hud__bar:has(.quiz__bonus) .hud__event {
+  min-width: 0;
+}
+
 .hud__bar::after {
   content: '';
   position: absolute;
