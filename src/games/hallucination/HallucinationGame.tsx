@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
 import { HALLUCINATION_QUESTIONS } from './content'
-import { isCorrect, levelByKey, scoreFor, TRUST_LEVELS } from './scoring'
+import {
+  gainIfCorrect,
+  isCorrect,
+  leanOf,
+  MAX_TRUST,
+  scoreFor,
+  TRUST_STEP,
+} from './scoring'
 import './HallucinationGame.css'
 
-type Picks = Record<string, string>
+type Picks = Record<string, number>
 
 /** Each reply gets this long before the round moves on without an answer. */
 const SELECT_SECONDS = 20
@@ -44,8 +51,12 @@ export default function HallucinationGame({
 
   const question = HALLUCINATION_QUESTIONS[index]
 
-  const pickKey = picks[question.id]
-  const picked = pickKey ? levelByKey(pickKey) : undefined
+  // `undefined` means untouched, which is not the same as a deliberate "not
+  // sure": both score nothing, but only one of them is an answer.
+  const picked = picks[question.id]
+  // What the slider shows while untouched: the middle, where nothing is risked.
+  const trust = picked ?? 0
+  const lean = leanOf(trust)
 
   const timeLeftMs = Math.max(0, SELECT_SECONDS * 1000 - inCycleMs)
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
@@ -62,21 +73,30 @@ export default function HallucinationGame({
   const total = useMemo(
     () =>
       HALLUCINATION_QUESTIONS.reduce((sum, item) => {
-        const level = picks[item.id] ? levelByKey(picks[item.id]) : undefined
-        return level ? sum + scoreFor(level, item.truth) : sum
+        const value = picks[item.id]
+        return value === undefined ? sum : sum + scoreFor(value, item.truth)
       }, 0),
     [picks],
   )
 
+  // The answer is committed when the clock runs out, not when the slider is
+  // first touched: a player who changes their mind before the timer ends must
+  // keep the score for what they finally chose.
+  const reported = useRef(new Set<string>())
+  useEffect(() => {
+    if (!revealed) return
+    const value = picks[question.id]
+    if (value === undefined || reported.current.has(question.id)) return
+    reported.current.add(question.id)
+    report(index, scoreFor(value, question.truth))
+  }, [revealed, index, picks, question, report])
+
   const isLast = index === HALLUCINATION_QUESTIONS.length - 1
 
   if (finished) {
-    // Derived, not assumed: the best a doubt sentence can pay is 10, so the
-    // ceiling is not simply 20 per question.
-    const best = HALLUCINATION_QUESTIONS.reduce(
-      (sum, item) => sum + Math.max(...TRUST_LEVELS.map((level) => scoreFor(level, item.truth))),
-      0,
-    )
+    // Every question pays the same 200 at the far end of the slider, whichever
+    // way it leans, so the ceiling is simply the number of questions.
+    const best = HALLUCINATION_QUESTIONS.length * MAX_TRUST
     return (
       <div className="hud hud--game hallu">
         <div className="hud__matrix" aria-hidden="true" />
@@ -108,8 +128,8 @@ export default function HallucinationGame({
           </p>
           <ul className="hallu__review">
             {HALLUCINATION_QUESTIONS.map((item) => {
-              const level = picks[item.id] ? levelByKey(picks[item.id]) : undefined
-              const points = level ? scoreFor(level, item.truth) : 0
+              const value = picks[item.id]
+              const points = value === undefined ? 0 : scoreFor(value, item.truth)
               return (
                 <li key={item.id} className={points < 0 ? 'is-bad' : points > 0 ? 'is-good' : ''}>
                   <span className="hallu__reviewpoints">
@@ -129,8 +149,10 @@ export default function HallucinationGame({
     )
   }
 
-  const points = picked ? scoreFor(picked, question.truth) : 0
-  const right = picked ? isCorrect(picked, question.truth) : false
+  const points = picked === undefined ? 0 : scoreFor(picked, question.truth)
+  const right = picked === undefined ? false : isCorrect(picked, question.truth)
+  const gain = gainIfCorrect(trust)
+  const fillPct = Math.min(50, (Math.abs(trust) / MAX_TRUST) * 50)
 
   return (
     <div className="hud hud--game hallu">
@@ -214,26 +236,70 @@ export default function HallucinationGame({
       {!revealed ? (
         <div className="hallu__choices">
           <p className="hallu__question">How much do you trust this answer?</p>
-          <div className="hallu__buttons">
-            {TRUST_LEVELS.map((level) => (
-              <button
-                key={level.key}
-                type="button"
-                className={`hallu__button hallu__button--${level.key}`}
-                disabled={waiting}
-                onClick={() => {
-                  setPicks((current) => ({ ...current, [question.id]: level.key }))
-                  report(index, scoreFor(level, question.truth))
+
+          {/* One control, read left to right: the further you drag, the more you
+              stand to win or lose. The old five buttons committed on the first
+              tap; a slider should let you think, so the answer is locked in when
+              the clock runs out, not when you first touch it. */}
+          <div className={`hallu__slider is-${lean}`}>
+            <div className="hallu__labels" aria-hidden="true">
+              <span className={`hallu__label ${lean === 'doubt' ? 'is-on' : ''}`}>Doubt</span>
+              <span className={`hallu__label ${lean === 'unsure' ? 'is-on' : ''}`}>Not sure</span>
+              <span className={`hallu__label ${lean === 'trust' ? 'is-on' : ''}`}>Trust</span>
+            </div>
+
+            <div
+              className="hallu__trackwrap"
+              style={
+                {
+                  // The bar grows out of the middle, on the side you dragged
+                  // towards: left of the notch for doubt, right of it for trust.
+                  '--fill-left': `${trust > 0 ? 50 : 50 - fillPct}%`,
+                  '--fill-width': `${fillPct}%`,
+                } as CSSProperties
+              }
+            >
+              <span className="hallu__track" aria-hidden="true">
+                <span className="hallu__ticks" />
+                <span className="hallu__fill" />
+                <span className="hallu__notch" />
+              </span>
+              <input
+                type="range"
+                className="hallu__range"
+                min={-MAX_TRUST}
+                max={MAX_TRUST}
+                step={TRUST_STEP}
+                value={trust}
+                aria-label="How much do you trust this answer: left is doubt, right is trust"
+                aria-valuetext={
+                  trust === 0
+                    ? 'Not sure, scores nothing either way'
+                    : `${lean === 'trust' ? 'Trust' : 'Doubt'} ${gain}, plus ${gain} if correct, minus ${gain} if wrong`
+                }
+                onChange={(event) => {
+                  const value = Number(event.target.value)
+                  setPicks((current) => ({ ...current, [question.id]: value }))
                 }}
-              >
-                {level.label}
-              </button>
-            ))}
+              />
+            </div>
+
+            <p className="hallu__readout">
+              <span className="hallu__gain">{gain > 0 ? `+${gain}` : '0'}</span>
+              <span className="hallu__gainnote">
+                {gain > 0 ? `if you are correct · −${gain} if you are wrong` : 'nothing either way'}
+              </span>
+            </p>
           </div>
+
           {waiting ? (
-            <p className="hallu__waiting">Waiting for others to answer…</p>
+            <p className="hallu__waiting">
+              Locked in when the timer ends — you can still move it.
+            </p>
           ) : (
-            <p className="hallu__hint">Not Sure scores nothing either way. The rest are symmetric — you gain and lose the same amount.</p>
+            <p className="hallu__hint">
+              Drag left if you think it is made up, right if you believe it. Every step is +10.
+            </p>
           )}
         </div>
       ) : (
@@ -253,9 +319,11 @@ export default function HallucinationGame({
             <span className="hallu__verdictpick">
               {picked === undefined
                 ? 'you did not pick in time'
-                : `you chose ${picked.label}${
-                    right ? '' : ' — the sign flips when you read it backwards'
-                  }`}
+                : lean === 'unsure'
+                  ? 'you called it not sure'
+                  : `you went ${lean} at ${gain}${
+                      right ? '' : ' — the sign flips when you read it backwards'
+                    }`}
             </span>
           </div>
           <p className="hallu__why">{question.reveal}</p>

@@ -38,7 +38,7 @@ const OPENINGS: GameOpening[] = [
     icon: '/game_icons/hallucination_icon.PNG',
     rules: [
       'Three AI answers. Some of them are completely made up.',
-      'Rate how much you trust each one, up to Full Trust.',
+      'Drag the trust scale: left to doubt it, right to believe it.',
       'Trusting a fake and doubting a fact cost you the same.',
     ],
   },

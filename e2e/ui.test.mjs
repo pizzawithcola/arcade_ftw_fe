@@ -216,6 +216,82 @@ describe('an opening hands over from its name to its rules', () => {
   })
 })
 
+describe('the trust scale', () => {
+  test('the slider is a ten-point scale from -200 to +200, and says what it pays', async () => {
+    const { context, page } = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
+    try {
+      // Node 2 is the Hallucination round.
+      await api.jump(ROOM, 2)
+      await page.waitForTimeout(1200)
+
+      const start = await page.evaluate(() => {
+        const input = document.querySelector('.hallu__range')
+        return {
+          kind: input?.type,
+          min: input?.min,
+          max: input?.max,
+          step: input?.step,
+          value: input?.value,
+          labels: [...document.querySelectorAll('.hallu__label')].map((l) => l.textContent),
+          readout: document.querySelector('.hallu__readout')?.innerText.replace(/\s+/g, ' '),
+        }
+      })
+      assert.equal(start.kind, 'range', 'the five buttons should be one slider')
+      assert.equal(start.min, '-200')
+      assert.equal(start.max, '200')
+      assert.equal(start.step, '10')
+      assert.equal(start.value, '0', 'it starts in the middle, risking nothing')
+      assert.deepEqual(start.labels, ['Doubt', 'Not sure', 'Trust'])
+      assert.match(start.readout ?? '', /0/)
+      assert.match(start.readout ?? '', /nothing either way/)
+
+      const at = async (value) => {
+        await page.evaluate((v) => {
+          const input = document.querySelector('.hallu__range')
+          const setter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype,
+            'value',
+          ).set
+          setter.call(input, String(v))
+          input.dispatchEvent(new Event('input', { bubbles: true }))
+        }, value)
+        await page.waitForTimeout(120)
+        return page.evaluate(() => {
+          const track = document.querySelector('.hallu__track').getBoundingClientRect()
+          const fill = document.querySelector('.hallu__fill').getBoundingClientRect()
+          return {
+            gain: document.querySelector('.hallu__gain')?.textContent,
+            note: document.querySelector('.hallu__gainnote')?.textContent ?? '',
+            lit: [...document.querySelectorAll('.hallu__label')].find((l) =>
+              l.classList.contains('is-on'),
+            )?.textContent,
+            from: Math.round(((fill.left - track.left) / track.width) * 100),
+            width: Math.round((fill.width / track.width) * 100),
+          }
+        })
+      }
+
+      const trust = await at(140)
+      assert.equal(trust.gain, '+140')
+      assert.match(trust.note, /if you are correct/)
+      assert.match(trust.note, /−140 if you are wrong/)
+      assert.equal(trust.lit, 'Trust')
+      // The bar grows out of the middle, towards the side you dragged.
+      assert.equal(trust.from, 50)
+      assert.equal(trust.width, 35)
+
+      const doubt = await at(-140)
+      assert.equal(doubt.gain, '+140', 'the same 140 is at stake on the doubt side')
+      assert.equal(doubt.lit, 'Doubt')
+      assert.equal(doubt.from, 15)
+      assert.equal(doubt.width, 35)
+      await snap(page, 'ipad-trust-scale.png')
+    } finally {
+      await context.close()
+    }
+  })
+})
+
 describe('the Ultimate round', () => {
   test('the wall and the iPad are on the same question', async () => {
     const { context, page } = await stage(WALL, { path: `/display/${ROOM}` })

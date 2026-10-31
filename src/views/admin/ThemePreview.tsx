@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import type { CSSProperties } from 'react'
+
 import { findOpening } from '../../games/openings'
 import { BLOCKS, IMAGES, LEAKS, POST_META } from '../../games/dataShadow/content'
 import { targetCount } from '../../games/dataShadow/scoring'
@@ -416,21 +418,44 @@ export default function ThemePreview() {
                     </div>
                     <div className="hallu__choices">
                       <p className="hallu__question">How much do you trust this answer?</p>
-                      <div className="hallu__buttons">
-                        {['very doubt', 'doubt', 'not sure', 'partial trust', 'full trust'].map(
-                          (label) => (
-                            <button
-                              key={label}
-                              type="button"
-                              className={`hallu__button hallu__button--${label.replace(/ /g, '_')}`}
-                            >
-                              {label}
-                            </button>
-                          ),
-                        )}
+                      {/* The live control is a drag scale, so the preview shows the
+                          same widget at a sample setting rather than a mock-up. */}
+                      <div className="hallu__slider is-trust">
+                        <div className="hallu__labels" aria-hidden="true">
+                          <span className="hallu__label">Doubt</span>
+                          <span className="hallu__label">Not sure</span>
+                          <span className="hallu__label is-on">Trust</span>
+                        </div>
+                        <div
+                          className="hallu__trackwrap"
+                          style={
+                            { '--fill-left': '15%', '--fill-width': '35%' } as CSSProperties
+                          }
+                        >
+                          <span className="hallu__track" aria-hidden="true">
+                            <span className="hallu__ticks" />
+                            <span className="hallu__fill" />
+                            <span className="hallu__notch" />
+                          </span>
+                          <input
+                            type="range"
+                            className="hallu__range"
+                            min={-200}
+                            max={200}
+                            step={10}
+                            defaultValue={140}
+                            aria-label="Trust scale preview"
+                          />
+                        </div>
+                        <p className="hallu__readout">
+                          <span className="hallu__gain">+140</span>
+                          <span className="hallu__gainnote">
+                            if you are correct · −140 if you are wrong
+                          </span>
+                        </p>
                       </div>
                       <p className="hallu__hint">
-                        Not Sure scores nothing either way. The rest are symmetric.
+                        Drag left to doubt, right to trust. Every step is +10.
                       </p>
                     </div>
                   </div>
