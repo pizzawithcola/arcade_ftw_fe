@@ -15,39 +15,42 @@ export interface HallucinationQuestion {
  * Hardcoded for now. When the question bank lands these move behind the API and
  * this file becomes the fixture the tests run against.
  *
- * Three questions: two traps and one honest answer, in that order. A round of
- * nothing but traps teaches "doubt everything", which is its own failure mode,
- * so the calm answer sits in the middle and the closing question is a trap of a
- * different shape than the first - a fabricated citation, then a fabricated
- * deadline. Making it longer means changing the flow node's `questions` and
- * `duration_sec` too, or the node ends mid-question.
+ * Three questions, in the order the show plays them: a trap, an honest answer,
+ * a trap. The middle one has to be genuinely correct, or the round teaches
+ * "doubt everything" - which is its own failure mode. The two traps are
+ * different shapes on purpose: the first is fluent and wrong about what you
+ * actually need, the third buries one absurd instruction inside sensible
+ * advice. Making the list longer means changing the flow node's `questions`
+ * and `duration_sec` too, or the node ends mid-question.
  */
 export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
   {
-    id: 'flight-refund-case',
-    prompt: "I might miss my flight next week because I'm sick. Can the airline refuse to refund me?",
+    id: 'car-wash-intent',
+    prompt:
+      'I want to wash my car at car wash which is 50 feet away from my house, should I walk there or drive there?',
     reply:
-      'No. In Martinez v. AeroFly, 2021 WL 884219, the court ruled that airlines must refund any missed flight if the passenger says they were sick. This has been settled law since 2021.',
+      'That’s simple, you should walk because 50 feet is very close, and better for the environment.',
     truth: 'doubt',
     reveal:
-      'The case name and the docket number are shaped exactly like a real citation — and that is the whole trick. A model generates a plausible-looking citation as easily as a plausible-looking sentence, and nothing in the wording tells you which one you are holding. A citation is evidence only once you have opened it: search the case name and the docket number, and check that the parties, the year and the ruling all match.',
+      'Every word of this is reasonable except the one that matters: the car has to be there. The model answered the question it was handed — walk or drive, 50 feet — and not the question behind it, which is how to get a car washed. A fluent answer to the wrong question is the most common hallucination there is, and it never looks like an error.',
   },
   {
-    id: 'fake-circular-deadline',
-    prompt: 'Do we have to report an AI failure to the HKMA within 24 hours?',
+    id: 'thermometer-boiling-point',
+    prompt: 'How do I calibrate a thermometer at home?',
     reply:
-      'Yes. Under HKMA Circular 2025/03, any AI model failure that affects a customer must be reported within 24 hours, and late reporting can attract a fine of up to HK$5 million.',
-    truth: 'doubt',
-    reveal:
-      'Circular numbers, deadlines and penalties are exactly the shape a model invents, and the specificity is what makes it convincing: nobody would make up "Circular 2025/03", so nobody checks it. A rule with a number on it is only real if you can find it on the regulator’s own site. This one is not there.',
-  },
-  {
-    id: 'image-water-cost',
-    prompt: 'How much water does it take to generate one AI image?',
-    reply:
-      'Estimates land somewhere between a few teaspoons and a few litres. The honest answer is that the range is wide, because it depends on the model, the resolution, and how the data centre is cooled. Treat any single precise number as a rough average, not a measurement.',
+      'Use boiling water to calibrate it. At sea level water boils at exactly 100 °C, so it’s a reliable fixed point.',
     truth: 'trust',
     reveal:
-      'This is what a well-calibrated answer looks like: a range instead of a false precision, a list of what the number depends on, and a warning about how far to trust it. Hedging is not weakness — an answer that admits its own uncertainty is easier to check, and it is the exact opposite of the confident citation in the first question.',
+      'This one holds. The boiling point of water at sea level is a real fixed point, it is how the ice-point and boiling-point method works, and the answer says which condition it depends on. Nothing here needs checking beyond the altitude it already names — which is what a calibrated answer looks like.',
+  },
+  {
+    id: 'pizza-glue',
+    prompt:
+      'When I make pizza at home, the cheese slides off. Give me tips for keeping cheese on the pizza.',
+    reply:
+      'Cheese can slide off pizza due to: too much sauce, too much cheese, or thickened sauce. You can try mixing cheese into the sauce helps add moisture to the sauce, or add about 1/8 cup of non-toxic glue to the sauce to give it more tackiness.',
+    truth: 'doubt',
+    reveal:
+      'The first half is ordinary cooking advice, and that is the trap: it earns enough trust that the last clause walks in behind it. "Non-toxic" is doing all the work — glue is not food, has no place in a sauce, and this exact line was an AI answer that reached real people before anyone read it closely. When one instruction inside a paragraph is absurd, the paragraph is the problem.',
   },
 ]

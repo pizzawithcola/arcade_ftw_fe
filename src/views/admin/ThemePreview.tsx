@@ -378,8 +378,8 @@ export default function ThemePreview() {
                         <div className="chat__bubble">
                           <span className="chat__who">You asked</span>
                           <p className="chat__text">
-                            I might miss my flight next week because I&apos;m sick. Can the airline
-                            refuse to refund me?
+                            I want to wash my car at car wash which is 50 feet away from my house,
+                            should I walk there or drive there?
                           </p>
                         </div>
                       </div>
@@ -390,9 +390,8 @@ export default function ThemePreview() {
                           <span className="chat__aistamp">generated · unverified</span>
                         </div>
                         <p className="chat__text chat__text--ai">
-                          No. In Martinez v. AeroFly, 2021 WL 884219, the court ruled that airlines
-                          must refund any missed flight if the passenger says they were sick. This
-                          has been settled law since 2021.
+                          That&apos;s simple, you should walk because 50 feet is very close, and
+                          better for the environment.
                         </p>
                         <div className="chat__actions">
                           <button type="button" className="chat__action" title="Good answer">
@@ -450,7 +449,7 @@ export default function ThemePreview() {
                         <p className="hallu__readout">
                           <span className="hallu__gain">+140</span>
                           <span className="hallu__gainnote">
-                            if you are correct · −140 if you are wrong
+                            if you are correct · −70 if you are wrong
                           </span>
                         </p>
                       </div>

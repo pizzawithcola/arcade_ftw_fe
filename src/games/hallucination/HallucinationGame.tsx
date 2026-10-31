@@ -4,6 +4,7 @@ import { useScoreReport } from '../../hooks/useScoreReport'
 import { HALLUCINATION_QUESTIONS } from './content'
 import {
   gainIfCorrect,
+  lossIfWrong,
   isCorrect,
   leanOf,
   MAX_TRUST,
@@ -151,6 +152,7 @@ export default function HallucinationGame({
   const points = picked === undefined ? 0 : scoreFor(picked, question.truth)
   const right = picked === undefined ? false : isCorrect(picked, question.truth)
   const gain = gainIfCorrect(trust)
+  const loss = lossIfWrong(trust)
   const intensity = Math.abs(trust) / MAX_TRUST
   const fillPct = Math.min(50, intensity * 50)
 
@@ -280,7 +282,7 @@ export default function HallucinationGame({
                 aria-valuetext={
                   trust === 0
                     ? 'Not sure, scores nothing either way'
-                    : `${lean === 'trust' ? 'Trust' : 'Doubt'} ${gain}, plus ${gain} if correct, minus ${gain} if wrong`
+                    : `${lean === 'trust' ? 'Trust' : 'Doubt'} ${gain}, plus ${gain} if correct, minus ${loss} if wrong`
                 }
                 onChange={(event) => {
                   const value = Number(event.target.value)
@@ -292,7 +294,9 @@ export default function HallucinationGame({
             <p className="hallu__readout">
               <span className="hallu__gain">{gain > 0 ? `+${gain}` : '0'}</span>
               <span className="hallu__gainnote">
-                {gain > 0 ? `if you are correct · −${gain} if you are wrong` : 'nothing either way'}
+                {gain > 0
+                  ? `if you are correct · −${loss} if you are wrong`
+                  : 'nothing either way'}
               </span>
             </p>
           </div>
@@ -321,7 +325,7 @@ export default function HallucinationGame({
                 : lean === 'unsure'
                   ? 'you called it not sure'
                   : `you went ${lean} at ${gain}${
-                      right ? '' : ' — the sign flips when you read it backwards'
+                      right ? '' : ` — a wrong read costs ${loss}`
                     }`}
             </span>
           </div>

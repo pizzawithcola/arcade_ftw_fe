@@ -308,7 +308,10 @@ describe('the trust scale', () => {
       const trust = await at(140)
       assert.equal(trust.gain, '+140')
       assert.match(trust.note, /if you are correct/)
-      assert.match(trust.note, /−140 if you are wrong/)
+      // Winning pays the stake; losing pays half of it. A full push is +200
+      // when right and −100 when wrong, so committing is never punished harder
+      // than playing safe is rewarded.
+      assert.match(trust.note, /−70 if you are wrong/)
       assert.equal(trust.lit, 'Trust')
       // The bar grows out of the middle, towards the side you dragged.
       assert.equal(trust.from, 50)
@@ -319,6 +322,10 @@ describe('the trust scale', () => {
       assert.equal(doubt.lit, 'Doubt')
       assert.equal(doubt.from, 15)
       assert.equal(doubt.width, 35)
+
+      const full = await at(200)
+      assert.equal(full.gain, '+200')
+      assert.match(full.note, /−100 if you are wrong/)
 
       const trustsHarder = channels((await at(200)).deep)
       const trustsSoftly = channels((await at(40)).deep)
