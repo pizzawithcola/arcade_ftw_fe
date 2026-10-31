@@ -782,21 +782,15 @@
    markup on purpose: the audience meets one piece of hardware, not a deck of
    unrelated slides. */
 
-/* The brief keeps the game frame's proportions. Sized to its content it came
-   out as a flat strip in the middle of the iPad - a different shape from every
-   other screen in the show, and from the wall, which has always been full
-   height. */
 .hud--brief .hud__frame {
-  width: min(96%, 1500px);
-  height: min(100%, 78rem);
-  min-height: 0;
-  align-self: center;
+  width: min(100%, 60rem);
+  max-height: 100%;
 }
 
 /* Content may be longer than the panel on a small iPad, so the stage scrolls
    rather than clipping the third rule. */
 .hud__stage--brief {
-  align-content: center;
+  align-content: start;
   justify-items: start;
   text-align: left;
   overflow-y: auto;

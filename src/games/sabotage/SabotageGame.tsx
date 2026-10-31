@@ -247,10 +247,9 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
 
           {sabotage.phase === 'brief' && <Rules sabotage={sabotage} />}
 
-          {/* The colour legend sits at the foot of the screen, on the draw and
-              the rules card alike: it is a reminder of where to sit, not part of
-              what you are being told. */}
-          {(sabotage.phase === 'team_reveal' || sabotage.phase === 'brief') && (
+          {/* The colour legend sits at the foot of the draw screen only - it is
+              a reminder of where to walk, not part of the rules card. */}
+          {sabotage.phase === 'team_reveal' && (
             <p className="sab__legend">
               <span className="sab__legendatk">Purple round to attack</span>
               <span className="sab__legendsep" aria-hidden="true">
