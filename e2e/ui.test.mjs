@@ -250,6 +250,7 @@ describe('the trust scale', () => {
           lockedIn: /lock/i.test(document.querySelector('.hallu__choices')?.innerText ?? ''),
           questionGap: parseFloat(getComputedStyle(question).marginBottom),
           hint: Boolean(document.querySelector('.hallu__hint')),
+          ghost: Boolean(document.querySelector('.hallu__ghost')),
           readoutGap: parseFloat(getComputedStyle(readout).marginTop),
         }
       })
@@ -258,7 +259,9 @@ describe('the trust scale', () => {
       assert.equal(start.max, '200')
       assert.equal(start.step, '10')
       assert.equal(start.value, '0', 'it starts in the middle, risking nothing')
-      assert.deepEqual(start.labels, ['Doubt', 'Not sure', 'Trust'])
+      // The arrows are part of the label now: they say which way to drag.
+      assert.deepEqual(start.labels, ['← Doubt', 'Not sure', 'Trust →'])
+      assert.equal(start.ghost, true, 'the hint handle sways until the slider is touched')
       assert.match(start.readout ?? '', /0/)
       assert.match(start.readout ?? '', /nothing either way/)
       assert.equal(start.question, 'Can you trust this AI response, or should you doubt it?')
@@ -319,14 +322,14 @@ describe('the trust scale', () => {
       // when right and −100 when wrong, so committing is never punished harder
       // than playing safe is rewarded.
       assert.match(trust.note, /−70 if you are wrong/)
-      assert.equal(trust.lit, 'Trust')
+      assert.equal(trust.lit, 'Trust →')
       // The bar grows out of the middle, towards the side you dragged.
       assert.equal(trust.from, 50)
       assert.equal(trust.width, 35)
 
       const doubt = await at(-140)
       assert.equal(doubt.gain, '+140', 'the same 140 is at stake on the doubt side')
-      assert.equal(doubt.lit, 'Doubt')
+      assert.equal(doubt.lit, '← Doubt')
       assert.equal(doubt.from, 15)
       assert.equal(doubt.width, 35)
 
@@ -354,107 +357,59 @@ describe('the trust scale', () => {
   })
 })
 
-/**
- * Where a phrase sits on screen, so a pointer can be dragged across it.
- *
- * The post is rendered one `<mark>` or `<span>` per run, so the phrase has to be
- * located by walking the text nodes and rebuilding the offsets the game uses.
- */
-const PHRASE_RECT = (needle) => {
-  const body = document.querySelector('.post__body')
-  const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
-  const nodes = []
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node)
-  let all = ''
-  for (const node of nodes) all += node.data
-  const at = all.indexOf(needle)
-  if (at === -1) return { error: `not in the post: ${needle}` }
-  const pointAt = (index) => {
-    let total = 0
-    for (const node of nodes) {
-      if (index <= total + node.data.length) return { node, offset: index - total }
-      total += node.data.length
-    }
-    return null
-  }
-  const from = pointAt(at)
-  const to = pointAt(at + needle.length)
-  const range = document.createRange()
-  range.setStart(from.node, from.offset)
-  range.setEnd(to.node, to.offset)
-  const boxes = [...range.getClientRects()].filter((box) => box.width > 1)
-  const first = boxes[0]
-  const last = boxes[boxes.length - 1]
-  return {
-    start: { x: first.left + 2, y: first.top + first.height / 2 },
-    end: { x: last.right - 2, y: last.top + last.height / 2 },
-  }
-}
-
-describe('the data shadow sweep', () => {
-  test('a drag highlights the words and offers one button, without a browser selection', async () => {
+describe('the data shadow post', () => {
+  test('a paragraph joins the report on one tap, and leaves it on the next', async () => {
     const { context, page } = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
     try {
       // Node 5 is the Data Shadow round itself.
       await api.jump(ROOM, 5)
-      await page.waitForSelector('.post__body', { timeout: 20000 })
+      await page.waitForSelector('.post__para', { timeout: 20000 })
+
+      const shape = await page.evaluate(() => ({
+        paragraphs: document.querySelectorAll('.post__para').length,
+        pictures: document.querySelectorAll('.post__shot').length,
+        userSelect: getComputedStyle(document.querySelector('.post__para')).userSelect,
+        selectable: window.getSelection()?.isCollapsed,
+      }))
+      assert.equal(shape.paragraphs, 7, 'the post is seven paragraphs')
+      assert.equal(shape.pictures, 2, 'two pictures, not three')
+      assert.equal(shape.userSelect, 'none', 'the post is not selectable text any more')
+      assert.equal(shape.selectable, true, 'and nothing selected itself on load')
 
       const read = () =>
         page.evaluate(() => ({
-          swept: [...document.querySelectorAll('.post__mark.is-sweeping')].map((m) => m.textContent),
-          flagged: [...document.querySelectorAll('.post__mark.is-flagged')].map((m) => m.textContent),
-          bubble: document.querySelector('.bubble')?.textContent?.replace(/\s+/g, ' ').trim() ?? null,
-          report: [...document.querySelectorAll('.report__text')].map((m) => m.textContent),
-          // The copy bar appears because the browser has a selection; a
-          // collapsed one is the proof it never gets one.
-          collapsed: window.getSelection()?.isCollapsed,
-          userSelect: getComputedStyle(document.querySelector('.post__body')).userSelect,
+          report: [...document.querySelectorAll('.report__text')].map((n) => n.textContent),
+          flagged: [...document.querySelectorAll('.post__mark.is-flagged')].map((n) =>
+            n.textContent.slice(0, 32),
+          ),
+          pressed: [...document.querySelectorAll('.post__para')].map((n) =>
+            n.getAttribute('aria-pressed'),
+          ),
+          count: document.querySelector('.report__count')?.innerText.replace(/\s+/g, ' ') ?? '',
         }))
 
-      const before = await read()
-      assert.equal(before.userSelect, 'none', 'the browser is told not to select the post')
-      assert.deepEqual(before.swept, [])
-
-      const phrase = 'real customer conversations'
-      const spot = await page.evaluate(PHRASE_RECT, phrase)
-      assert.equal(spot.error, undefined, spot.error)
-
-      // Sweep across the phrase the way a finger would.
-      await page.mouse.move(spot.start.x, spot.start.y)
-      await page.mouse.down()
-      await page.mouse.move(spot.end.x, spot.end.y, { steps: 12 })
-      const dragging = await read()
-      assert.deepEqual(dragging.swept, [phrase], 'the highlighter follows the finger')
-      assert.equal(dragging.bubble, null, 'no button under the fingertip')
-      assert.equal(dragging.collapsed, true, 'the sweep is ours, not the browser selection')
-
-      await page.mouse.up()
-      const dropped = await read()
-      assert.deepEqual(dropped.swept, [phrase], 'the highlight survives the release')
-      assert.equal(dropped.bubble, '＋ Add to report', 'the button lands beside the highlight')
-      await snap(page, 'ipad-sweep.png')
-
-      // One tap puts it in the report and the highlight changes hands.
-      await page.click('.bubble')
+      // Tap the paragraph that carries the leak; the whole block is the answer.
+      const leak = page.locator('.post__para', { hasText: 'real customer conversations' })
+      await leak.click()
       const added = await read()
-      assert.deepEqual(added.report, [`“${phrase}”`])
-      assert.deepEqual(added.flagged, [phrase])
-      assert.deepEqual(added.swept, [])
-      assert.equal(added.bubble, null, 'the button goes once the sweep is in the report')
+      assert.equal(added.flagged.length, 1)
+      assert.match(added.flagged[0] ?? '', /^That followed months of testing/)
+      assert.equal(added.report.length, 1)
+      assert.match(added.report[0] ?? '', /real customer conversations/)
+      assert.equal(added.pressed.filter((state) => state === 'true').length, 1)
+      assert.match(added.count, /^1\/7$/, `the count says one of seven: ${added.count}`)
 
-      // Sweeping and then dragging back onto the anchor takes the highlight off.
-      const second = await page.evaluate(PHRASE_RECT, 'our internal forecasting')
-      assert.equal(second.error, undefined, second.error)
-      await page.mouse.move(second.start.x, second.start.y)
-      await page.mouse.down()
-      await page.mouse.move(second.end.x, second.end.y, { steps: 8 })
-      assert.deepEqual((await read()).swept, ['our internal forecasting'])
-      await page.mouse.move(second.start.x, second.start.y, { steps: 8 })
-      const back = await read()
-      assert.deepEqual(back.swept, [], 'the highlight shrinks to nothing')
-      assert.equal(back.bubble, null, 'and the button goes with it')
-      await page.mouse.up()
-      assert.deepEqual((await read()).swept, [], 'released on nothing, it stays nothing')
+      // Tapping it again is how a mistaken paragraph comes back out.
+      await leak.click()
+      const removed = await read()
+      assert.deepEqual(removed.report, [])
+      assert.deepEqual(removed.flagged, [])
+
+      // A picture is still its own small button, separate from tapping to look.
+      await page.locator('.post__shotflag').first().click()
+      const picture = await read()
+      assert.equal(picture.report.length, 1)
+      await snap(page, 'ipad-data-shadow.png')
     } finally {
       await context.close()
     }

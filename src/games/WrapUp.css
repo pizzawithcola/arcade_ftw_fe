@@ -1,0 +1,74 @@
+/* The last screen: one paragraph, typed out, ending in red. */
+
+.wrapup {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: min(100%, 46rem);
+  margin: 0 auto;
+  padding: clamp(1rem, 4vh, 2.5rem);
+}
+
+.wrapup__text {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--c-text);
+  text-align: center;
+  /* The paragraph grows line by line as it types; keeping the box the same
+     height stops the whole block jumping on the first character. */
+  min-height: 6.4em;
+}
+
+/* The line the show has been about. Red is a fill or a rail everywhere else,
+   but this is the last thing anyone reads, at heading size, which is the one
+   place the brand red is legible on black. */
+.wrapup__call {
+  font-weight: 700;
+  color: var(--c-brand);
+  text-shadow: 0 0 26px color-mix(in srgb, var(--c-brand) 45%, transparent);
+}
+
+.wrapup__caret {
+  display: inline-block;
+  width: 0.08em;
+  height: 1.05em;
+  margin-left: 0.06em;
+  vertical-align: -0.15em;
+  background: var(--c-text);
+  animation: wrapup-blink 0.9s steps(1, end) infinite;
+}
+
+.wrapup__caret.is-done {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes wrapup-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The wall is read from the back of a room, so it gets the larger setting. */
+.wrapup--display {
+  width: min(100%, 62rem);
+}
+
+.wrapup--display .wrapup__text {
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapup__caret {
+    animation: none;
+    opacity: 0;
+  }
+}

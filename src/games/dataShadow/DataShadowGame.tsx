@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
@@ -8,7 +7,6 @@ import { ReportKindIcon } from './ReportKindIcon'
 import {
   evaluate,
   maxScore,
-  MIN_SELECTION_CHARS,
   resolveLeaks,
   targetCount,
   type Evaluation,
@@ -18,11 +16,14 @@ import {
 import './DataShadowGame.css'
 
 /**
- * One post, one clock. Fifty seconds was too short to read a paragraph and
- * sweep it for names: the room was still working when the verdict landed.
- * The node's own duration leaves a few seconds of verdict after this.
+ * One post, one clock.
+ *
+ * The post is now read a paragraph at a time - a tap flags the whole paragraph,
+ * not a drag over a few words - so the round is fifty seconds instead of eighty:
+ * there is nothing left to aim at, only something to decide. The node's own
+ * duration leaves ten seconds of verdict after this.
  */
-const ROUND_SECONDS = 80
+const ROUND_SECONDS = 50
 
 const BLOCK_OFFSETS: number[] = (() => {
   const offsets: number[] = []
@@ -36,156 +37,15 @@ const BLOCK_OFFSETS: number[] = (() => {
 
 const LEAK_SPANS: LeakSpan[] = resolveLeaks(POST_TEXT, LEAKS)
 
-interface Mark {
-  start: number
-  end: number
-  className: string
-  key: string
-}
-
-/**
- * Selection ranges can overlap; highlighting needs them disjoint or the same
- * words would emit two nested marks. The range being swept right now wins over
- * one already flagged, so the live gesture stays visible while it happens.
- */
-function mergeMarks(marks: Mark[]) {
-  const sorted = [...marks].sort((a, b) => a.start - b.start || a.end - b.end)
-  const merged: Mark[] = []
-  for (const mark of sorted) {
-    const last = merged[merged.length - 1]
-    if (last && mark.start <= last.end) {
-      last.end = Math.max(last.end, mark.end)
-      if (mark.className === 'is-sweeping') last.className = 'is-sweeping'
-    } else {
-      merged.push({ ...mark })
-    }
-  }
-  return merged
-}
-
-/**
- * Every text node under the post, in reading order. Splitting the post into
- * paragraphs and marks never adds characters, so their lengths add up to
- * POST_TEXT - the coordinate space the leak anchors were resolved in.
- */
-function textNodesIn(container: HTMLElement) {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
-  const nodes: Text[] = []
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node as Text)
-  return nodes
-}
-
-/** Where the finger is, as a caret. WebKit and Blink spell it one way, Gecko
-    the other; both are hit tests, so neither needs a text selection to exist. */
-function caretAt(x: number, y: number) {
-  const doc = document as Document & {
-    caretRangeFromPoint?: (x: number, y: number) => Range | null
-    caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null
-  }
-  const range = doc.caretRangeFromPoint?.(x, y)
-  if (range) return { node: range.startContainer, offset: range.startOffset }
-  const position = doc.caretPositionFromPoint?.(x, y)
-  return position ? { node: position.offsetNode, offset: position.offset } : null
-}
-
-/** A caret's character offset inside the post, or null when it is not in it. */
-function charOffsetAt(nodes: Text[], caret: { node: Node; offset: number }): number | null {
-  const { node, offset } = caret
-  let total = 0
-  for (const text of nodes) {
-    if (text === node) return total + Math.min(offset, text.length)
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      // A caret between paragraphs or against a mark resolves to an element:
-      // map it onto the first character that boundary points at.
-      const child = node.childNodes[offset]
-      if (child && (child === text || child.contains(text))) return total
-    }
-    total += text.length
-  }
-  if (node.nodeType === Node.ELEMENT_NODE) {
-    // Past the element's last child, the caret sits at its end.
-    let end = 0
-    for (const text of nodes) {
-      if (!node.contains(text)) break
-      end += text.length
-    }
-    return end
-  }
-  return null
-}
-
-/** The reverse, so the bubble can be parked on the highlight. */
-function rangeForOffsets(nodes: Text[], start: number, end: number) {
-  const pointAt = (index: number) => {
-    let total = 0
-    for (const text of nodes) {
-      if (index <= total + text.length) return { node: text, offset: index - total }
-      total += text.length
-    }
-    return null
-  }
-  const from = pointAt(start)
-  const to = pointAt(end)
-  if (!from || !to) return null
-  const range = document.createRange()
-  range.setStart(from.node, from.offset)
-  range.setEnd(to.node, to.offset)
-  return range
-}
-
-/**
- * Whitespace at either end is not part of the sweep and can never be a leak.
- * Returns null once the sweep has been dragged back to nothing, which is how
- * taking a highlight off works.
- */
-function trimSweep(start: number, end: number) {
-  let from = start
-  let to = end
-  while (from < to && /\s/.test(POST_TEXT[from])) from += 1
-  while (to > from && /\s/.test(POST_TEXT[to - 1])) to -= 1
-  return to > from ? { start: from, end: to, length: to - from } : null
-}
-
-/**
- * The characters a sweep from `anchor` to `head` covers. A caret sits between
- * two characters, so a highlight drawn straight from it stops half a letter
- * short of the fingertip; the head char is included to fix that. Dragging back
- * onto the anchor covers nothing, which is how a sweep is taken off.
- */
-function sweepBetween(anchor: number, head: number) {
-  if (head === anchor) return null
-  const forward = head > anchor
-  const from = forward ? anchor : head - 1
-  const to = forward ? head + 1 : anchor
-  return trimSweep(Math.max(0, from), Math.min(POST_TEXT.length, to))
-}
-
-/** A block's text with the given marks wrapped, so highlights render in place. */
-function renderBlock(blockIndex: number, marks: Mark[]) {
-  const text = BLOCKS[blockIndex]
-  const start = BLOCK_OFFSETS[blockIndex]
-  const end = start + text.length
-
-  const local = marks
-    .filter((mark) => mark.start < end && mark.end > start)
-    .map((mark) => ({ ...mark, start: Math.max(mark.start, start), end: Math.min(mark.end, end) }))
-    .sort((a, b) => a.start - b.start)
-
-  if (local.length === 0) return [text]
-
-  const parts: Array<string | { text: string; className: string; key: string }> = []
-  let cursor = start
-  for (const mark of local) {
-    if (mark.start > cursor) parts.push(POST_TEXT.slice(cursor, mark.start))
-    parts.push({
-      text: POST_TEXT.slice(mark.start, mark.end),
-      className: mark.className,
-      key: mark.key,
-    })
-    cursor = mark.end
-  }
-  if (cursor < end) parts.push(POST_TEXT.slice(cursor, end))
-  return parts
+/** The character range one paragraph occupies in `POST_TEXT`. */
+function blockRange(index: number) {
+  const start = BLOCK_OFFSETS[index] ?? 0
+  const raw = BLOCKS[index] ?? ''
+  // Trailing whitespace belongs to no paragraph, and a range that ended on it
+  // would read as a longer selection than the player made.
+  const text = raw.trim()
+  const lead = raw.length - raw.trimStart().length
+  return { start: start + lead, end: start + lead + text.length, text }
 }
 
 export default function DataShadowGame({
@@ -201,15 +61,6 @@ export default function DataShadowGame({
   /** The picture being looked at full size, if any. */
   const [zoomed, setZoomed] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
-  const [bubble, setBubble] = useState<{ x: number; y: number; below: boolean } | null>(null)
-  /** The range under the finger right now, or the one waiting for its button. */
-  const [sweep, setSweep] = useState<{ start: number; end: number } | null>(null)
-  const [sweeping, setSweeping] = useState(false)
-  const bodyRef = useRef<HTMLDivElement>(null)
-  /** The anchor the sweep is measured from, for as long as a finger is down. */
-  const anchorRef = useRef<number | null>(null)
-  /** Mirrors `sweep` for the release handler, which has to read it synchronously. */
-  const sweepRef = useRef<{ start: number; end: number } | null>(null)
   const seq = useRef(0)
   const report = useScoreReport(room, nodeIndex)
 
@@ -235,143 +86,37 @@ export default function DataShadowGame({
     if (result) report(null, result.score)
   }, [result, report])
 
-  const marks: Mark[] = useMemo(() => {
-    if (done) {
-      const caught = new Set((result?.caught ?? []).map((leak) => leak.id))
-      // A leak can name more than one anchor; both are revealed together, and
-      // the key has to carry the offset because the id repeats.
-      return LEAK_SPANS.map((leak) => ({
-        start: leak.start,
-        end: leak.end,
-        className: caught.has(leak.id) ? 'is-hit' : 'is-missed',
-        key: `${leak.id}-${leak.start}`,
-      }))
-    }
-    // Before submitting, every flagged range is just "you picked this" - showing
-    // anything more would leak the answer.
-    const flagged = selections.map((item) => ({
-      start: item.start,
-      end: item.end,
-      className: 'is-flagged',
-      key: `f-${item.start}-${item.end}`,
-    }))
-    // A sweep cannot outlive the round: once the report is locked the highlight
-    // that was waiting for its button goes with it.
-    const live = sweep && !locked ? [{ ...sweep, className: 'is-sweeping', key: 'sweep' }] : []
-    return mergeMarks([...flagged, ...live]).map((mark) => ({
-      ...mark,
-      key: `f-${mark.start}-${mark.end}`,
-    }))
-  }, [done, locked, selections, result, sweep])
-
-  const showSweep = useCallback((next: { start: number; end: number } | null) => {
-    sweepRef.current = next
-    setSweep(next)
-  }, [])
-
-  /** Where a pointer sits in the post, as a character offset. Null when the
-      finger is off the text, which keeps the sweep it already had. */
-  const sweepAt = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    const container = bodyRef.current
-    if (!container) return null
-    const caret = caretAt(event.clientX, event.clientY)
-    if (!caret || !container.contains(caret.node)) return null
-    return charOffsetAt(textNodesIn(container), caret)
-  }, [])
-
-  /** Where the button goes: centred on the highlight, flipped below when the
-      highlight is near the top edge, and never off the side of the screen. */
-  const placeBubble = useCallback((range: { start: number; end: number }) => {
-    const container = bodyRef.current
-    if (!container) return null
-    const domRange = rangeForOffsets(textNodesIn(container), range.start, range.end)
-    const rect = domRange?.getBoundingClientRect()
-    if (!rect || (rect.width === 0 && rect.height === 0)) return null
-    const half = 78
-    const x = Math.min(Math.max(rect.left + rect.width / 2, half), window.innerWidth - half)
-    const below = rect.top < 72
-    return { x, y: below ? rect.bottom + 10 : rect.top - 10, below }
-  }, [])
-
-  /** Down anchors the highlighter; a plain tap anchors and releases on the same
-      character, which is a sweep of nothing and leaves nothing behind. */
-  const onSweepDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (locked || event.button !== 0) return
-    const at = sweepAt(event)
-    if (at === null) return
-    anchorRef.current = at
-    // Capture keeps the moves coming when the finger drifts off the paragraph,
-    // which is the whole point of a highlighter.
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-    setSweeping(true)
-    setBubble(null)
-    showSweep(null)
+  /** How a paragraph should be drawn: flagged, revealed right, or revealed wrong.
+   *
+   * The reveal is per paragraph now, because the choice was per paragraph: a
+   * paragraph that held a leak nobody flagged is amber whatever else it said.
+   */
+  const verdictFor = (index: number) => {
+    const here = blockRange(index)
+    const flagged = selections.some((item) => item.start === here.start)
+    if (!done) return flagged ? 'is-flagged' : ''
+    const inside = LEAK_SPANS.filter((leak) => leak.start < here.end && leak.end > here.start)
+    const caught = new Set((result?.caught ?? []).map((leak) => leak.id))
+    if (inside.some((leak) => !caught.has(leak.id))) return 'is-missed'
+    if (flagged) return 'is-hit'
+    return ''
   }
 
-  const onSweepMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const anchor = anchorRef.current
-    if (anchor === null) return
-    const at = sweepAt(event)
-    if (at === null) return
-    // Dragging back towards the anchor shortens the highlight, and dragging all
-    // the way back cancels it: the sweep is whatever is under the finger now.
-    const range = sweepBetween(anchor, at)
-    showSweep(range ? { start: range.start, end: range.end } : null)
+  const isFlagged = (index: number) => {
+    const here = blockRange(index)
+    return selections.some((item) => item.start === here.start)
   }
 
-  const onSweepUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (anchorRef.current === null) return
-    anchorRef.current = null
-    setSweeping(false)
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-    // Whatever is highlighted when the finger lifts is what the button acts on:
-    // re-reading the pointer here would move the end of the highlight by a
-    // character and add the comma next to the phrase.
-    const range = sweepRef.current
-    if (range && range.end - range.start >= MIN_SELECTION_CHARS) {
-      setBubble(placeBubble(range))
-      return
-    }
-    showSweep(null)
-  }
-
-  const onSweepCancel = () => {
-    anchorRef.current = null
-    setSweeping(false)
-    showSweep(null)
-  }
-
-  /** Put the swept words in the report. The highlight then stays, in the
-      flagged colour, because that is what it has become. */
-  const addSweep = () => {
-    const range = sweepRef.current
-    if (locked || !range) return
-    const text = POST_TEXT.slice(range.start, range.end)
-    setSelections((current) =>
-      current.some((item) => item.start === range.start && item.end === range.end)
-        ? current
-        : [...current, { id: `sel-${seq.current++}`, text, start: range.start, end: range.end }],
-    )
-    showSweep(null)
-  }
-
-  // The button only follows the layout it was measured in: scrolling or resizing
-  // moves the text out from under it.
-  useEffect(() => {
+  /** Tap a paragraph to put it in the report, tap it again to take it out. */
+  const toggleBlock = (index: number) => {
     if (locked) return
-    const remeasure = () => {
-      const range = sweepRef.current
-      setBubble(range ? placeBubble(range) : null)
-    }
-    window.addEventListener('scroll', remeasure, true)
-    window.addEventListener('resize', remeasure)
-    return () => {
-      window.removeEventListener('scroll', remeasure, true)
-      window.removeEventListener('resize', remeasure)
-    }
-  }, [locked, placeBubble])
+    const here = blockRange(index)
+    setSelections((current) =>
+      current.some((item) => item.start === here.start)
+        ? current.filter((item) => item.start !== here.start)
+        : [...current, { id: `sel-${seq.current++}`, text: here.text, start: here.start, end: here.end }],
+    )
+  }
 
   const remove = (id: string) => {
     if (locked) return
@@ -390,16 +135,7 @@ export default function DataShadowGame({
   const flaggedCount = selections.length + imageFlags.length
 
   return (
-    <div
-      className="hud hud--game shadow"
-      // Touching anywhere that is not the post or its button drops a sweep that
-      // has not been added yet, so a stray highlight never lingers.
-      onPointerDownCapture={(event) => {
-        const target = event.target as Element | null
-        if (target?.closest('.post__body, .bubble')) return
-        if (sweepRef.current) showSweep(null)
-      }}
-    >
+    <div className="hud hud--game shadow">
       <div className="hud__matrix" aria-hidden="true" />
       <div className="hud__frame shadow__frame">
         <div className="hud__inner shadow__inner">
@@ -434,7 +170,7 @@ export default function DataShadowGame({
           <div className="hud__stage shadow__stage">
       <div className="shadow__main">
         <p className="shadow__task">
-          Drag to select the words that should never have been posted.
+          Tap a paragraph that should never have been posted.
         </p>
         {/* The light card is deliberate: it reads instantly as a social network,
             which is the context the player is being asked to judge in. */}
@@ -450,27 +186,27 @@ export default function DataShadowGame({
             </span>
           </header>
 
-          <div
-            className={`post__body ${done ? 'is-revealed' : ''} ${sweeping ? 'is-sweeping' : ''}`}
-            ref={bodyRef}
-            onPointerDown={onSweepDown}
-            onPointerMove={onSweepMove}
-            onPointerUp={onSweepUp}
-            onPointerCancel={onSweepCancel}
-          >
-            {BLOCKS.map((_, index) => (
-              <p className="post__para" key={index}>
-                {renderBlock(index, marks).map((part, partIndex) =>
-                  typeof part === 'string' ? (
-                    <span key={`t-${partIndex}`}>{part}</span>
-                  ) : (
-                    <mark key={part.key} className={`post__mark ${part.className}`}>
-                      {part.text}
-                    </mark>
-                  ),
-                )}
-              </p>
-            ))}
+          {/* One button per paragraph. A whole paragraph is the unit of the
+              decision now: no aiming, no handles, and nothing the browser can
+              turn into a text selection. */}
+          <div className="post__body">
+            {BLOCKS.map((text, index) => {
+              const verdict = verdictFor(index)
+              const flagged = isFlagged(index)
+              return (
+                <button
+                  type="button"
+                  key={index}
+                  className="post__para"
+                  disabled={locked}
+                  aria-pressed={flagged}
+                  aria-label={`${flagged ? 'Remove from report' : 'Add to report'}: ${text}`}
+                  onClick={() => toggleBlock(index)}
+                >
+                  <mark className={`post__mark ${verdict}`}>{text}</mark>
+                </button>
+              )
+            })}
           </div>
 
           {/* Screenshots leak more than sentences do, so they are judged the
@@ -589,8 +325,7 @@ export default function DataShadowGame({
         <div className="report__list">
           {flaggedCount === 0 && (
             <p className="report__empty">
-              Nothing flagged yet. Select a risky phrase, or use ＋ on a picture, then tap the
-              button that appears beside the text.
+              Nothing flagged yet. Tap a paragraph, or use ＋ on a picture.
             </p>
           )}
           {selections.map((item) => {
@@ -714,21 +449,6 @@ export default function DataShadowGame({
           document.body,
         )}
 
-      {/* Both, not either: the button belongs to a sweep, and a sweep that has
-          been added no longer has a button. */}
-      {!locked && !sweeping && sweep && bubble && (
-        <button
-          type="button"
-          className={`bubble ${bubble.below ? 'is-below' : 'is-above'}`}
-          style={{ left: bubble.x, top: bubble.y }}
-          // Tapping the button must not start a sweep underneath it, and the
-          // highlight it belongs to has to survive the tap.
-          onPointerDown={(event) => event.preventDefault()}
-          onClick={addSweep}
-        >
-          ＋ Add to report
-        </button>
-      )}
     </div>
   )
 }

@@ -183,21 +183,49 @@
   -webkit-user-select: none;
 }
 
+/* A paragraph is a button now: the whole block is the tap target, so it has to
+   behave like text and not like a control - no button chrome, same metrics as
+   the paragraph it replaced. */
 .post__para {
-  margin: 0 0 0.7rem;
+  display: block;
+  width: 100%;
+  margin: 0 0 0.55rem;
+  padding: 0.15rem 0;
+  border: none;
+  background: none;
   /* Follows the screen instead of a fixed pixel size: an iPad in landscape has
      far less height than a desktop, and the post has to fit in it. */
+  font: inherit;
   font-size: clamp(0.84rem, 0.5vw + 0.6vh, 1rem);
   line-height: 1.7;
   color: var(--c-paper-ink);
+  text-align: left;
+  cursor: pointer;
+  /* A long press on a paragraph is a tap here, not a text selection. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  border-radius: 6px;
+  transition: background-color 200ms ease-out;
 }
 
 .post__para:last-child {
   margin-bottom: 0;
 }
 
+.post__para:disabled {
+  cursor: default;
+}
+
+/* Hover is for the desktop rehearsal; the room only ever sees the tap state. */
+@media (hover: hover) {
+  .post__para:not(:disabled):hover .post__mark:not(.is-flagged):not(.is-hit):not(.is-missed) {
+    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+  }
+}
+
 .post__mark {
-  padding: 0.05em 0.05em;
+  padding: 0.08em 0.18em;
   border-radius: 3px;
   background: transparent;
   color: inherit;
@@ -360,7 +388,7 @@
   /* A player who drags across the whole post would otherwise fill the panel
      with one enormous entry and push everything else out of view. */
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

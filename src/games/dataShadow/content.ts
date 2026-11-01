@@ -110,12 +110,12 @@ export const LEAKS: LeakSpec[] = [
 ]
 
 /**
- * Three pictures under the post.
+ * Two pictures under the post.
  *
  * Screenshots are the most common leak on a professional feed, and the most
- * persuasive: text gets skimmed, a picture gets believed. Two of these give away
- * something real; the third is a photo that was already public, which is exactly
- * why it is here.
+ * persuasive: text gets skimmed, a picture gets believed. The meeting photo
+ * gives away something real - a screen full of the operating numbers - and the
+ * team photo was already public, which is exactly why it is here.
  *
  * `weight` is signed - a leak pays, a decoy costs - so the whole value table
  * lives in this file.
@@ -128,14 +128,6 @@ export const IMAGES: ImageSpec[] = [
     alt: 'Photo attached to the post: Team Photo.',
     weight: -80,
     why: 'Safe. It is a team photo with no screen, no badge and no document in frame - nothing here was not already visible to anyone who walked past the room.',
-  },
-  {
-    id: 'img-badge',
-    label: 'Meeting Memory',
-    src: '/data_shadow/risk_id_card.JPG',
-    alt: 'Photo attached to the post: Meeting Memory.',
-    weight: 120,
-    why: 'The badges are the leak, not the people. A readable pass shows the naming convention, the access level and often a QR code - which is the first thing anyone needs to walk in behind you.',
   },
   {
     id: 'img-dashboard',

@@ -53,6 +53,9 @@ export default function HallucinationGame({
   // `undefined` means untouched, which is not the same as a deliberate "not
   // sure": both score nothing, but only one of them is an answer.
   const picked = picks[question.id]
+  // Touching the slider at all counts as having understood it, even if the
+  // handle came back to the middle: the hint exists to teach the gesture once.
+  const touched = picked !== undefined
   // What the slider shows while untouched: the middle, where nothing is risked.
   const trust = picked ?? 0
   const lean = leanOf(trust)
@@ -183,9 +186,15 @@ export default function HallucinationGame({
             style={{ '--intensity': intensity } as CSSProperties}
           >
             <div className="hallu__labels" aria-hidden="true">
-              <span className={`hallu__label ${lean === 'doubt' ? 'is-on' : ''}`}>Doubt</span>
+              {/* The arrows point the way the handle has to move: the two ends
+                  of this scale are the instruction, not decoration. */}
+              <span className={`hallu__label ${lean === 'doubt' ? 'is-on' : ''}`}>
+                <span className="hallu__arrow">←</span> Doubt
+              </span>
               <span className={`hallu__label ${lean === 'unsure' ? 'is-on' : ''}`}>Not sure</span>
-              <span className={`hallu__label ${lean === 'trust' ? 'is-on' : ''}`}>Trust</span>
+              <span className={`hallu__label ${lean === 'trust' ? 'is-on' : ''}`}>
+                Trust <span className="hallu__arrow">→</span>
+              </span>
             </div>
 
             <div
@@ -204,6 +213,12 @@ export default function HallucinationGame({
                 <span className="hallu__fill" />
                 <span className="hallu__notch" />
               </span>
+              {/* A ghost handle that sways either side of the notch until the
+                  player touches the real one: "this is a thing you slide", said
+                  without a line of instructions. */}
+              {!touched && !revealed && (
+                <span className="hallu__ghost" aria-hidden="true" />
+              )}
               <input
                 type="range"
                 className="hallu__range"

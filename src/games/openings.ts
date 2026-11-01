@@ -63,7 +63,7 @@ const OPENINGS: GameOpening[] = [
     icon: '/game_icons/data_icon.PNG',
     rules: [
       'AI has generated content for your social media',
-      'Drag and click to report the data breach',
+      'Tap the paragraphs that should never have been posted',
       'Correct answers get points, incorrect choices loses points',
     ],
   },

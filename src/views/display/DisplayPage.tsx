@@ -9,6 +9,7 @@ import { BASE_POINTS, drawQuestions, pointsFor, slotAt } from '../../games/quiz/
 import { quizTimeline, sittingAt } from '../../games/quiz/timeline'
 import { theBet } from '../../games/sabotage/revealCopy'
 import Welcome from '../../games/Welcome'
+import WrapUp from '../../games/WrapUp'
 import Opening from '../../games/Opening'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import '../../games/hallucination/HallucinationGame.css'
@@ -609,6 +610,13 @@ export default function DisplayPage() {
 
           {node?.type === 'opening' && <OpeningOnScreen node={node} remainingMs={remaining} />}
 
+          {node?.type === 'outro' && (
+            <WrapUp
+              elapsedMs={Math.max(0, (node.duration_sec ?? 0) * 1000 - remaining)}
+              size="display"
+            />
+          )}
+
           {node?.type === 'intro' && (
             <Welcome
               elapsedMs={Math.max(0, (node.duration_sec ?? 0) * 1000 - remaining)}
@@ -645,7 +653,7 @@ export default function DisplayPage() {
 
           {phase === 'playing' &&
             !question &&
-            !['leaderboard', 'opening', 'intro'].includes(node?.type ?? '') && (
+            !['leaderboard', 'opening', 'intro', 'outro'].includes(node?.type ?? '') && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (

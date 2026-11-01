@@ -13,6 +13,7 @@ import HallucinationGame from '../../games/hallucination/HallucinationGame'
 import QuizGame from '../../games/quiz/QuizGame'
 import SabotageGame from '../../games/sabotage/SabotageGame'
 import Welcome from '../../games/Welcome'
+import WrapUp from '../../games/WrapUp'
 import { GAME_COUNT, findOpening, gameNumber, openingPhase } from '../../games/openings'
 import Opening from '../../games/Opening'
 import '../hud.css'
@@ -120,6 +121,40 @@ function NodeStage({
             </div>
             <div className="hud__stage">
               <Welcome elapsedMs={elapsed} />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // The last node. It gets the same chassis as everything else but no bar: the
+  // room has stopped playing, so there is nothing left to count down.
+  if (node.type === 'outro') {
+    return (
+      <div className="hud hud--game" key={nodeIndex}>
+        <div className="hud__matrix" aria-hidden="true" />
+        <div className="hud__frame">
+          <div className="hud__inner">
+            <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+            <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+            <span className="hud__corner hud__corner--br" aria-hidden="true" />
+            <div className="hud__tab">Wrap up</div>
+            {/* The bar is not decoration: the chassis is a three-row grid, and
+                without it the stage lands in the middle row and the frame
+                collapses to the height of the text. */}
+            <div className="hud__bar">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <span className="hud__event">That’s the show</span>
+              <span className="hud__status">
+                <span className="hud__dot" aria-hidden="true" />
+                complete
+              </span>
+              <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+            </div>
+            <div className="hud__stage">
+              <WrapUp elapsedMs={elapsed} />
             </div>
           </div>
         </div>

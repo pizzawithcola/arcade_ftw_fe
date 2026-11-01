@@ -70,21 +70,20 @@ export interface Selection extends Span {
 
 export const FALSE_ALARM_POINTS = -80
 /**
- * The longest drag still treated as "one thing the player pointed at".
+ * The longest selection still treated as "one thing the player pointed at".
  *
  * Purity alone punished honest play: `35.65%` is six characters inside a sixty
- * character sentence, so selecting that whole sentence scored 0.10 and was
- * rejected as a false alarm. A tablet drag cannot land on six characters, so a
- * selection that fully contains an anchor and stays under a sentence's length
- * is accepted on intent, while a paragraph or the whole post still is not.
+ * character sentence, so flagging that sentence scored 0.10 and was rejected as
+ * a false alarm. The unit of the game is a paragraph now - the longest one on
+ * the post is about 160 characters - so the intent allowance has to cover a
+ * whole paragraph and stop there; two paragraphs, or the whole post, still do
+ * not count.
  */
-export const MAX_SELECTION_CHARS = 140
+export const MAX_SELECTION_CHARS = 200
 /** Share of a selection that must sit inside leaks for it to count. */
 export const PURITY_THRESHOLD = 0.3
 /** Share of a leak that must be covered for it to count as caught. */
 export const LEAK_COVERAGE_THRESHOLD = 0.5
-/** A shorter drag is almost certainly an accidental tap. */
-export const MIN_SELECTION_CHARS = 3
 /** A selection covering more than this share of the post credits nothing. */
 export const BLANKET_RATIO = 0.5
 

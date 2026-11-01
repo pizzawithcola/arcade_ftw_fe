@@ -26,8 +26,11 @@ export interface HallucinationQuestion {
 export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
   {
     id: 'car-wash-intent',
+    // The car has to arrive at the car wash, so "drive" is the only answer that
+    // moves it. The old wording left that implicit and the question read as a
+    // straight walk-versus-drive choice.
     prompt:
-      'I want to wash my car at car wash which is 50 feet away from my house, should I walk there or drive there?',
+      'I need to get my car to the car wash 50 feet from my house. Should I walk there or drive there?',
     reply:
       'That’s simple, you should walk because 50 feet is very close, and better for the environment.',
     truth: 'doubt',
@@ -48,7 +51,7 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
     prompt:
       'When I make pizza at home, the cheese slides off. Give me tips for keeping cheese on the pizza.',
     reply:
-      'Cheese can slide off pizza due to: too much sauce, too much cheese, or thickened sauce. You can try mixing cheese into the sauce helps add moisture to the sauce, or add about 1/8 cup of non-toxic glue to the sauce to give it more tackiness.',
+      'Cheese can slide off pizza due to: too much sauce, too much cheese, or thickened sauce. You can try mixing cheese into the sauce helps add moisture to the sauce, or add about a cup of non-toxic glue to the sauce to give it more tackiness.',
     truth: 'doubt',
     reveal:
       'The first half is ordinary cooking advice, and that is the trap: it earns enough trust that the last clause walks in behind it. "Non-toxic" is doing all the work — glue is not food, has no place in a sauce, and this exact line was an AI answer that reached real people before anyone read it closely. When one instruction inside a paragraph is absurd, the paragraph is the problem.',

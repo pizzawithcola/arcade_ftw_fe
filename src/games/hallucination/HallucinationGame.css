@@ -346,7 +346,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  height: clamp(2.6rem, 7vh, 3.4rem);
+  /* Ten percent more height than the bar needs: the control is the only thing
+     on this screen a finger has to find, and it was the tightest target left. */
+  height: clamp(2.86rem, 7.7vh, 3.74rem);
 }
 
 .hallu__track {
@@ -564,5 +566,114 @@
 @media (max-width: 46rem) {
   .hallu__gainnote {
     display: none;
+  }
+}
+
+/* ─── the two ends of the scale ───────────────────────────────────────────── */
+
+/* The arrows say which way the handle moves. They breathe while the answer is
+   still open, then settle once it is picked, so they read as an instruction
+   rather than as part of the label. */
+.hallu__arrow {
+  display: inline-block;
+  margin: 0 0.15em;
+  font-size: 1.1em;
+  line-height: 1;
+  color: var(--c-text-muted);
+  animation: hallu-arrow 1.6s ease-in-out infinite;
+}
+
+.hallu__label:first-child .hallu__arrow {
+  animation-name: hallu-arrow-left;
+}
+
+.hallu__label.is-on .hallu__arrow,
+.hallu__slider.is-trust .hallu__label:last-child .hallu__arrow,
+.hallu__slider.is-doubt .hallu__label:first-child .hallu__arrow {
+  color: var(--c-text);
+}
+
+@keyframes hallu-arrow-left {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(-4px);
+    opacity: 1;
+  }
+}
+
+@keyframes hallu-arrow {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+}
+
+/* ─── the hint handle ─────────────────────────────────────────────────────── */
+
+/* Fifty points either side of the notch, easing out and back, for as long as
+   nobody has touched the real handle. It is a ghost: it never sets a value, and
+   the first interaction takes it away. */
+/* Same footprint as the real handle - the hint is only useful if it looks like
+   the thing the player is supposed to drag. */
+.hallu__ghost {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(1.5rem, 6vw, 1.9rem);
+  height: clamp(2rem, 5.4vh, 2.5rem);
+  margin: calc(clamp(2rem, 5.4vh, 2.5rem) / -2) 0 0 calc(clamp(1.5rem, 6vw, 1.9rem) / -2);
+  border: 2px solid color-mix(in srgb, var(--c-text) 70%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-text) 18%, transparent);
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--c-text) 8%, transparent),
+    0 0 26px color-mix(in srgb, var(--c-text) 40%, transparent);
+  pointer-events: none;
+  animation: hallu-ghost-sway 2.6s cubic-bezier(0.45, 0, 0.55, 1) 0.4s 2 both;
+}
+
+/* The sway is short on purpose: 50 points of a 400 point scale is a nudge, not
+   a suggestion of an answer. */
+@keyframes hallu-ghost-sway {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  12% {
+    transform: translateX(-50px);
+    opacity: 1;
+  }
+  38% {
+    transform: translateX(50px);
+  }
+  64% {
+    transform: translateX(-50px);
+  }
+  86% {
+    transform: translateX(50px);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hallu__ghost,
+  .hallu__arrow {
+    animation: none;
+  }
+
+  .hallu__ghost {
+    opacity: 0.5;
   }
 }
