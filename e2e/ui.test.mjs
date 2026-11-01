@@ -773,6 +773,66 @@ describe('the Ultimate round', () => {
   })
 })
 
+describe('the final board', () => {
+  test('stacks from last place up, and lands the top three last', async () => {
+    // Its own crowd, so the test says the same thing whatever ran before it: a
+    // pile of one is not a pile.
+    const crowd = ['Ux-f1', 'Ux-f2', 'Ux-f3', 'Ux-f4']
+    for (const name of crowd) await api.join(ROOM, name)
+    const { context, page } = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
+    try {
+      // Node 11 is the activity board: everyone's total, which is the last
+      // screen with numbers on it.
+      await api.jump(ROOM, 11)
+      await page.waitForSelector('.ldb--pile', { timeout: 20000 })
+
+      const shape = await page.evaluate(() => ({
+        split: Boolean(document.querySelector('.ldb__list--split')),
+        rows: [...document.querySelectorAll('.ldb__row')].map((row) => ({
+          rank: row.querySelector('.ldb__rank')?.textContent?.trim(),
+          opacity: Number(getComputedStyle(row).opacity),
+          top: Math.round(row.getBoundingClientRect().top),
+        })),
+      }))
+      assert.equal(shape.split, false, 'the final board is one column: it is a stack')
+      assert.ok(shape.rows.length > 2, 'the pile needs something to stack')
+
+      // Read it again once the pile has finished and the top three have flared.
+      await page.waitForTimeout(4_000)
+      const settled = await page.evaluate(() => {
+        const rows = [...document.querySelectorAll('.ldb__row')]
+        return {
+          opacities: rows.map((row) => Number(getComputedStyle(row).opacity)),
+          order: rows.map((row) => row.querySelector('.ldb__name')?.textContent?.trim()),
+          scores: rows.map((row) => Number(row.querySelector('.ldb__score')?.textContent ?? 0)),
+        }
+      })
+      assert.deepEqual(
+        settled.opacities,
+        settled.opacities.map(() => 1),
+        'every place is on the board by the end',
+      )
+      assert.deepEqual(
+        [...settled.scores].sort((a, b) => b - a),
+        settled.scores,
+        'and they are in order, best first',
+      )
+      await snap(page, 'ipad-final-board.png')
+    } finally {
+      await context.close()
+      for (const name of crowd) {
+        const found = await api.get(`/api/players?q=${encodeURIComponent(name)}`, {
+          token: api.adminToken,
+          expect: 200,
+        })
+        for (const player of found.players ?? []) {
+          if (player.nickname === name) await api.deletePlayer(player.player_id)
+        }
+      }
+    }
+  })
+})
+
 describe('the console', () => {
   test('the jump board lists every node and the quiz tables reflect five slots', async () => {
     const errors = []

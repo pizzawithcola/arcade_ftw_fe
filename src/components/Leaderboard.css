@@ -354,3 +354,84 @@
     animation: none;
   }
 }
+
+/* ─── the final board: a pile ──────────────────────────────────────────────── */
+
+/* Rows arrive by position, not by CSS animation, so the stack physics live in
+   `pileAt()` and this only takes over the parts a transform cannot do: the glow
+   when a place lands, and the louder glow for the three that matter. */
+
+.ldb--pile .ldb__row {
+  animation: none;
+  will-change: transform, opacity;
+}
+
+.ldb--pile .ldb__row.is-piling {
+  box-shadow: 0 18px 30px color-mix(in srgb, var(--c-black) 55%, transparent);
+}
+
+/* Landing: one red ring that swells and dies. */
+@keyframes ldb-flare {
+  from {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--c-brand) calc(var(--tier) * 34%), transparent),
+      0 0 calc(var(--tier) * 44px) color-mix(in srgb, var(--c-brand) calc(var(--tier) * 26%), transparent);
+  }
+  to {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--c-brand) 0%, transparent),
+      0 0 0 color-mix(in srgb, var(--c-brand) 0%, transparent);
+  }
+}
+
+.ldb--pile .ldb__row.is-flare {
+  animation: ldb-flare 900ms ease-out;
+}
+
+/* The last three get a light sweep as they land, timed off the same class. */
+.ldb--pile .ldb__row.is-flare::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in srgb, var(--c-text) 26%, transparent) 48%,
+    transparent 72%
+  );
+  transform: translateX(-120%);
+  animation: ldb-sweep 700ms ease-out;
+  pointer-events: none;
+}
+
+@keyframes ldb-sweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* First place lands hardest: a second, wider ring and a standing glow. */
+.ldb--pile .ldb__row.is-rank-1.is-flare {
+  animation: ldb-flare 900ms ease-out, ldb-crown 1600ms ease-out;
+}
+
+@keyframes ldb-crown {
+  0% {
+    transform-origin: center;
+    filter: brightness(1);
+  }
+  18% {
+    filter: brightness(1.5);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ldb--pile .ldb__row.is-flare,
+  .ldb--pile .ldb__row.is-flare::after,
+  .ldb--pile .ldb__row.is-rank-1.is-flare {
+    animation: none;
+  }
+}

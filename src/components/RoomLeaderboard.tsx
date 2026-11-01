@@ -4,8 +4,10 @@ import Leaderboard, { type LeaderboardEntry } from './Leaderboard'
 
 /**
  * One section's in-game ranking for a room. Fetches the section's scores and
- * renders the shared list. The title is left to the enclosing screen; the
- * `total` section is still a placeholder until its design lands.
+ * renders the shared list. The title is left to the enclosing screen.
+ *
+ * `total` is the last board of the night, so it is drawn differently: the rows
+ * stack up from the bottom rather than arriving as a finished list.
  */
 export default function RoomLeaderboard({
   code,
@@ -17,7 +19,7 @@ export default function RoomLeaderboard({
   const [rows, setRows] = useState<LeaderboardEntry[]>([])
 
   useEffect(() => {
-    if (!code || !section || section === 'total') return
+    if (!code || !section) return
     let live = true
     fetchRoomLeaderboard(code, section)
       .then((board) => {
@@ -41,9 +43,7 @@ export default function RoomLeaderboard({
     }
   }, [code, section])
 
-  if (section === 'total') {
-    return <p className="ldb__empty">The final ranking is coming soon.</p>
-  }
-
-  return <Leaderboard rows={rows} />
+  // The final board plays itself in: last place lands first, then the pile
+  // builds upwards until the top three arrive.
+  return <Leaderboard rows={rows} pile={section === 'total'} />
 }
