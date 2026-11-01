@@ -135,11 +135,13 @@ function NodeStage({
   nodeIndex,
   room,
   team,
+  nickname,
 }: {
   node: FlowNode | null
   nodeIndex: number
   room: string
   team?: string
+  nickname?: string
 }) {
   // Unconditional, so it sits above every branch below: the title card needs the
   // node clock, and a hook cannot hide behind an `if`.
@@ -273,7 +275,7 @@ function NodeStage({
       <div className="stage stage--leaderboard" key={nodeIndex}>
         <span className="stage__kind">leaderboard</span>
         <h2>{node.title ?? 'Standings'}</h2>
-        <RoomLeaderboard code={room} section={node.section} />
+        <RoomLeaderboard code={room} section={node.section} me={nickname} />
       </div>
     )
   }
@@ -527,7 +529,7 @@ export default function PlayPage() {
       ) : phase === 'waiting' ? (
         <WaitingRoom nickname={me.nickname} eventName={eventName} />
       ) : (
-        <NodeStage node={node} nodeIndex={index} room={code} team={me.team} />
+        <NodeStage node={node} nodeIndex={index} room={code} team={me.team} nickname={me.nickname} />
       )}
     </main>
   )

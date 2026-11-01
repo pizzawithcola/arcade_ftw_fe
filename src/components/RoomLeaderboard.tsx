@@ -12,9 +12,12 @@ import Leaderboard, { type LeaderboardEntry } from './Leaderboard'
 export default function RoomLeaderboard({
   code,
   section,
+  me,
 }: {
   code: string
   section?: string
+  /** The player reading it, so the board can point at their own place. */
+  me?: string
 }) {
   const [rows, setRows] = useState<LeaderboardEntry[]>([])
 
@@ -45,5 +48,5 @@ export default function RoomLeaderboard({
 
   // The final board plays itself in: last place lands first, then the pile
   // builds upwards until the top three arrive.
-  return <Leaderboard rows={rows} pile={section === 'total'} />
+  return <Leaderboard rows={rows} pile={section === 'total'} me={me} />
 }

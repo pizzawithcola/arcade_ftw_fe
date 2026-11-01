@@ -149,6 +149,39 @@
   color: var(--c-text-muted);
 }
 
+/* Where this device stands. A chip rather than a sentence, so it reads at a
+   glance on a screen someone is holding at arm's length. */
+.ldb__you {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0 0 0.55rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.ldb__you b {
+  font-size: 1.35em;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: var(--c-brand);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--c-brand) 55%, transparent);
+}
+
+/* And the row itself, so the number and the name are the same fact. */
+.ldb__row.is-me {
+  border-color: color-mix(in srgb, var(--c-brand) 65%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-brand) 35%, transparent);
+}
+
+.ldb__row.is-me .ldb__name {
+  color: var(--c-text);
+  font-weight: 700;
+}
+
 /* Same columns as a row: the label has to sit over the thing it names. */
 .ldb__legend {
   display: grid;

@@ -81,11 +81,14 @@ export default function Leaderboard({
   title,
   rows,
   pile = false,
+  me,
 }: {
   title?: string
   rows: LeaderboardEntry[]
   /** The last board of the night: build it as a stack instead of a list. */
   pile?: boolean
+  /** This device's nickname, so the reader can find themselves in the list. */
+  me?: string
 }) {
   const list = useRef<HTMLOListElement | null>(null)
   const [split, setSplit] = useState(false)
@@ -173,6 +176,7 @@ export default function Leaderboard({
   // Every row's bar is measured against the leader, so the board reads as a
   // spread rather than as a list of numbers.
   const leader = Math.max(1, ...rows.map((row) => Math.max(0, row.total ?? row.score)))
+  const mine = me ? rows.find((row) => row.nickname === me) : undefined
 
   return (
     <div className={`ldb${piling ? ' ldb--pile' : ''}`}>
@@ -186,6 +190,13 @@ export default function Leaderboard({
             <span className="ldb__pulse" aria-hidden="true" />
             Live standings
           </p>
+          {/* The board is four hundred names long from where the player sits:
+              without this line they have to hunt for their own row. */}
+          {mine && (
+            <p className="ldb__you">
+              You are <b>#{mine.rank}</b> of {rows.length}
+            </p>
+          )}
           {/* The columns, labelled in the same grid the rows use, so the header
               sits over the data it names instead of over the middle of it. */}
           <div className="ldb__legend" aria-hidden="true">
@@ -236,6 +247,7 @@ export default function Leaderboard({
                     playing ? 'is-moving' : '',
                     piling ? 'is-piling' : '',
                     flare ? 'is-flare' : '',
+                    row.nickname === me ? 'is-me' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
