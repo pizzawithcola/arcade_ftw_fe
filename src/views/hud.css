@@ -786,8 +786,11 @@
    markup on purpose: the audience meets one piece of hardware, not a deck of
    unrelated slides. */
 
+/* Narrower than a game screen: three numbered lines in a full-width panel read
+   like a slide with the text pinned to its left edge. The title card keeps the
+   full width - the name is the point of that half. */
 .hud--brief .hud__frame {
-  width: min(100%, 60rem);
+  width: min(100%, 46rem);
   max-height: 100%;
 }
 

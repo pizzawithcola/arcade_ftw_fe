@@ -27,10 +27,10 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
   {
     id: 'car-wash-intent',
     // The car has to arrive at the car wash, so "drive" is the only answer that
-    // moves it. The old wording left that implicit and the question read as a
-    // straight walk-versus-drive choice.
+    // moves it. Spelled out in the asker's own words: the trap is that the model
+    // answers "walk or drive" and forgets what is being washed.
     prompt:
-      'I need to get my car to the car wash 50 feet from my house. Should I walk there or drive there?',
+      'I need to take my car to the car wash, which is 50 feet from my house. Should I walk or should I drive?',
     reply:
       'That’s simple, you should walk because 50 feet is very close, and better for the environment.',
     truth: 'doubt',
