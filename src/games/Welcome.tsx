@@ -45,10 +45,6 @@ export default function Welcome({
       <span className="welcome__scan" aria-hidden="true" />
 
       <header className="welcome__head">
-        <p className="welcome__kicker">
-          <span className="welcome__dot" aria-hidden="true" />
-          tonight
-        </p>
         {/* The one red-lit thing on the screen, exactly as on the game cards:
             the brand marks the name, never the copy. */}
         <h1 className="welcome__title" data-text="AI CYBER ARCADE">

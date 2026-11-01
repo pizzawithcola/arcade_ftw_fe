@@ -165,7 +165,11 @@
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c-brand) 80%, transparent));
 }
 
+/* Held to the right edge whether or not the bar carries a status chip or a
+   clock: without this, a bar with only an event name leaves the pair of
+   chevrons stranded in the middle. */
 .hud__chevrons--flip {
+  margin-left: auto;
   transform: scaleX(-1);
 }
 
@@ -877,6 +881,12 @@
 .hud--fill .hud__stage {
   grid-template-rows: minmax(0, 1fr);
   align-content: stretch;
+}
+
+/* The rules were pinned to the top of a panel that used to be as short as they
+   are; in a full-height one they centre. */
+.hud--fill .opening {
+  align-content: center;
 }
 
 /* Game content reads left to right; only the waiting room centres its text.

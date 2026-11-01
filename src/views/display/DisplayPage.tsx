@@ -711,7 +711,7 @@ export default function DisplayPage() {
               <span className="hud__corner hud__corner--bl" aria-hidden="true" />
               <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-              <div className="hud__tab">Arcade FTW</div>
+              <div className="hud__tab">Arcade Fintech Week</div>
 
               <div className="hud__bar">
                 <span className="hud__chevrons" aria-hidden="true" />

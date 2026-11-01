@@ -169,10 +169,6 @@ function NodeStage({
             <div className="hud__bar">
               <span className="hud__chevrons" aria-hidden="true" />
               <span className="hud__event">Tonight's line-up</span>
-              <span className="hud__status">
-                <span className="hud__dot" aria-hidden="true" />
-                starting soon
-              </span>
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>
             <div className="hud__stage">
@@ -226,7 +222,7 @@ function NodeStage({
     const at = gameNumber(entry.key, node.section)
     const half = openingPhase(node.title_sec, elapsed)
     return (
-      <div className={`hud ${half === 'title' ? 'hud--game' : 'hud--brief'}`} key={nodeIndex}>
+      <div className={`hud ${half === 'title' ? 'hud--game' : 'hud--brief'} hud--fill`} key={nodeIndex}>
         <div className="hud__matrix" aria-hidden="true" />
         <div className="hud__frame">
           <div className="hud__inner">
