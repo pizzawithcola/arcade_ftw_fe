@@ -406,23 +406,6 @@ function TeamChip({
   )
 }
 
-/** The three columns, with the round's target marked. Nothing else on screen
- *  says which one decides the round, and it is the one thing a viewer needs. */
-function DomainRow({ sabotage }: { sabotage: SabotageState }) {
-  return (
-    <div className="battle__domains">
-      {sabotage.domains.map((domain) => (
-        <span
-          key={domain}
-          className={`battle__domain${domain === sabotage.target ? ' is-target' : ''}`}
-        >
-          {SAB_DOMAIN[domain]}
-        </span>
-      ))}
-    </div>
-  )
-}
-
 /** The one thing moving while the room buys: the attack going in and the
  *  defence taking it, three lanes, one per column. No card is public yet, so
  *  this is the whole of what the wall can honestly show. */
@@ -437,7 +420,7 @@ function Clash({ sabotage }: { sabotage: SabotageState }) {
         {sabotage.domains.map((domain, at) => (
           <li
             key={domain}
-            className={`battle__lane${domain === sabotage.target ? ' is-target' : ''}`}
+            className="battle__lane"
             style={{ '--lane': at } as CSSProperties}
           >
             <span className="battle__lanename">{SAB_DOMAIN[domain]}</span>
@@ -485,7 +468,6 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
           Round {sabotage.round} of {sabotage.rounds}
         </p>
         <p className="battle__headline">{sabotage.theme}</p>
-        <DomainRow sabotage={sabotage} />
         <Clash sabotage={sabotage} />
         <div className="battle__teams">
           <TeamChip sabotage={sabotage} team="red" />

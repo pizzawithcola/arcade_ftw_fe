@@ -1050,29 +1050,6 @@
 }
 
 /* The three columns, with the one that decides the round lit. */
-.battle__domains {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.battle__domain {
-  padding: 0.3rem 1.1rem;
-  border: 1px solid var(--c-border);
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.72rem, 1.2vw, 0.92rem);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--c-text-dim);
-}
-
-.battle__domain.is-target {
-  border-color: var(--c-brand);
-  background: color-mix(in srgb, var(--c-brand-deep) 40%, transparent);
-  color: var(--c-text);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--c-brand) 40%, transparent);
-}
-
-/* The two jobs, each in its own colour, each with its own sentence. */
 .battle__briefs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1336,7 +1313,7 @@
 .battle__clash {
   display: grid;
   gap: clamp(0.35rem, 1vh, 0.7rem);
-  width: min(100%, 60rem);
+  width: 100%;
 }
 
 .battle__clashhead {
@@ -1364,20 +1341,11 @@
   background: color-mix(in srgb, #000 22%, transparent);
 }
 
-.battle__lane.is-target {
-  border-color: color-mix(in srgb, var(--c-brand) 55%, transparent);
-  box-shadow: inset 0 0 24px color-mix(in srgb, var(--c-brand-deep) 26%, transparent);
-}
-
 .battle__lanename {
   font-family: 'Orbitron', ui-monospace, monospace;
   font-size: clamp(0.8rem, 1.25vw, 1.05rem);
   letter-spacing: 0.16em;
   color: var(--c-text-muted);
-}
-
-.battle__lane.is-target .battle__lanename {
-  color: var(--c-text);
 }
 
 .battle__lanetrack {
