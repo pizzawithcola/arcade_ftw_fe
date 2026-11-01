@@ -74,6 +74,62 @@ function WaitingRoom({ nickname, eventName }: { nickname: string; eventName: str
   )
 }
 
+/**
+ * Between shows the device used to fall back to three lines of text on the page
+ * background, which read as "something is missing". It gets the same chassis as
+ * the waiting room instead: the room is still there, the show has not started.
+ */
+function BetweenShows({
+  eventName,
+  headline,
+  note,
+}: {
+  eventName: string
+  headline: string
+  note: string
+}) {
+  return (
+    <div className="hud">
+      <div className="hud__matrix" aria-hidden="true" />
+
+      <div className="hud__frame">
+        <div className="hud__inner">
+          <span className="hud__corner hud__corner--tl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--tr" aria-hidden="true" />
+          <span className="hud__corner hud__corner--bl" aria-hidden="true" />
+          <span className="hud__corner hud__corner--br" aria-hidden="true" />
+
+          <div className="hud__tab">Between Rounds</div>
+
+          <div className="hud__bar">
+            <span className="hud__chevrons" aria-hidden="true" />
+            <span className="hud__event">{eventName || 'AI Cyber Arcade'}</span>
+            <span className="hud__status">
+              <span className="hud__dot" aria-hidden="true" />
+              get ready
+            </span>
+            <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
+          </div>
+
+          <div className="hud__stage">
+            <div className="hud__rings" aria-hidden="true">
+              <span className="hud__ring hud__ring--outer" />
+              <span className="hud__ring hud__ring--mid" />
+              <span className="hud__ring hud__ring--inner" />
+            </div>
+
+            <h1 className="wait__title">
+              <span className="wait__brand">AI Cyber Arcade</span>
+              <span className="wait__hi">{headline}</span>
+            </h1>
+            <p className="wait__note">{note}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function NodeStage({
   node,
   nodeIndex,
@@ -455,32 +511,23 @@ export default function PlayPage() {
       )}
 
       {roomMissing || (phase === 'waiting' && !code) ? (
-        <div className="wait">
-          <h1 className="wait__title">
-            <span className="wait__brand">AI Cyber Arcade</span>
-            <span className="wait__event">{eventName}</span>
-          </h1>
-          <p className="wait__hi">Between rounds</p>
-          <p className="wait__note">Waiting for the host to open the next show…</p>
-        </div>
+        <BetweenShows
+          eventName={eventName}
+          headline="Between rounds"
+          note="Waiting for the host to open the next show…"
+        />
       ) : phase === 'finished' && sawPlaying ? (
-        <div className="wait">
-          <h1 className="wait__title">
-            <span className="wait__brand">AI Cyber Arcade</span>
-            <span className="wait__event">{eventName}</span>
-          </h1>
-          <p className="wait__hi">Thanks for playing</p>
-          <p className="wait__note">That's a wrap — signing you out…</p>
-        </div>
+        <BetweenShows
+          eventName={eventName}
+          headline="Thanks for playing"
+          note="That's a wrap — signing you out…"
+        />
       ) : phase === 'finished' ? (
-        <div className="wait">
-          <h1 className="wait__title">
-            <span className="wait__brand">AI Cyber Arcade</span>
-            <span className="wait__event">{eventName}</span>
-          </h1>
-          <p className="wait__hi">Between rounds</p>
-          <p className="wait__note">Waiting for the host to open the next show…</p>
-        </div>
+        <BetweenShows
+          eventName={eventName}
+          headline="Between rounds"
+          note="Waiting for the host to open the next show…"
+        />
       ) : phase === 'waiting' ? (
         <WaitingRoom nickname={me.nickname} eventName={eventName} />
       ) : (

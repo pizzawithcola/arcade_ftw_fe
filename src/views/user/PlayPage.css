@@ -31,58 +31,68 @@
 
 /* The player's waiting room: three lines, centred, nothing to read twice. */
 
-.wait {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: clamp(1.1rem, 3.2vh, 2.2rem);
-  padding: clamp(2rem, 6vw, 5rem);
-  text-align: center;
-}
-
+/* The dead time between shows, inside the waiting room's chassis. Rings above,
+   a name line, a headline, and one line that says what the device is waiting
+   for; nothing here is clickable, so it is set like a status, not a page. */
 .wait__title {
   display: grid;
-  gap: clamp(0.35rem, 1vh, 0.7rem);
+  justify-items: center;
+  gap: clamp(0.45rem, 1.3vh, 0.9rem);
   margin: 0;
 }
 
 .wait__brand {
-  font-size: clamp(0.8rem, 1.5vw, 1.15rem);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.7rem, 1.4vw, 0.95rem);
   font-weight: 600;
-  letter-spacing: 0.34em;
+  letter-spacing: 0.42em;
   text-transform: uppercase;
-  color: var(--c-text);
-}
-
-.wait__event {
-  font-size: clamp(1.9rem, 5.4vw, 4rem);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  color: var(--c-text);
-  text-wrap: balance;
-  max-width: 20ch;
+  color: color-mix(in srgb, var(--c-brand) 72%, var(--c-text));
 }
 
 .wait__hi {
   margin: 0;
-  font-size: clamp(1.5rem, 3.6vw, 2.6rem);
-  line-height: 1.15;
-  color: var(--c-text-muted);
-}
-
-.wait__hi strong {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
   font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
   color: var(--c-text);
+  text-wrap: balance;
 }
 
 .wait__note {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   margin: 0;
-  font-size: clamp(0.95rem, 1.7vw, 1.25rem);
+  font-size: clamp(0.9rem, 1.6vw, 1.15rem);
   letter-spacing: 0.04em;
   color: var(--c-text-dim);
+}
+
+/* A slow lamp: the screen is alive, it is just not doing anything yet. */
+.wait__note::before {
+  content: '';
+  width: 0.45rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c-brand);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-brand) 70%, transparent);
+  animation: wait-lamp 2.4s ease-in-out infinite;
+}
+
+@keyframes wait-lamp {
+  50% {
+    opacity: 0.25;
+    box-shadow: 0 0 4px color-mix(in srgb, var(--c-brand) 30%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wait__note::before {
+    animation: none;
+  }
 }
 
 .play__who {
