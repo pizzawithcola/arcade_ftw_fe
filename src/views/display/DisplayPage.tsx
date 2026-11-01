@@ -16,7 +16,13 @@ import '../../games/hallucination/HallucinationGame.css'
 import '../hud.css'
 import { useGameSocket } from '../../hooks/useGameSocket'
 import { useTicker } from '../../hooks/useTicker'
-import { useGameStore, type FlowNode, type QuestionState } from '../../store/gameStore'
+import {
+  useGameStore,
+  type FlowNode,
+  type QuestionState,
+  type SabotageState,
+  type SabotageTeam,
+} from '../../store/gameStore'
 import StaffLogin from '../StaffLogin'
 import './DisplayPage.css'
 
@@ -349,92 +355,216 @@ function sabTeam(key: string): string {
   return SAB_TEAM[key] ?? key.toUpperCase()
 }
 
-function SabotageOnScreen() {
-  const sabotage = useGameStore((state) => state.sabotage)
-  if (!sabotage) return null
+/** One round of the match, for the rail across the top of every battle screen. */
+function RoundRail({ sabotage }: { sabotage: SabotageState }) {
+  return (
+    <ol className="battle__rail" aria-hidden="true">
+      {Array.from({ length: sabotage.rounds }, (_, at) => {
+        const number = at + 1
+        const played = sabotage.history.find((result) => result.round === number)
+        const state =
+          number === sabotage.round && sabotage.phase !== 'final'
+            ? 'is-now'
+            : played
+              ? played.winner
+                ? 'is-done'
+                : 'is-void'
+              : ''
+        return (
+          <li key={number} className={`battle__railstep ${state}`}>
+            R{number}
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
 
+/** One team, named in its own colour, with what it has left to spend. */
+function TeamChip({
+  sabotage,
+  team,
+  role,
+}: {
+  sabotage: SabotageState
+  team: SabotageTeam
+  role?: 'attacks' | 'defends'
+}) {
+  const left = sabotage.budget[team] ?? 0
+  const share = sabotage.total_budget > 0 ? left / sabotage.total_budget : 0
+  return (
+    <div className={`battle__team is-${team}`}>
+      <span className="battle__teamname">{sabTeam(team)}</span>
+      {role && <span className="battle__teamrole">{role.toUpperCase()}</span>}
+      <span className="battle__teammoney">{sabMoney(left)}</span>
+      <span className="battle__teambar" aria-hidden="true">
+        <span style={{ width: `${Math.max(2, Math.round(share * 100))}%` }} />
+      </span>
+      <span className="battle__teamcount">{sabotage.teams[team]?.length ?? 0} players</span>
+    </div>
+  )
+}
+
+/** The three columns, with the round's target marked. Nothing else on screen
+ *  says which one decides the round, and it is the one thing a viewer needs. */
+function DomainRow({ sabotage }: { sabotage: SabotageState }) {
+  return (
+    <div className="battle__domains">
+      {sabotage.domains.map((domain) => (
+        <span
+          key={domain}
+          className={`battle__domain${domain === sabotage.target ? ' is-target' : ''}`}
+        >
+          {SAB_DOMAIN[domain]}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** The wall of the whole round: who is on it, what is at stake, what is left. */
+function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
   if (sabotage.phase === 'team_reveal') {
-    // The colour does the naming here: this round one whole team is purple and
-    // the other is blue, so the tablet in your hand matches the table to walk to.
-    const attacking = sabotage.teams[sabotage.attacker]?.length ?? 0
-    const defending = sabotage.teams[sabotage.attacker === 'red' ? 'blue' : 'red']?.length ?? 0
     return (
-      <article className="display__question">
-        <p className="display__prompt">Find the screen in your colour, and regroup.</p>
-        <p className="display__look">
-          <span className="display__atk">{attacking} on Purple</span> ·{' '}
-          <span className="display__def">{defending} on Blue</span>
-        </p>
+      <article className="battle">
+        <p className="battle__eyebrow">Two sides · one budget</p>
+        <p className="battle__headline">Find your colour</p>
+        <div className="battle__teams">
+          <TeamChip sabotage={sabotage} team="red" />
+          <TeamChip sabotage={sabotage} team="blue" />
+        </div>
       </article>
     )
   }
 
   if (sabotage.phase === 'brief') {
     return (
-      <article className="display__question">
-        <p className="display__prompt">Four rounds. One budget.</p>
-        <p className="display__reply">
-          Each team has {sabMoney(sabotage.total_budget)} for all four rounds. What you
-          spend now is gone in round four.
-        </p>
-        <p className="display__look">
-          Every card scores in Data, People and Infra · only the round's target decides who
-          wins · the dearest card is not the strongest
-        </p>
+      <article className="battle">
+        <RoundRail sabotage={sabotage} />
+        <p className="battle__eyebrow">The whole match, paid up front</p>
+        <p className="battle__bigmoney">{sabMoney(sabotage.total_budget)}</p>
+        <div className="battle__facts">
+          <span>
+            <b>4</b> rounds
+          </span>
+          <span>
+            <b>3</b> columns
+          </span>
+          <span>
+            <b>1</b> shared budget
+          </span>
+          <span>
+            target column <b>wins</b> the round
+          </span>
+        </div>
+        <div className="battle__teams">
+          <TeamChip sabotage={sabotage} team={sabotage.attacker} role="attacks" />
+          <TeamChip sabotage={sabotage} team={sabotage.defender} role="defends" />
+        </div>
       </article>
     )
   }
 
   if (sabotage.phase === 'select') {
     return (
-      <article className="display__question">
-        <p className="display__prompt">
-          Round {sabotage.round} · {sabotage.theme}
+      <article className="battle">
+        <RoundRail sabotage={sabotage} />
+        <p className="battle__eyebrow">
+          Round {sabotage.round} of {sabotage.rounds}
         </p>
-        <p className="display__reply">
-          TARGET · {SAB_DOMAIN[sabotage.target]?.toUpperCase()} — {sabTeam(sabotage.attacker)}{' '}
-          attacks
-        </p>
-        <p className="display__look">
-          {sabotage.attacker === 'red' ? sabotage.attack_brief : sabotage.defence_brief}
-        </p>
-        <p className="display__look">
-          Left to spend — {sabTeam('red')} {sabMoney(sabotage.budget.red ?? 0)} ·{' '}
-          {sabTeam('blue')} {sabMoney(sabotage.budget.blue ?? 0)}
-        </p>
+        <p className="battle__headline">{sabotage.theme}</p>
+        <DomainRow sabotage={sabotage} />
+        <div className="battle__briefs">
+          <div className="battle__brief is-atk">
+            <span className="battle__brieftag">{sabTeam(sabotage.attacker)} ATTACKS</span>
+            <p>{sabotage.attack_brief}</p>
+          </div>
+          <div className="battle__brief is-def">
+            <span className="battle__brieftag">{sabTeam(sabotage.defender)} DEFENDS</span>
+            <p>{sabotage.defence_brief}</p>
+          </div>
+        </div>
+        <div className="battle__teams">
+          <TeamChip sabotage={sabotage} team="red" />
+          <TeamChip sabotage={sabotage} team="blue" />
+        </div>
       </article>
     )
   }
 
   if (sabotage.phase === 'reveal' && sabotage.last_result) {
     const r = sabotage.last_result
+    const won = r.winner ? sabTeam(r.winner) : null
     return (
-      <article className="display__question">
-        <p className="display__prompt">
-          Round {r.round} · {r.outcome.toUpperCase()}
-        </p>
-        <ul className="display__dims">
+      <article className="battle">
+        <RoundRail sabotage={sabotage} />
+        <p className="battle__eyebrow">Round {r.round} · {r.theme}</p>
+        <p className={`battle__outcome${won ? '' : ' is-draw'}`}>{r.outcome}</p>
+
+        {/* Three columns, drawn as the two hands that met in each one. */}
+        <ul className="battle__dims">
           {r.dims.map((dim) => (
-            <li key={dim.domain} className={`is-${dim.result} ${dim.target ? 'is-target' : ''}`}>
-              <span>{SAB_DOMAIN[dim.domain]}</span>
-              <b>{dim.attack}</b>
-              <span>vs</span>
-              <b>{dim.defence}</b>
-              <em>{dim.result === 'break' ? 'BREACH' : dim.result === 'tie' ? 'TIE' : 'HELD'}</em>
+            <li
+              key={dim.domain}
+              className={`battle__dim is-${dim.result}${dim.target ? ' is-target' : ''}`}
+            >
+              <span className="battle__dimname">{SAB_DOMAIN[dim.domain]}</span>
+              <span className="battle__dimbar is-atk" aria-hidden="true">
+                <span
+                  style={{
+                    width: `${Math.round((dim.attack / Math.max(1, dim.attack, dim.defence)) * 100)}%`,
+                  }}
+                />
+              </span>
+              <b className="battle__dimatk">{dim.attack}</b>
+              <b className="battle__dimdef">{dim.defence}</b>
+              <span className="battle__dimbar is-def" aria-hidden="true">
+                <span
+                  style={{
+                    width: `${Math.round((dim.defence / Math.max(1, dim.attack, dim.defence)) * 100)}%`,
+                  }}
+                />
+              </span>
+              <span className="battle__dimword">
+                {dim.result === 'break' ? 'BREACH' : dim.result === 'tie' ? 'TIE' : 'HELD'}
+              </span>
             </li>
           ))}
         </ul>
-        <p className="display__look">
-          {sabTeam('red')} {sabotage.scores.red} · {sabTeam('blue')} {sabotage.scores.blue}
-        </p>
-        <p className="display__look">
-          {sabTeam(r.attacker)} spent {sabMoney(r.attack_cost)} · {sabTeam(r.defender)} spent{' '}
-          {sabMoney(r.defence_cost)} · left {sabTeam('red')}{' '}
-          {sabMoney(sabotage.budget.red ?? 0)} / {sabTeam('blue')}{' '}
-          {sabMoney(sabotage.budget.blue ?? 0)}
-        </p>
-        {/* The phone tells each side what happened to them; the wall says what
-            the round was about, so both rooms leave with one line to remember. */}
+
+        {/* Both hands are public once the round is scored, so the room gets to
+            see what was actually played rather than a summary of it. */}
+        <div className="battle__hands">
+          <div className="battle__hand is-atk">
+            <span className="battle__brieftag">
+              {sabTeam(r.attacker)} · {sabMoney(r.attack_cost)}
+            </span>
+            <ul>
+              {r.attack.length === 0 ? (
+                <li className="is-none">no cards played</li>
+              ) : (
+                r.attack.map((id) => <li key={id}>{sabotage.cards[id]?.name ?? id}</li>)
+              )}
+            </ul>
+          </div>
+          <div className="battle__hand is-def">
+            <span className="battle__brieftag">
+              {sabTeam(r.defender)} · {sabMoney(r.defence_cost)}
+            </span>
+            <ul>
+              {r.defence.length === 0 ? (
+                <li className="is-none">no cards played</li>
+              ) : (
+                r.defence.map((id) => <li key={id}>{sabotage.cards[id]?.name ?? id}</li>)
+              )}
+            </ul>
+          </div>
+        </div>
+
+        <div className="battle__teams is-tight">
+          <TeamChip sabotage={sabotage} team="red" />
+          <TeamChip sabotage={sabotage} team="blue" />
+        </div>
         {theBet(r.round) && <p className="display__bet">{theBet(r.round)}</p>}
       </article>
     )
@@ -442,14 +572,31 @@ function SabotageOnScreen() {
 
   const red = sabotage.scores.red ?? 0
   const blue = sabotage.scores.blue ?? 0
-  const leader = red === blue ? null : sabTeam(red > blue ? 'red' : 'blue')
+  const winner = red === blue ? null : red > blue ? 'red' : 'blue'
   return (
-    <article className="display__question">
-      <p className="display__prompt">{leader ? `${leader} WINS` : 'DRAWN'}</p>
-      <p className="display__reply">
-        {sabTeam('red')} {red} · {sabTeam('blue')} {blue}
+    <article className="battle">
+      <p className="battle__eyebrow">{sabotage.rounds} rounds played</p>
+      <p className={`battle__outcome${winner ? '' : ' is-draw'}`}>
+        {winner ? `${sabTeam(winner)} WINS` : 'DRAWN'}
       </p>
-      <p className="display__look">{sabotage.rounds} rounds played</p>
+      <div className="battle__scoreline">
+        {(['red', 'blue'] as const).map((team) => (
+          <div key={team} className={`battle__score is-${team}`}>
+            <span className="battle__teamname">{sabTeam(team)}</span>
+            <b>{sabotage.scores[team] ?? 0}</b>
+            <span className="battle__teambar" aria-hidden="true">
+              <span
+                style={{
+                  width: `${Math.round(((sabotage.scores[team] ?? 0) / Math.max(1, red, blue)) * 100)}%`,
+                }}
+              />
+            </span>
+            <span className="battle__teamcount">
+              {sabotage.rounds_won[team] ?? 0} rounds won
+            </span>
+          </div>
+        ))}
+      </div>
     </article>
   )
 }
@@ -602,7 +749,7 @@ export default function DisplayPage() {
 
           {node?.type === 'game' && node?.game === 'data_shadow' && <PostOnScreen />}
 
-          {node?.game === 'sabotage' && <SabotageOnScreen />}
+          {node?.game === 'sabotage' && sabotage && <BattleBoard sabotage={sabotage} />}
 
           {node?.type === 'leaderboard' && (
             <RoomLeaderboard key={node.section} code={code} section={node.section} />
@@ -653,7 +800,10 @@ export default function DisplayPage() {
 
           {phase === 'playing' &&
             !question &&
-            !['leaderboard', 'opening', 'intro', 'outro'].includes(node?.type ?? '') && (
+            !['leaderboard', 'opening', 'intro', 'outro'].includes(node?.type ?? '') &&
+            // In the battle only the picking phase is answered on the iPad; under
+            // the draw, the rules and the result it was a line of noise.
+            (node?.game !== 'sabotage' || sabotage?.phase === 'select') && (
             <p className="display__look">Answer on your iPad →</p>
           )}
           {phase === 'finished' && (

@@ -877,3 +877,415 @@
     animation: none;
   }
 }
+
+/* ─── AI Cyber Battle, on the wall ─────────────────────────────────────────── */
+
+/* The battle used to be a paragraph of centred text, which is what a game with
+   numbers on two sides should never look like. Every screen here is built from
+   the same four things: the round rail, the two teams, the three columns, and
+   one number big enough to read from the back. */
+.battle {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(0.55rem, 1.5vh, 1.1rem);
+  width: min(100%, 66rem);
+  margin: 0.2rem 0;
+  text-align: center;
+}
+
+.battle__eyebrow {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.66rem, 1.1vw, 0.86rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.battle__headline {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.4rem, 3.2vw, 2.4rem);
+  letter-spacing: 0.05em;
+  color: var(--c-text);
+}
+
+/* The four rounds, so a viewer who just looked up knows how far in they are. */
+.battle__rail {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 0.2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.battle__railstep {
+  padding: 0.25rem 0.9rem;
+  border: 1px solid var(--c-border);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--c-text-dim);
+}
+
+.battle__railstep.is-now {
+  border-color: var(--c-brand);
+  background: color-mix(in srgb, var(--c-brand-deep) 32%, transparent);
+  color: var(--c-text);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-brand) 35%, transparent);
+}
+
+.battle__railstep.is-done {
+  border-color: color-mix(in srgb, var(--c-text) 45%, transparent);
+  color: var(--c-text-muted);
+}
+
+.battle__railstep.is-void {
+  border-style: dashed;
+}
+
+.battle__bigmoney {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(3rem, 9vw, 6rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-text);
+  text-shadow: 0 0 40px color-mix(in srgb, var(--c-brand) 45%, transparent);
+}
+
+.battle__facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--c-text-muted);
+}
+
+.battle__facts span {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--c-border);
+  background: color-mix(in srgb, var(--c-surface-raised) 80%, transparent);
+}
+
+.battle__facts b {
+  color: var(--c-text);
+}
+
+/* Two teams, always side by side, always in their own colour. */
+.battle__teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.6rem, 1.6vw, 1.4rem);
+  width: 100%;
+}
+
+.battle__teams.is-tight {
+  gap: clamp(0.5rem, 1.2vw, 1rem);
+}
+
+.battle__team {
+  display: grid;
+  gap: 0.25rem;
+  padding: clamp(0.6rem, 1.4vh, 1rem) clamp(0.8rem, 1.6vw, 1.4rem);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--team);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--team) 14%, transparent),
+    color-mix(in srgb, var(--c-surface-raised) 85%, transparent) 45%
+  );
+  text-align: left;
+}
+
+.battle__team.is-red {
+  --team: var(--c-attack);
+}
+
+.battle__team.is-blue {
+  --team: var(--c-defend);
+}
+
+.battle__teamname {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.95rem, 1.7vw, 1.3rem);
+  letter-spacing: 0.16em;
+  color: var(--team, var(--c-text));
+}
+
+.battle__teamrole {
+  font-size: 0.68rem;
+  letter-spacing: 0.26em;
+  color: var(--c-text-muted);
+}
+
+.battle__teammoney {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.battle__teambar {
+  display: block;
+  height: 4px;
+  background: color-mix(in srgb, var(--c-border) 90%, transparent);
+  overflow: hidden;
+}
+
+.battle__teambar > span {
+  display: block;
+  height: 100%;
+  background: var(--team, var(--c-text));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--team, var(--c-text)) 70%, transparent);
+}
+
+.battle__teamcount {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--c-text-dim);
+}
+
+/* The three columns, with the one that decides the round lit. */
+.battle__domains {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.battle__domain {
+  padding: 0.3rem 1.1rem;
+  border: 1px solid var(--c-border);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.72rem, 1.2vw, 0.92rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-dim);
+}
+
+.battle__domain.is-target {
+  border-color: var(--c-brand);
+  background: color-mix(in srgb, var(--c-brand-deep) 40%, transparent);
+  color: var(--c-text);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--c-brand) 40%, transparent);
+}
+
+/* The two jobs, each in its own colour, each with its own sentence. */
+.battle__briefs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.6rem, 1.6vw, 1.4rem);
+  width: 100%;
+}
+
+.battle__brief {
+  display: grid;
+  gap: 0.3rem;
+  padding: clamp(0.5rem, 1.2vh, 0.9rem) clamp(0.8rem, 1.6vw, 1.3rem);
+  border: 1px solid color-mix(in srgb, var(--edge) 45%, transparent);
+  background: color-mix(in srgb, var(--edge) 9%, transparent);
+  text-align: left;
+}
+
+.battle__brief.is-atk {
+  --edge: var(--c-attack);
+}
+
+.battle__brief.is-def {
+  --edge: var(--c-defend);
+}
+
+.battle__brief p {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  line-height: 1.4;
+  color: var(--c-text);
+}
+
+.battle__brieftag {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: var(--edge, var(--c-text-muted));
+}
+
+/* The verdict of a round, at the size it deserves. */
+.battle__outcome {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(2rem, 5.2vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: var(--c-text);
+  text-shadow: 0 0 34px color-mix(in srgb, var(--c-brand) 45%, transparent);
+}
+
+.battle__outcome.is-draw {
+  color: var(--c-text-muted);
+  text-shadow: none;
+}
+
+/* A round, column by column: the two hands meet in the middle of each row. */
+.battle__dims {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.battle__dim {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 1.6rem 1.6rem minmax(0, 1fr) 5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-raised);
+}
+
+.battle__dim.is-target {
+  border-color: color-mix(in srgb, var(--c-brand) 55%, transparent);
+}
+
+.battle__dimname {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--c-text);
+}
+
+.battle__dimbar {
+  display: flex;
+  height: 8px;
+  background: color-mix(in srgb, var(--c-black) 70%, transparent);
+}
+
+.battle__dimbar.is-atk {
+  justify-content: flex-start;
+}
+
+.battle__dimbar.is-atk > span {
+  background: var(--c-attack);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-attack) 60%, transparent);
+}
+
+.battle__dimbar.is-def {
+  justify-content: flex-end;
+}
+
+.battle__dimbar.is-def > span {
+  background: var(--c-defend);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-defend) 60%, transparent);
+}
+
+.battle__dimatk {
+  color: var(--c-attack);
+  font-family: 'Orbitron', ui-monospace, monospace;
+}
+
+.battle__dimdef {
+  color: var(--c-defend);
+  font-family: 'Orbitron', ui-monospace, monospace;
+}
+
+.battle__dimword {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--c-text-muted);
+}
+
+.battle__dim.is-break .battle__dimword {
+  color: var(--c-attack);
+}
+
+.battle__dim.is-hold .battle__dimword {
+  color: var(--c-defend);
+}
+
+/* Both hands, once they are public. */
+.battle__hands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.6rem, 1.6vw, 1.4rem);
+  width: 100%;
+}
+
+.battle__hand {
+  padding: clamp(0.4rem, 1vh, 0.7rem) clamp(0.7rem, 1.4vw, 1.1rem);
+  border: 1px solid color-mix(in srgb, var(--edge) 40%, transparent);
+  background: color-mix(in srgb, var(--edge) 8%, transparent);
+  text-align: left;
+}
+
+.battle__hand.is-atk {
+  --edge: var(--c-attack);
+}
+
+.battle__hand.is-def {
+  --edge: var(--c-defend);
+}
+
+.battle__hand ul {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: clamp(0.8rem, 1.3vw, 1rem);
+  color: var(--c-text);
+}
+
+.battle__hand li::before {
+  content: '▸ ';
+  color: var(--edge);
+}
+
+.battle__hand li.is-none {
+  color: var(--c-text-dim);
+  font-style: italic;
+}
+
+.battle__hand li.is-none::before {
+  content: '';
+}
+
+/* The final line of the match. */
+.battle__scoreline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.8rem, 2vw, 2rem);
+  width: 100%;
+}
+
+.battle__score {
+  display: grid;
+  gap: 0.2rem;
+  padding: clamp(0.7rem, 1.6vh, 1.2rem);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--team);
+  background: color-mix(in srgb, var(--team) 10%, var(--c-surface-raised));
+  text-align: left;
+}
+
+.battle__score.is-red {
+  --team: var(--c-attack);
+}
+
+.battle__score.is-blue {
+  --team: var(--c-defend);
+}
+
+.battle__score b {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 1;
+  color: var(--c-text);
+}
