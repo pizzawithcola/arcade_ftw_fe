@@ -197,6 +197,22 @@ export function theBet(round: number): string | undefined {
   return THE_BET[round]
 }
 
+/**
+ * Who won the round, said in the room's words: the two sides are TEAM A and
+ * TEAM B on every screen, and the round's job is what makes the win readable -
+ * "Team A win" alone does not say whether they broke in or held the line.
+ */
+export function outcomeLabel(result: {
+  winner: 'red' | 'blue' | null
+  attacker: 'red' | 'blue'
+  defender: 'red' | 'blue'
+}): string {
+  if (!result.winner) return 'DRAWN'
+  const side = result.winner === 'red' ? 'TEAM A' : 'TEAM B'
+  const job = result.winner === result.attacker ? 'ATTACKER' : 'DEFENDER'
+  return `${side} (${job}) WINS`
+}
+
 /** Every sentence a round can show, for the admin page and the tests. */
 export function revealCopyFor(round: number): Record<string, Record<SabotageVoice, string>> {
   return COPY[round] ?? {}

@@ -1289,3 +1289,219 @@
   line-height: 1;
   color: var(--c-text);
 }
+
+/* ─── battle: the round rail is a header, not a line of the copy ─────────────
+   It used to sit in the middle of the stack, so on a 55-inch screen "ROUND 3"
+   was a caption on the headline. Pinned to the top of the stage instead, which
+   is where a scoreboard belongs, and the rest of the board centres below it. */
+/* `position: static` is deliberate, and it has to outrank `.hud__stage > *`:
+   with no positioned ancestor between them, the rail's containing block is the
+   stage itself, so `top: 0` is the top of the screen and not the top of a
+   centred block. */
+.display__stage > .battle {
+  position: static;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding-top: clamp(2.6rem, 5.5vh, 4rem);
+}
+
+.battle__rail {
+  position: absolute;
+  inset: 0 0 auto 0;
+  justify-content: center;
+  margin: 0;
+}
+
+/* Both hands are drawn whether they hold two cards or four, so the two panels
+   have to be the same shape on the wall. */
+.battle__hands {
+  align-items: stretch;
+}
+
+.battle__hand {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.battle__brieftag.is-atk {
+  --edge: var(--c-attack);
+}
+
+.battle__brieftag.is-def {
+  --edge: var(--c-defend);
+}
+
+/* ─── select: the attack going in, the defence taking it ─────────────────────*/
+.battle__clash {
+  display: grid;
+  gap: clamp(0.35rem, 1vh, 0.7rem);
+  width: min(100%, 60rem);
+}
+
+.battle__clashhead {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(0.2rem, 0.6vw, 0.6rem);
+}
+
+.battle__lanes {
+  display: grid;
+  gap: clamp(0.3rem, 1vh, 0.7rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.battle__lane {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 7rem) minmax(0, 1fr);
+  gap: clamp(0.5rem, 1.2vw, 1rem);
+  align-items: center;
+  padding: 0.28rem 0.5rem 0.28rem 0;
+  border: 1px solid color-mix(in srgb, var(--c-border) 70%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, #000 22%, transparent);
+}
+
+.battle__lane.is-target {
+  border-color: color-mix(in srgb, var(--c-brand) 55%, transparent);
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--c-brand-deep) 26%, transparent);
+}
+
+.battle__lanename {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.8rem, 1.25vw, 1.05rem);
+  letter-spacing: 0.16em;
+  color: var(--c-text-muted);
+}
+
+.battle__lane.is-target .battle__lanename {
+  color: var(--c-text);
+}
+
+.battle__lanetrack {
+  position: relative;
+  height: clamp(1.5rem, 3.4vh, 2.3rem);
+  overflow: hidden;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--c-attack) 10%, transparent), transparent 55%),
+    linear-gradient(270deg, color-mix(in srgb, var(--c-defend) 10%, transparent), transparent 55%);
+}
+
+/* The bolt runs the lane and dies on the shield; the shield answers; the two
+   meet in a flash. One loop is 2.8s, offset a third of a second per lane so the
+   three columns never read as a metronome. */
+.battle__lanebolt {
+  position: absolute;
+  inset-block: 18%;
+  left: 0;
+  width: 42%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--c-attack));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--c-attack) 60%, transparent));
+  animation: battle-bolt 2.8s linear infinite;
+  animation-delay: calc(var(--lane, 0) * 0.34s);
+}
+
+.battle__laneshield {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c-defend) 70%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--c-defend) 40%, transparent);
+  animation: battle-shield 2.8s linear infinite;
+  animation-delay: calc(var(--lane, 0) * 0.34s);
+}
+
+.battle__lanehit {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: clamp(1.4rem, 3vw, 2.6rem);
+  aspect-ratio: 1;
+  translate: 50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--c-text) 70%, transparent),
+    transparent 62%
+  );
+  opacity: 0;
+  animation: battle-hit 2.8s linear infinite;
+  animation-delay: calc(var(--lane, 0) * 0.34s);
+}
+
+@keyframes battle-bolt {
+  0% {
+    translate: -110% 0;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  66% {
+    translate: 100% 0;
+    opacity: 1;
+  }
+  74%,
+  100% {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes battle-shield {
+  0%,
+  64% {
+    opacity: 0.5;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--c-defend) 30%, transparent);
+  }
+  70% {
+    opacity: 1;
+    box-shadow: 0 0 26px 4px color-mix(in srgb, var(--c-defend) 75%, transparent);
+  }
+  86%,
+  100% {
+    opacity: 0.5;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--c-defend) 30%, transparent);
+  }
+}
+
+@keyframes battle-hit {
+  0%,
+  62% {
+    opacity: 0;
+    scale: 0.3;
+  }
+  70% {
+    opacity: 0.95;
+    scale: 1;
+  }
+  86%,
+  100% {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle__lanebolt,
+  .battle__laneshield,
+  .battle__lanehit {
+    animation: none;
+  }
+
+  .battle__lanebolt {
+    translate: 40% 0;
+    opacity: 0.8;
+  }
+
+  .battle__lanehit {
+    opacity: 0.5;
+    scale: 0.8;
+  }
+}

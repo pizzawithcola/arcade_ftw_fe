@@ -7,10 +7,11 @@ import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { bankOptions } from '../../games/quiz/bank'
 import { BASE_POINTS, drawQuestions, pointsFor, slotAt } from '../../games/quiz/draw'
 import { quizTimeline, sittingAt } from '../../games/quiz/timeline'
-import { theBet } from '../../games/sabotage/revealCopy'
 import Welcome from '../../games/Welcome'
 import WrapUp from '../../games/WrapUp'
 import Opening from '../../games/Opening'
+import { BattleRules } from '../../games/sabotage/SabotageGame'
+import { outcomeLabel } from '../../games/sabotage/revealCopy'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
 import '../../games/hallucination/HallucinationGame.css'
 import '../hud.css'
@@ -422,6 +423,36 @@ function DomainRow({ sabotage }: { sabotage: SabotageState }) {
   )
 }
 
+/** The one thing moving while the room buys: the attack going in and the
+ *  defence taking it, three lanes, one per column. No card is public yet, so
+ *  this is the whole of what the wall can honestly show. */
+function Clash({ sabotage }: { sabotage: SabotageState }) {
+  return (
+    <div className="battle__clash" aria-hidden="true">
+      <div className="battle__clashhead">
+        <span className="battle__brieftag is-atk">{sabTeam(sabotage.attacker)} ATTACKS</span>
+        <span className="battle__brieftag is-def">{sabTeam(sabotage.defender)} DEFENDS</span>
+      </div>
+      <ul className="battle__lanes">
+        {sabotage.domains.map((domain, at) => (
+          <li
+            key={domain}
+            className={`battle__lane${domain === sabotage.target ? ' is-target' : ''}`}
+            style={{ '--lane': at } as CSSProperties}
+          >
+            <span className="battle__lanename">{SAB_DOMAIN[domain]}</span>
+            <span className="battle__lanetrack">
+              <span className="battle__lanebolt" />
+              <span className="battle__lanehit" />
+              <span className="battle__laneshield" />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /** The wall of the whole round: who is on it, what is at stake, what is left. */
 function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
   if (sabotage.phase === 'team_reveal') {
@@ -441,26 +472,7 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
     return (
       <article className="battle">
         <RoundRail sabotage={sabotage} />
-        <p className="battle__eyebrow">The whole match, paid up front</p>
-        <p className="battle__bigmoney">{sabMoney(sabotage.total_budget)}</p>
-        <div className="battle__facts">
-          <span>
-            <b>4</b> rounds
-          </span>
-          <span>
-            <b>3</b> columns
-          </span>
-          <span>
-            <b>1</b> shared budget
-          </span>
-          <span>
-            target column <b>wins</b> the round
-          </span>
-        </div>
-        <div className="battle__teams">
-          <TeamChip sabotage={sabotage} team={sabotage.attacker} role="attacks" />
-          <TeamChip sabotage={sabotage} team={sabotage.defender} role="defends" />
-        </div>
+        <BattleRules sabotage={sabotage} size="display" />
       </article>
     )
   }
@@ -474,16 +486,7 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
         </p>
         <p className="battle__headline">{sabotage.theme}</p>
         <DomainRow sabotage={sabotage} />
-        <div className="battle__briefs">
-          <div className="battle__brief is-atk">
-            <span className="battle__brieftag">{sabTeam(sabotage.attacker)} ATTACKS</span>
-            <p>{sabotage.attack_brief}</p>
-          </div>
-          <div className="battle__brief is-def">
-            <span className="battle__brieftag">{sabTeam(sabotage.defender)} DEFENDS</span>
-            <p>{sabotage.defence_brief}</p>
-          </div>
-        </div>
+        <Clash sabotage={sabotage} />
         <div className="battle__teams">
           <TeamChip sabotage={sabotage} team="red" />
           <TeamChip sabotage={sabotage} team="blue" />
@@ -499,7 +502,7 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
       <article className="battle">
         <RoundRail sabotage={sabotage} />
         <p className="battle__eyebrow">Round {r.round} · {r.theme}</p>
-        <p className={`battle__outcome${won ? '' : ' is-draw'}`}>{r.outcome}</p>
+        <p className={`battle__outcome${won ? '' : ' is-draw'}`}>{outcomeLabel(r)}</p>
 
         {/* Three columns, drawn as the two hands that met in each one. */}
         <ul className="battle__dims">
@@ -565,7 +568,6 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
           <TeamChip sabotage={sabotage} team="red" />
           <TeamChip sabotage={sabotage} team="blue" />
         </div>
-        {theBet(r.round) && <p className="display__bet">{theBet(r.round)}</p>}
       </article>
     )
   }
@@ -732,10 +734,6 @@ export default function DisplayPage() {
               <div className="hud__bar">
                 <span className="hud__chevrons" aria-hidden="true" />
                 <span className="hud__event">{node?.title ?? '—'}</span>
-                <span className="hud__status">
-                  <span className="hud__dot" aria-hidden="true" />
-                  {phase === 'paused' ? 'paused' : phase === 'finished' ? 'finished' : 'live'}
-                </span>
                 {/* The display only ever has one clock, so it always shows the
                     node's remaining time - unlike the player screen, where the
                     game's own timer would otherwise compete with it. */}

@@ -204,17 +204,7 @@
   color: var(--c-text);
 }
 
-.sab__rulelist {
-  margin: 0;
-  padding-left: 1.1rem;
-  display: grid;
-  gap: clamp(0.45rem, 1.35vh, 0.8rem);
-  font-size: clamp(0.98rem, 2.28vw, 1.2rem);
-  line-height: 1.55;
-  color: var(--c-text-muted);
-}
-
-.sab__rulelist b {
+.sab__rules b {
   color: var(--c-text);
 }
 
@@ -245,11 +235,11 @@
 }
 
 /* The two jobs, named in their own colours inside a sentence. */
-.sab__rulelist b.is-atk {
+.sab__rules b.is-atk {
   color: var(--c-attack);
 }
 
-.sab__rulelist b.is-def {
+.sab__rules b.is-def {
   color: var(--c-defend);
 }
 
@@ -1044,4 +1034,32 @@
   .sab__bars {
     gap: 0.1rem;
   }
+}
+
+/* The same list on the wall: the room reads what the tablets read, at the size
+   a screen ten metres away needs. */
+.sab__rules--display {
+  width: min(100%, 62rem);
+}
+
+.sab__rules--display .sab__rulestitle {
+  font-size: clamp(1.7rem, 2.9vw, 3rem);
+  text-align: center;
+}
+
+.sab__rules--display .brief__rules {
+  gap: clamp(1rem, 3vh, 1.8rem);
+}
+
+.sab__rules--display .brief__rules li {
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.9rem;
+  font-size: clamp(1.15rem, 1.65vw, 1.9rem);
+  line-height: 1.5;
+}
+
+.sab__rules--display .brief__rules li::before {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.9rem;
 }

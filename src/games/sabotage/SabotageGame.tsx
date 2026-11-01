@@ -9,7 +9,7 @@ import {
   type SabotageTeam,
 } from '../../store/gameStore'
 import { CARD_ICONS, deckHasArt } from './cardIcons'
-import { revealLine, roundTitle, selectBrief } from './revealCopy'
+import { outcomeLabel, revealLine, roundTitle, selectBrief } from './revealCopy'
 import './SabotageGame.css'
 
 const DOMAIN_LABEL: Record<SabotageDomain, string> = {
@@ -245,7 +245,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
             </div>
           )}
 
-          {sabotage.phase === 'brief' && <Rules sabotage={sabotage} />}
+          {sabotage.phase === 'brief' && <BattleRules sabotage={sabotage} />}
 
           {/* The colour legend sits at the foot of the draw screen only - it is
               a reminder of where to walk, not part of the rules card. */}
@@ -388,28 +388,45 @@ function RoleSentence({ sentence, role }: { sentence: string | undefined; role: 
 }
 
 /** The rules, on one screen, readable in twenty seconds. */
-function Rules({ sabotage }: { sabotage: SabotageState & { endsAt: number | null; heldMs: number } }) {
+/**
+ * The four points of the briefing. Shared by the tablet and the wall so the
+ * room reads the same rules it is about to be judged on, and drawn with the
+ * numbered list the other two games open with.
+ */
+export function BattleRules({
+  sabotage,
+  size = 'device',
+}: {
+  sabotage: Pick<SabotageState, 'total_budget'>
+  size?: 'device' | 'display'
+}) {
   const step = (index: number) => ({ '--step': index }) as CSSProperties
   return (
-    <div className="sab__rules">
+    <div className={`sab__rules${size === 'display' ? ' sab__rules--display' : ''}`}>
       <h2 className="sab__rulestitle sab__rulestep" style={step(0)}>
         Four Rounds, One Team Wins
       </h2>
-      <ul className="sab__rulelist">
+      <ul className="brief__rules">
         <li className="sab__rulestep" style={step(1)}>
-          Your team will share a <b>{money(sabotage.total_budget)}</b> budget for all four
-          rounds
+          <span className="opening__text">
+            Your team will share a <b>{money(sabotage.total_budget)}</b> budget for all four
+            rounds
+          </span>
         </li>
         <li className="sab__rulestep" style={step(2)}>
-          You will switch between <b className="is-atk">Attacker</b> and{' '}
-          <b className="is-def">Defender</b>
+          <span className="opening__text">
+            You will switch between <b className="is-atk">Attacker</b> and{' '}
+            <b className="is-def">Defender</b>
+          </span>
         </li>
         <li className="sab__rulestep" style={step(3)}>
-          Choose your cards to build your <b className="is-atk">Attack</b> /{' '}
-          <b className="is-def">Defense</b>, up to four cards each round
+          <span className="opening__text">
+            Choose your cards to build your <b className="is-atk">Attack</b> /{' '}
+            <b className="is-def">Defense</b>, up to four cards each round
+          </span>
         </li>
         <li className="sab__rulestep" style={step(4)}>
-          Discuss with your teammates, for the best combination
+          <span className="opening__text">Discuss with your teammates, for the best combination</span>
         </li>
       </ul>
     </div>
@@ -536,7 +553,7 @@ function Final({
           <li key={entry.round} className={entry.winner && entry.winner === myTeam ? 'is-mine' : ''}>
             <span className="sab__recapround">R{entry.round}</span>
             <span className="sab__recaptheme">{entry.theme}</span>
-            <span className="sab__recapout">{entry.outcome}</span>
+            <span className="sab__recapout">{outcomeLabel(entry)}</span>
             <span className="sab__recappts">
               {entry.points.red}—{entry.points.blue}
             </span>
