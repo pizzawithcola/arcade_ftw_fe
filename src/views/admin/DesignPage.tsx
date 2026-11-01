@@ -6,7 +6,7 @@ import './DesignBackground.css'
 const ARTWORK = [
   { src: '/game_icons/hallucination_icon.PNG', label: 'Hallucination', note: 'game icon' },
   { src: '/game_icons/data_icon.PNG', label: 'Data Shadow', note: 'game icon' },
-  { src: '/game_icons/sabotage_icon.PNG', label: 'Sabotage', note: 'game icon' },
+  { src: '/game_icons/sabotage_icon.PNG', label: 'AI Cyber Battle', note: 'game icon' },
   { src: '/game_icons/ultimate_icon.PNG', label: 'Ultimate Quiz', note: 'game icon' },
   { src: '/city_skyline.PNG', label: 'City skyline', note: 'scene' },
 ]

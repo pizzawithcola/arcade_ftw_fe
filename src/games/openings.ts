@@ -72,7 +72,7 @@ const OPENINGS: GameOpening[] = [
     // card inside the node (see `SabotageGame`'s `Rules`), so the flow has no
     // opening in front of it. Name and icon still feed the welcome map.
     key: 'sabotage',
-    name: 'AI Sabotage',
+    name: 'AI Cyber Battle',
     icon: '/game_icons/sabotage_icon.PNG',
   },
   {

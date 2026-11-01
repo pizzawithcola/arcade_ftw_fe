@@ -35,7 +35,7 @@ const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset']
 const JUMP_GROUPS = [
   { title: 'Hallucination', buttons: ['challenge', 'quiz', 'ranking'] },
   { title: 'Data', buttons: ['challenge', 'quiz', 'ranking'] },
-  { title: 'Sabotage', buttons: ['challenge', 'ranking'] },
+  { title: 'AI Cyber Battle', buttons: ['challenge', 'ranking'] },
   { title: 'Ultimate', buttons: ['quiz', 'ranking'] },
 ]
 
@@ -666,7 +666,7 @@ export default function ThemePreview() {
               </button>
               <button type="button">wrong</button>
             </div>
-            <p className="admin__hint">Sabotage · red team and the second team</p>
+            <p className="admin__hint">AI Cyber Battle · red team and the second team</p>
             <div className="admin__jumps">
               <button type="button" className="is-current">
                 red

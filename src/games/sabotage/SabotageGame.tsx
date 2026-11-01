@@ -215,7 +215,7 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                   the spend card, where it read as part of the money. */}
               {sabotage.paused && <span className="sab__paused">Game Paused</span>}
             </span>
-            <div className="hud__tab">AI Sabotage</div>
+            <div className="hud__tab">AI Cyber Battle</div>
             <div className="sab__headright">
               <span className="sab__round">
                 R{sabotage.round}/{sabotage.rounds}

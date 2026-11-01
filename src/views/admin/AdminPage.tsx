@@ -51,7 +51,7 @@ interface JumpGroup {
 const SECTION_TITLES: Record<string, string> = {
   hallucination: 'Hallucination',
   data: 'Data',
-  sabotage: 'Sabotage',
+  sabotage: 'AI Cyber Battle',
   ultimate: 'Ultimate',
   total: 'Activity',
 }
@@ -804,7 +804,7 @@ function PlayersTable({
               <th scope="col">Event</th>
               <th scope="col">Hallu</th>
               <th scope="col">Data</th>
-              <th scope="col">Sabotage</th>
+              <th scope="col">AI Cyber Battle</th>
               <th scope="col">Ultimate</th>
               <th scope="col">Total</th>
               <th scope="col" aria-label="Actions" />
@@ -908,7 +908,7 @@ function SettingsView() {
         </div>
         <p className="admin__table-note">
           Twenty-five questions written against the four games: five each for Data Shadow
-          and Hallucination, ten across Sabotage&rsquo;s four rounds, and five on Hong Kong
+          and Hallucination, ten across AI Cyber Battle&rsquo;s four rounds, and five on Hong Kong
           for the final slot. This is the pool the Ultimate round draws from. Edited in
           <code> src/games/quiz/bank.ts</code>.
         </p>
