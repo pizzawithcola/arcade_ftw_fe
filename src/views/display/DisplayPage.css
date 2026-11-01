@@ -1009,6 +1009,24 @@
   --team: var(--c-defend);
 }
 
+/* After the side colours on purpose: a chip that names a job takes the job's
+   colour, so the attacker's panel is purple even when the attacker is TEAM B. */
+.battle__team.is-atk {
+  --team: var(--c-attack);
+}
+
+.battle__team.is-def {
+  --team: var(--c-defend);
+}
+
+.battle__teamspent {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.68rem, 1.1vw, 0.82rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--team, var(--c-text-muted));
+}
+
 .battle__teamname {
   font-family: 'Orbitron', ui-monospace, monospace;
   font-size: clamp(0.95rem, 1.7vw, 1.3rem);

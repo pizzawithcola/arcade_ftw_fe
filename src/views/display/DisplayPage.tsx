@@ -381,22 +381,35 @@ function RoundRail({ sabotage }: { sabotage: SabotageState }) {
   )
 }
 
-/** One team, named in its own colour, with what it has left to spend. */
+/**
+ * One team, named in its own colour, with what it has left to spend.
+ *
+ * When the round names a job the chip takes the job's colour instead of the
+ * side's: purple is what attacks and blue is what defends, on every panel, and a
+ * defender drawn in the attacker's purple is the one thing a viewer reads wrong.
+ */
 function TeamChip({
   sabotage,
   team,
   role,
+  spent,
 }: {
   sabotage: SabotageState
   team: SabotageTeam
   role?: 'attacks' | 'defends'
+  /** What this round cost the side, for the panel under the hands. */
+  spent?: number
 }) {
   const left = sabotage.budget[team] ?? 0
   const share = sabotage.total_budget > 0 ? left / sabotage.total_budget : 0
+  const tone = role === 'attacks' ? 'is-atk' : role === 'defends' ? 'is-def' : ''
   return (
-    <div className={`battle__team is-${team}`}>
+    <div className={`battle__team is-${team} ${tone}`.trim()}>
       <span className="battle__teamname">{sabTeam(team)}</span>
       {role && <span className="battle__teamrole">{role.toUpperCase()}</span>}
+      {spent !== undefined && (
+        <span className="battle__teamspent">{sabMoney(spent)} spent this round</span>
+      )}
       <span className="battle__teammoney">{sabMoney(left)}</span>
       <span className="battle__teambar" aria-hidden="true">
         <span style={{ width: `${Math.max(2, Math.round(share * 100))}%` }} />
@@ -546,9 +559,21 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
           </div>
         </div>
 
+        {/* In the order the hands were played, and in the job's colours: the
+            left panel is always the attack, whichever side made it. */}
         <div className="battle__teams is-tight">
-          <TeamChip sabotage={sabotage} team="red" />
-          <TeamChip sabotage={sabotage} team="blue" />
+          <TeamChip
+            sabotage={sabotage}
+            team={r.attacker}
+            role="attacks"
+            spent={r.attack_cost}
+          />
+          <TeamChip
+            sabotage={sabotage}
+            team={r.defender}
+            role="defends"
+            spent={r.defence_cost}
+          />
         </div>
       </article>
     )
