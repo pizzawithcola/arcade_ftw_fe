@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
@@ -208,22 +209,50 @@ function inQuestionMs(question: QuestionState): number {
  * round is the one people want to read along with, so its four answers are on the
  * wall too - lettered, so the host can say "B" and everyone looks at the same box.
  */
-/** The bonus card, sized for a projector rather than a tablet. */
+/** The digits a reel runs through before it lands, same count as the tablet's. */
+const BONUS_REEL_DIGITS = 9
+
+/** The bonus card, sized for a projector rather than a tablet.
+ *
+ * Same machine as the iPad's card, scaled up: the reel is the only thing moving
+ * on screen, so it has to be legible from the back of the room.
+ */
 function BonusOnScreen({ index, multiplier }: { index: number; multiplier: number }) {
+  const cells = BONUS_REEL_DIGITS * 2 + 1
+  const strip = [
+    ...Array.from({ length: BONUS_REEL_DIGITS * 2 }, (_, at) => (at % BONUS_REEL_DIGITS) + 1),
+    multiplier,
+  ]
   return (
     <article className="display__bonus">
       <div className="display__bonusgrid" aria-hidden="true" />
-      <div className="display__bonusring" aria-hidden="true">
-        <span />
-        <span />
+      <div className="display__bonusbulbs" aria-hidden="true">
+        {Array.from({ length: 18 }, (_, at) => (
+          <span key={at} style={{ '--bulb': at } as CSSProperties} />
+        ))}
       </div>
       <p className="display__bonustag">Bonus round</p>
-      <p className="display__bonusmult">
-        <span>×</span>
-        {multiplier}
-      </p>
+      <div className="display__reel">
+        <span className="display__reeldial is-top" aria-hidden="true" />
+        <div
+          className="display__reelstrip"
+          style={
+            {
+              '--cells': cells,
+              transform: `translateY(calc(-1 * (${cells} - 1) * 1em))`,
+            } as CSSProperties
+          }
+        >
+          {strip.map((digit, at) => (
+            <span key={at} className={at === strip.length - 1 ? 'is-landed' : ''}>
+              {digit}
+            </span>
+          ))}
+        </div>
+        <span className="display__reeldial is-bottom" aria-hidden="true" />
+      </div>
       <p className="display__bonusworth">
-        Pays <b>{pointsFor(index)}</b> instead of {BASE_POINTS}
+        Gain <b>{pointsFor(index)}</b> instead of {BASE_POINTS}
       </p>
     </article>
   )
@@ -609,9 +638,7 @@ export default function DisplayPage() {
                 />
               )}
               <p className="display__kicker">
-                {question.bonus_ms
-                  ? `bonus ×${slotAt(question.index).multiplier} before question ${question.index + 1}`
-                  : `question ${question.index + 1} / ${question.count}`}
+                question {question.index + 1} / {question.count}
               </p>
             </>
           )}

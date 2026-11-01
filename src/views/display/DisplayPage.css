@@ -693,18 +693,17 @@
 
 /* ─── the bonus card, at wall size ─────────────────────────────────────────── */
 
-/* Same beat as the tablet's card, sized for a projector: the multiplier has to
-   be readable from the back of the room, and the sweep is what carries the
-   motion at that distance. Keyframes are local - a display sheet that borrowed
-   another module's animation would break the day that module is refactored. */
+/* The same slot machine the tablet runs, sized for a projector: one window, one
+   digit, bulbs along the top. The reel is the only motion on the wall during the
+   quiz, so it has to carry at forty metres. */
 .display__bonus {
   position: relative;
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: clamp(0.6rem, 1.6vh, 1.2rem);
+  gap: clamp(0.6rem, 1.8vh, 1.4rem);
   width: min(100%, 72rem);
-  min-height: min(52vh, 26rem);
+  min-height: min(56vh, 28rem);
   padding: clamp(1rem, 3vh, 2.4rem);
   overflow: hidden;
   text-align: center;
@@ -723,47 +722,35 @@
   opacity: 0.65;
 }
 
-.display__bonusring {
+.display__bonusbulbs {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
+  inset: 1rem 16% auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
-.display__bonusring span {
-  position: absolute;
-  width: min(64vh, 30rem);
-  aspect-ratio: 1;
+.display__bonusbulbs span {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
-  border-top-color: transparent;
-  border-bottom-color: transparent;
-  animation: display-bonus-spin 2.6s linear infinite;
+  background: var(--c-brand-deep);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  animation: display-bonus-bulb 0.9s steps(1, end) infinite;
+  animation-delay: calc(var(--bulb, 0) * 55ms);
 }
 
-.display__bonusring span:last-child {
-  width: min(46vh, 21rem);
-  border-color: color-mix(in srgb, var(--c-brand) 32%, transparent);
-  border-left-color: transparent;
-  border-right-color: transparent;
-  animation-direction: reverse;
-  animation-duration: 1.7s;
-}
-
-.display__bonus::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--c-brand) 85%, transparent) 50%,
-    transparent
-  );
-  box-shadow: 0 0 24px color-mix(in srgb, var(--c-brand) 70%, transparent);
-  animation: display-bonus-scan 1.1s ease-in-out 2;
+@keyframes display-bonus-bulb {
+  0%,
+  45% {
+    background: var(--c-text);
+    box-shadow: 0 0 16px var(--c-text);
+  }
+  55%,
+  100% {
+    background: var(--c-brand-deep);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--c-brand) 60%, transparent);
+  }
 }
 
 .display__bonustag {
@@ -777,26 +764,87 @@
   color: var(--c-text-muted);
 }
 
-.display__bonusmult {
+.display__reel {
   position: relative;
-  display: flex;
-  align-items: baseline;
-  gap: 0.04em;
-  margin: 0;
+  display: grid;
+  place-items: center;
+  height: 1em;
+  padding: 0 0.3em;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c-black) 92%, transparent),
+    color-mix(in srgb, var(--c-surface-raised) 92%, transparent)
+  );
+  box-shadow:
+    inset 0 0 40px color-mix(in srgb, var(--c-brand-deep) 50%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--c-brand-deep) 55%, transparent);
   font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(5rem, 20vh, 13rem);
   font-weight: 700;
   line-height: 1;
-  font-size: clamp(5rem, 18vh, 12rem);
   color: var(--c-text);
   text-shadow:
     0 0 24px color-mix(in srgb, var(--c-brand) 70%, transparent),
     0 0 90px color-mix(in srgb, var(--c-brand) 40%, transparent);
-  animation: display-bonus-pop 0.62s cubic-bezier(0.16, 1.2, 0.3, 1) both;
 }
 
-.display__bonusmult span {
-  font-size: 0.46em;
-  color: var(--c-brand);
+.display__reeldial {
+  position: absolute;
+  left: 50%;
+  width: 70%;
+  height: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--c-brand) 50%, transparent);
+  opacity: 0.9;
+}
+
+.display__reeldial.is-top {
+  top: 0;
+}
+
+.display__reeldial.is-bottom {
+  bottom: 0;
+}
+
+.display__reelstrip {
+  display: grid;
+  grid-auto-rows: 1em;
+  animation: display-bonus-spin 1.5s cubic-bezier(0.12, 0.8, 0.12, 1);
+}
+
+.display__reelstrip span {
+  height: 1em;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.display__reelstrip span.is-landed {
+  animation: display-bonus-flash 1.9s ease-out;
+}
+
+@keyframes display-bonus-spin {
+  from {
+    transform: translateY(0);
+    filter: blur(2px);
+  }
+  85% {
+    filter: blur(0);
+  }
+}
+
+@keyframes display-bonus-flash {
+  0%,
+  72% {
+    text-shadow: none;
+  }
+  78% {
+    text-shadow:
+      0 0 30px var(--c-text),
+      0 0 100px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  }
 }
 
 .display__bonusworth {
@@ -821,45 +869,11 @@
   }
 }
 
-@keyframes display-bonus-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes display-bonus-scan {
-  from {
-    transform: translateY(-8px);
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  to {
-    transform: translateY(60vh);
-    opacity: 0;
-  }
-}
-
-@keyframes display-bonus-pop {
-  from {
-    transform: scale(0.55);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .display__bonus,
-  .display__bonusring span,
-  .display__bonusmult {
+  .display__bonusbulbs span,
+  .display__reelstrip,
+  .display__reelstrip span.is-landed {
     animation: none;
-  }
-
-  .display__bonus::after {
-    display: none;
   }
 }

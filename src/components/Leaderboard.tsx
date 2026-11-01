@@ -160,7 +160,10 @@ export default function Leaderboard({
                   className={`ldb__row is-rank-${rank}${playing ? ' is-moving' : ''}`}
                   style={style}
                 >
-                  <span className="ldb__fill" aria-hidden="true" />
+                  {/* A zero-share row gets no bar at all: a 0% bar still draws
+                      its bright right edge, which reads as a score it does not
+                      have. */}
+                  {share > 0 && <span className="ldb__fill" aria-hidden="true" />}
                   <span className="ldb__rank">{String(rank).padStart(2, '0')}</span>
                   <span className="ldb__name">{row.nickname}</span>
                   <span className="ldb__score">{shown}</span>

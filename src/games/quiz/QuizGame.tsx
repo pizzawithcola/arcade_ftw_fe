@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
 import { useGameStore } from '../../store/gameStore'
@@ -197,19 +198,38 @@ return (
                 .filter(Boolean)
                 .join(' ')
               return (
-                <button
-                  key={option.letter}
-                  type="button"
-                  className={classes}
-                  disabled={waiting || revealed}
-                  onClick={() => {
-                    setPicks((current) => ({ ...current, [question.id]: option.letter }))
-                    report(index, questionScore(option.letter, question.correct_option))
-                  }}
-                >
-                  <span className="quiz__letter">{option.letter}</span>
-                  <span className="quiz__optiontext">{option.text}</span>
-                </button>
+                // The right answer opens: its explanation belongs under the
+                // words it is about, not in a paragraph at the foot of the
+                // screen that the player has to match back to a letter.
+                <div key={option.letter} className={`quiz__slot${isAnswer ? ' is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className={classes}
+                    disabled={waiting || revealed}
+                    onClick={() => {
+                      setPicks((current) => ({ ...current, [question.id]: option.letter }))
+                      report(index, questionScore(option.letter, question.correct_option))
+                    }}
+                  >
+                    <span className="quiz__letter">{option.letter}</span>
+                    <span className="quiz__optiontext">{option.text}</span>
+                    {isAnswer && (
+                      <span className="quiz__verdict is-right" aria-hidden="true">
+                        ✓
+                      </span>
+                    )}
+                    {isWrongPick && (
+                      <span className="quiz__verdict is-wrong" aria-hidden="true">
+                        ✗
+                      </span>
+                    )}
+                  </button>
+                  {isAnswer && (
+                    <div className="quiz__note">
+                      <p className="quiz__explain">{question.explain}</p>
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
@@ -217,18 +237,11 @@ return (
           {waiting && <p className="quiz__waiting">Waiting for others to answer…</p>}
 
           {revealed && (
-            <div
-              className={`quiz__reveal ${
-                picked === question.correct_option ? 'is-good' : 'is-bad'
-              }`}
-            >
-              <p className="quiz__explain">{question.explain}</p>
-              <p className="quiz__correct">
-                {picked === undefined
-                  ? `Time's up — the answer was ${question.correct_option}.`
-                  : `The answer was ${question.correct_option}.`}
-              </p>
+            <div className="quiz__reveal">
               <p className="quiz__autonext">
+                {/* A timeout still has to say so: with the answer line gone,
+                    this word is the only reason nothing turned red. */}
+                {picked === undefined ? "Time's up · " : ''}
                 {index === questions.length - 1 ? 'Final score' : 'Next question'} in{' '}
                 {reviewLeft}s
               </p>
@@ -243,11 +256,17 @@ return (
 )
 }
 
+/** The digits a reel runs through before it lands. Two full turns, then the
+ *  answer: a reel that only holds a few symbols reads as a counter, not as a
+ *  machine. */
+const REEL_DIGITS = 9
+
 /** The three seconds in front of a bonus question.
  *
  * The badge in the bar says "bonus ×2" quietly, which nobody reads once they are
- * answering. This is the same fact at the size of the whole screen, for as long
- * as the flow allows, so the jump in stakes lands before the question does.
+ * answering. This is the same fact at the size of the whole screen: a slot reel
+ * spins through the digits and lands on the multiplier, so the room hears the
+ * jump in stakes before the question arrives.
  */
 function BonusCard({
   index,
@@ -258,20 +277,45 @@ function BonusCard({
   multiplier: number
   seconds: number
 }) {
+  // `--cells - 1` is how far the strip has to travel to put the last cell in
+  // the window. The landed position is the strip's own transform, and the
+  // animation only says where it starts, so a reduced-motion card that never
+  // runs is already showing the right number.
+  const cells = REEL_DIGITS * 2 + 1
+  const strip = [
+    ...Array.from({ length: REEL_DIGITS * 2 }, (_, at) => (at % REEL_DIGITS) + 1),
+    multiplier,
+  ]
   return (
     <section className="quiz__bonuscard" aria-live="polite">
       <div className="quiz__bonusgrid" aria-hidden="true" />
-      <div className="quiz__bonusring" aria-hidden="true">
-        <span />
-        <span />
+      <div className="quiz__bonusbulbs" aria-hidden="true">
+        {Array.from({ length: 14 }, (_, at) => (
+          <span key={at} style={{ '--bulb': at } as CSSProperties} />
+        ))}
       </div>
       <p className="quiz__bonustag">Bonus round</p>
-      <p className="quiz__bonusmult">
-        <span className="quiz__bonussign">×</span>
-        <span className="quiz__bonusdigit">{multiplier}</span>
-      </p>
+      <div className="quiz__reel">
+        <span className="quiz__reeldial is-top" aria-hidden="true" />
+        <div
+          className="quiz__reelstrip"
+          style={
+            {
+              '--cells': cells,
+              transform: `translateY(calc(-1 * (${cells} - 1) * 1em))`,
+            } as CSSProperties
+          }
+        >
+          {strip.map((digit, at) => (
+            <span key={at} className={at === strip.length - 1 ? 'is-landed' : ''}>
+              {digit}
+            </span>
+          ))}
+        </div>
+        <span className="quiz__reeldial is-bottom" aria-hidden="true" />
+      </div>
       <p className="quiz__bonusworth">
-        Pays <b>{pointsFor(index)}</b> instead of {BASE_POINTS}
+        Gain <b>{pointsFor(index)}</b> instead of {BASE_POINTS}
       </p>
       <div className="quiz__bonusmeter" aria-hidden="true">
         <span style={{ animationDuration: `${seconds}s` }} />

@@ -13,6 +13,20 @@
   margin: clamp(1rem, 3vh, 2.2rem) auto 0;
 }
 
+/* A pool of red behind the plate, so the board sits in the scene instead of
+   being pasted onto it. */
+.ldb::before {
+  content: '';
+  position: absolute;
+  inset: -8% -12% 12%;
+  background: radial-gradient(
+    ellipse 60% 45% at 50% 0%,
+    color-mix(in srgb, var(--c-brand-deep) 26%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
 /* A single illuminated edge across the top: the one line that says "powered". */
 .ldb__rail {
   position: relative;
@@ -52,7 +66,10 @@
 }
 
 .ldb__title {
-  margin: 0 0 clamp(1rem, 3vh, 1.8rem);
+  position: relative;
+  width: fit-content;
+  margin: 0 auto clamp(1rem, 3vh, 1.8rem);
+  padding: 0.4rem 2.4rem;
   font-family: 'Orbitron', ui-monospace, monospace;
   font-size: clamp(1rem, 2.4vw, 1.25rem);
   font-weight: 600;
@@ -61,6 +78,16 @@
   text-transform: uppercase;
   color: var(--c-text);
   text-align: center;
+  /* A placard, cut at both ends: a title floating in space reads as a caption,
+     a title on a plate reads as the name of the instrument below it. */
+  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--c-brand-deep) 12%, transparent),
+    color-mix(in srgb, var(--c-brand-deep) 42%, transparent) 50%,
+    color-mix(in srgb, var(--c-brand-deep) 12%, transparent)
+  );
+  box-shadow: 0 0 26px color-mix(in srgb, var(--c-brand) 22%, transparent);
 }
 
 .ldb__empty {
@@ -73,7 +100,16 @@
   position: relative;
   padding: clamp(0.5rem, 1.4vh, 0.9rem);
   border: 1px solid var(--c-border);
-  background: color-mix(in srgb, var(--c-surface) 80%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-brand-deep) 10%, transparent),
+      transparent 22%
+    ),
+    color-mix(in srgb, var(--c-surface) 88%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--c-brand) 32%, transparent),
+    inset 0 0 60px color-mix(in srgb, var(--c-black) 70%, transparent);
 }
 
 .ldb__frame::before,
@@ -205,12 +241,21 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: var(--fill, 0%);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--c-brand-deep) 26%, transparent),
-    color-mix(in srgb, var(--c-brand) 14%, transparent)
-  );
-  border-right: 1px solid color-mix(in srgb, var(--c-brand) 55%, transparent);
+  /* Ticks over the wash, so the bar reads as a meter rather than as a highlighter
+     someone dragged across the row. */
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 7px,
+      color-mix(in srgb, var(--c-black) 62%, transparent) 7px 8px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--c-brand-deep) 40%, transparent),
+      color-mix(in srgb, var(--c-brand) 22%, transparent)
+    );
+  border-right: 1px solid color-mix(in srgb, var(--c-brand) 75%, transparent);
+  box-shadow: 2px 0 12px color-mix(in srgb, var(--c-brand) 35%, transparent);
   pointer-events: none;
 }
 
@@ -257,9 +302,28 @@
    earns the bright red, the rest step down through the neutrals. */
 .ldb__row.is-rank-1 {
   border-color: color-mix(in srgb, var(--c-brand) 70%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--c-brand-deep) 26%, var(--c-surface-raised)),
+    var(--c-surface-raised) 55%
+  );
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--c-brand) 22%, transparent),
-    0 0 26px color-mix(in srgb, var(--c-brand) 18%, transparent);
+    0 0 30px color-mix(in srgb, var(--c-brand) 22%, transparent);
+}
+
+/* A leader is a leader: one mark, no second font. */
+.ldb__row.is-rank-1 .ldb__name {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.ldb__row.is-rank-1 .ldb__name::before {
+  content: '▲';
+  margin-right: 0.5rem;
+  font-size: 0.62em;
+  color: var(--c-brand);
+  vertical-align: 0.12em;
 }
 
 .ldb__row.is-rank-1 .ldb__rank {

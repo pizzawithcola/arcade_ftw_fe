@@ -623,6 +623,57 @@ describe('the sabotage draw', () => {
 })
 
 describe('the Ultimate round', () => {
+  test('the right answer opens its explanation, and a wrong pick wears the red', async () => {
+    const { context, page } = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
+    try {
+      await api.jump(ROOM, 10)
+      await page.waitForTimeout(700)
+      // Answer A without knowing the key: whichever way it goes, the reveal has
+      // to colour exactly one row green and, if A was wrong, exactly one red.
+      await page.click('.quiz__option:first-child')
+      await page.waitForSelector('.quiz__note', { timeout: 30_000 })
+
+      const review = await page.evaluate(() => {
+        const colour = (selector) => {
+          const element = document.querySelector(selector)
+          return element ? getComputedStyle(element).borderTopColor : null
+        }
+        const slots = [...document.querySelectorAll('.quiz__slot')]
+        const open = slots.filter((slot) => slot.classList.contains('is-open'))
+        return {
+          open: open.length,
+          openLetter: open[0]?.querySelector('.quiz__letter')?.textContent ?? null,
+          note: open[0]?.querySelector('.quiz__note .quiz__explain')?.textContent ?? '',
+          noteInsideSlot: Boolean(open[0]?.querySelector('.quiz__note')),
+          answers: document.querySelectorAll('.quiz__option.is-answer').length,
+          answerColour: colour('.quiz__option.is-answer'),
+          wrongCount: document.querySelectorAll('.quiz__option.is-wrong').length,
+          wrongColour: colour('.quiz__option.is-wrong'),
+          tick: document.querySelector('.quiz__verdict.is-right')?.textContent ?? null,
+          // The old bottom line is gone: the note is the explanation now.
+          bottomLine: document.querySelector('.quiz__correct'),
+          autonext: document.querySelector('.quiz__autonext')?.textContent?.replace(/\s+/g, ' ') ?? '',
+        }
+      })
+
+      assert.equal(review.open, 1, 'exactly one option opens')
+      assert.equal(review.answers, 1, 'exactly one option is the answer')
+      assert.equal(review.answerColour, 'rgb(53, 208, 127)', `the answer is green: ${review.answerColour}`)
+      assert.equal(review.tick?.trim(), '✓')
+      assert.ok(review.note.length > 40, 'the explanation opened with the answer')
+      assert.equal(review.noteInsideSlot, true, 'the note lives inside the answer it explains')
+      assert.equal(review.bottomLine, null, 'nothing says "the answer was" any more')
+      assert.match(review.autonext, /Next question|Final score/)
+      if (review.wrongCount > 0) {
+        assert.equal(review.wrongColour, 'rgb(255, 82, 87)', `a wrong pick is red: ${review.wrongColour}`)
+        assert.notEqual(review.openLetter, null)
+      }
+      await snap(page, 'ipad-quiz-review.png')
+    } finally {
+      await context.close()
+    }
+  })
+
   test('the wall and the iPad are on the same question', async () => {
     const { context, page } = await stage(WALL, { path: `/display/${ROOM}` })
     const device = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
@@ -699,35 +750,41 @@ describe('the Ultimate round', () => {
       // the cards cannot be seeked to, and faking the clock would test nothing.
       const readCard = () =>
         page.evaluate(() => ({
-          mult: document.querySelector('.quiz__bonusmult')?.textContent ?? null,
+          mult: document.querySelector('.quiz__reelstrip .is-landed')?.textContent ?? null,
           worth: document.querySelector('.quiz__bonusworth')?.textContent ?? '',
           count: document.querySelector('.quiz__count')?.innerText.replace(/\s+/g, ' ') ?? '',
           options: document.querySelectorAll('.quiz__option').length,
+          // Every cell is a stop the reel can land on, and the reel's own
+          // transform is where it ends up.
+          cells: document.querySelectorAll('.quiz__reelstrip span').length,
+          landed: getComputedStyle(document.querySelector('.quiz__reelstrip')).transform,
         }))
 
       // `waitForFunction(fn, arg, options)`: the options object is the third
       // argument, and a long bonus wait needs its own budget.
       await page.waitForFunction(
-        () => document.querySelector('.quiz__bonusmult')?.textContent === '×2',
+        () => document.querySelector('.quiz__reelstrip .is-landed')?.textContent === '2',
         null,
         { timeout: 95_000 },
       )
       const twice = await readCard()
       assert.equal(twice.count, '4 / 5', 'the card belongs to question four')
-      assert.match(twice.worth, /200/, 'the card says what it pays')
+      assert.match(twice.worth, /Gain 200 instead of 100/, 'the card says what you gain')
+      assert.ok(twice.cells > 9, 'the reel has a strip to spin through')
+      assert.notEqual(twice.landed, 'none', 'the reel lands on a transform, not on nothing')
       assert.equal(twice.options, 0, 'a card is not answerable')
       // The wall shows the same card, or the room is told a different story.
       // Its clock ticks on a 250ms timer, so the card can land a beat after the
       // tablet's: poll rather than sampling the frame the iPad happened to win.
       await wall.page.waitForFunction(
-        () => document.querySelector('.display__bonusmult')?.textContent === '×2',
+        () => document.querySelector('.display__reelstrip .is-landed')?.textContent === '2',
         null,
         { timeout: 3_500 },
       )
       await snap(page, 'ipad-quiz-bonus-card.png')
 
       await page.waitForFunction(
-        () => document.querySelector('.quiz__bonusmult')?.textContent === '×3',
+        () => document.querySelector('.quiz__reelstrip .is-landed')?.textContent === '3',
         null,
         { timeout: 45_000 },
       )

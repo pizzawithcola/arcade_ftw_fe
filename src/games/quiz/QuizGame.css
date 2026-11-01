@@ -106,25 +106,86 @@
   color: var(--c-warning);
 }
 
-/* The right answer lights up white; a wrong pick wears the red. */
-.quiz__option.is-answer {
-  border-color: var(--c-text);
-  background: color-mix(in srgb, var(--c-text) 9%, var(--c-surface-raised));
+/* One option and the note it can open: the explanation grows out of the answer
+   it explains, which is the only place a player is already looking. */
+.quiz__slot {
+  display: grid;
+}
+
+.quiz__option {
+  /* Room for the tick in the corner, so a long option never runs under it. */
+  padding-right: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+/* The right answer is green and the wrong pick is red: the two colours the app
+   already uses for "you took it" and "you did not". */
+.quiz__option.is-answer,
+.quiz__slot.is-open .quiz__option.is-answer {
+  border-color: var(--c-win);
+  background: color-mix(in srgb, var(--c-win) 14%, var(--c-surface-raised));
 }
 
 .quiz__option.is-answer .quiz__letter {
-  border-color: var(--c-text);
+  border-color: var(--c-win);
+  background: color-mix(in srgb, var(--c-win) 22%, transparent);
   color: var(--c-text);
 }
 
 .quiz__option.is-wrong {
-  border-color: var(--c-brand-deep);
-  background: color-mix(in srgb, var(--c-brand-deep) 14%, var(--c-surface-raised));
+  border-color: var(--c-lose);
+  background: color-mix(in srgb, var(--c-lose) 16%, var(--c-surface-raised));
 }
 
 .quiz__option.is-wrong .quiz__letter {
-  border-color: var(--c-brand-deep);
+  border-color: var(--c-lose);
+  background: color-mix(in srgb, var(--c-lose) 22%, transparent);
   color: var(--c-text);
+}
+
+/* Picking right: the letter plate is the tick, the glyph is a second cue for
+   anyone who cannot read the colour. */
+.quiz__verdict {
+  position: absolute;
+  top: 50%;
+  right: clamp(0.6rem, 1.4vw, 0.9rem);
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.quiz__verdict.is-right {
+  color: var(--c-win);
+}
+
+.quiz__verdict.is-wrong {
+  color: var(--c-lose);
+}
+
+/* The opened note: same colour family as the answer above it, joined to it by a
+   missing border so the two read as one block. */
+.quiz__note {
+  border: 1px solid color-mix(in srgb, var(--c-win) 55%, transparent);
+  border-top: none;
+  border-radius: 0 0 7px 7px;
+  background: color-mix(in srgb, var(--c-win) 8%, var(--c-surface));
+  padding: clamp(0.45rem, 1.2vh, 0.7rem) clamp(0.7rem, 1.5vw, 1rem);
+  animation: quiz-note-open 0.32s ease-out both;
+}
+
+.quiz__slot.is-open .quiz__option {
+  border-radius: 7px 7px 0 0;
+}
+
+@keyframes quiz-note-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .quiz__waiting {
@@ -138,29 +199,14 @@
 
 .quiz__reveal {
   display: grid;
-  gap: 0.4rem;
   width: 100%;
-  padding-top: clamp(0.3rem, 1vh, 0.6rem);
-  border-top: 1px solid var(--c-border);
 }
 
 .quiz__explain {
   margin: 0;
   font-size: clamp(0.78rem, 1.45vw, 0.9rem);
-  line-height: 1.6;
-  color: var(--c-text-muted);
-}
-
-.quiz__correct {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
+  line-height: 1.55;
   color: var(--c-text);
-}
-
-.quiz__reveal.is-bad .quiz__correct {
-  padding-left: 0.5rem;
-  border-left: 2px solid var(--c-brand-deep);
 }
 
 /* The round advances itself, so this states what is about to happen instead of
@@ -276,21 +322,21 @@
 
 /* ─── the bonus card ───────────────────────────────────────────────────────── */
 
-/* Three seconds in front of a bonus question. The room has to feel the jump in
-   stakes before the question lands, so this is the only screen in the round
-   with motion: a sweeping scan, two counter-rotating rings and a meter that is
-   literally the card's own clock running out. */
+/* Three seconds in front of a bonus question, built like a slot machine: a reel
+   that spins through the digits and lands on the multiplier. The room has to
+   feel the jump in stakes before the question lands, and a number that arrives
+   without moving does not do that. */
 .quiz__bonuscard {
   position: relative;
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: clamp(0.35rem, 1.1vh, 0.8rem);
+  gap: clamp(0.3rem, 1vh, 0.7rem);
   align-self: stretch;
-  padding: clamp(1rem, 3vh, 2rem) 1rem;
+  padding: clamp(0.8rem, 2.4vh, 1.6rem) 1rem;
   overflow: hidden;
   text-align: center;
-  animation: quiz-bonus-land 0.5s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation: quiz-bonus-land 0.4s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
 
 /* The grid behind everything, fading out at the edges so it reads as depth
@@ -308,90 +354,145 @@
   animation: quiz-bonus-drift 3s linear both;
 }
 
-.quiz__bonusring {
+/* The bulb rail along the top of the cabinet, chasing left to right. */
+.quiz__bonusbulbs {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
+  inset: 0.35rem 18% auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
 }
 
-.quiz__bonusring span {
-  position: absolute;
-  width: min(58vh, 30rem);
-  aspect-ratio: 1;
+.quiz__bonusbulbs span {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 55%, transparent);
-  /* Two arcs, not a full circle: a closed ring reads as decoration, a broken
-     one reads as something turning. */
-  border-top-color: transparent;
-  border-bottom-color: transparent;
-  animation: quiz-bonus-spin 2.4s linear infinite;
+  background: var(--c-brand-deep);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  animation: quiz-bonus-bulb 0.9s steps(1, end) infinite;
+  animation-delay: calc(var(--bulb, 0) * 60ms);
 }
 
-.quiz__bonusring span:last-child {
-  width: min(42vh, 22rem);
-  border-color: color-mix(in srgb, var(--c-brand) 30%, transparent);
-  border-left-color: transparent;
-  border-right-color: transparent;
-  animation-direction: reverse;
-  animation-duration: 1.6s;
-}
-
-/* One bright line crossing the card, the way a scanner sweeps a document. */
-.quiz__bonuscard::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--c-brand) 80%, transparent) 50%,
-    transparent
-  );
-  box-shadow: 0 0 18px color-mix(in srgb, var(--c-brand) 70%, transparent);
-  animation: quiz-bonus-scan 1.1s ease-in-out 2;
+@keyframes quiz-bonus-bulb {
+  0%,
+  45% {
+    background: var(--c-text);
+    box-shadow: 0 0 10px var(--c-text);
+  }
+  55%,
+  100% {
+    background: var(--c-brand-deep);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--c-brand) 60%, transparent);
+  }
 }
 
 .quiz__bonustag {
   position: relative;
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.66rem, 1.5vw, 0.82rem);
+  font-size: clamp(0.64rem, 1.5vw, 0.8rem);
   letter-spacing: 0.44em;
   text-indent: 0.44em;
   text-transform: uppercase;
   color: var(--c-text-muted);
 }
 
-.quiz__bonusmult {
+/* The window the reel is read through: one cell tall, so exactly one digit is
+   ever visible and the strip can be moved by whole cells. */
+.quiz__reel {
   position: relative;
-  display: flex;
-  align-items: baseline;
-  gap: 0.05em;
-  margin: 0;
+  display: grid;
+  place-items: center;
+  height: 1em;
+  padding: 0 0.42em;
+  overflow: hidden;
+  /* The cabinet window: a dark plate behind the digit, so the reel reads as
+     something the number is being read through. */
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c-black) 92%, transparent),
+    color-mix(in srgb, var(--c-surface-raised) 92%, transparent)
+  );
+  box-shadow:
+    inset 0 0 26px color-mix(in srgb, var(--c-brand-deep) 45%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--c-brand-deep) 55%, transparent);
   font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(3.6rem, 13vh, 7rem);
   font-weight: 700;
   line-height: 1;
   color: var(--c-text);
-  /* The multiplier is the one thing that has to be legible from the back row. */
-  font-size: clamp(3.4rem, 11vh, 6.4rem);
   text-shadow:
-    0 0 18px color-mix(in srgb, var(--c-brand) 65%, transparent),
+    0 0 18px color-mix(in srgb, var(--c-brand) 70%, transparent),
     0 0 60px color-mix(in srgb, var(--c-brand) 35%, transparent);
-  animation: quiz-bonus-pop 0.62s cubic-bezier(0.16, 1.2, 0.3, 1) both;
 }
 
-.quiz__bonussign {
-  font-size: 0.52em;
-  color: var(--c-brand);
+/* The payline markers, above and below the window. */
+.quiz__reeldial {
+  position: absolute;
+  left: 50%;
+  width: 65%;
+  height: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--c-brand) 50%, transparent);
+  opacity: 0.85;
 }
 
-.quiz__bonusdigit {
-  /* Two frames of flicker on the way in: a settled number reads as a label, a
-     number that lands reads as an event. */
-  animation: quiz-bonus-flicker 0.9s steps(1, end) both;
+.quiz__reeldial.is-top {
+  top: 0;
+}
+
+.quiz__reeldial.is-bottom {
+  bottom: 0;
+}
+
+.quiz__reelstrip {
+  display: grid;
+  grid-auto-rows: 1em;
+  /* The landed position: two turns of the digits and then the multiplier. The
+     animation only describes where it starts, so with reduced motion the reel
+     is simply already showing the answer. */
+  animation: quiz-bonus-spin 1.5s cubic-bezier(0.12, 0.8, 0.12, 1);
+}
+
+.quiz__reelstrip span {
+  height: 1em;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+/* The digit it lands on gets the full treatment; the ones flying past do not. */
+.quiz__reelstrip span.is-landed {
+  color: var(--c-text);
+  animation: quiz-bonus-flash 1.9s ease-out;
+}
+
+@keyframes quiz-bonus-spin {
+  from {
+    transform: translateY(0);
+    filter: blur(1.2px);
+  }
+  85% {
+    filter: blur(0);
+  }
+}
+
+@keyframes quiz-bonus-flash {
+  0%,
+  72% {
+    text-shadow: none;
+  }
+  78% {
+    text-shadow:
+      0 0 22px var(--c-text),
+      0 0 70px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  }
+  100% {
+    text-shadow:
+      0 0 18px color-mix(in srgb, var(--c-brand) 70%, transparent),
+      0 0 60px color-mix(in srgb, var(--c-brand) 35%, transparent);
+  }
 }
 
 .quiz__bonusworth {
@@ -413,7 +514,7 @@
   position: relative;
   width: min(100%, 22rem);
   height: 3px;
-  margin-top: clamp(0.3rem, 1vh, 0.7rem);
+  margin-top: clamp(0.2rem, 0.8vh, 0.5rem);
   background: color-mix(in srgb, var(--c-border) 90%, transparent);
   overflow: hidden;
 }
@@ -445,55 +546,6 @@
   }
 }
 
-@keyframes quiz-bonus-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes quiz-bonus-scan {
-  from {
-    transform: translateY(-6px);
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  to {
-    transform: translateY(52vh);
-    opacity: 0;
-  }
-}
-
-@keyframes quiz-bonus-pop {
-  from {
-    transform: scale(0.55);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes quiz-bonus-flicker {
-  0% {
-    opacity: 0;
-  }
-  22% {
-    opacity: 1;
-  }
-  30% {
-    opacity: 0.35;
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 @keyframes quiz-bonus-meter {
   from {
     transform: scaleX(1);
@@ -503,18 +555,15 @@
   }
 }
 
-/* Reduced motion keeps the card, drops the theatre: the number is the message
-   and the meter still says how long is left. */
+/* Reduced motion keeps the card and drops the theatre: the reel is already on
+   its answer, the meter still says how long is left. */
 @media (prefers-reduced-motion: reduce) {
+  .quiz__note,
   .quiz__bonuscard,
   .quiz__bonusgrid,
-  .quiz__bonusring span,
-  .quiz__bonusmult,
-  .quiz__bonusdigit {
+  .quiz__bonusbulbs span,
+  .quiz__reelstrip,
+  .quiz__reelstrip span.is-landed {
     animation: none;
-  }
-
-  .quiz__bonuscard::after {
-    display: none;
   }
 }
