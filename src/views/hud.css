@@ -864,6 +864,21 @@
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
+/* The welcome is the one game screen whose copy is shorter than the stage, so
+   its frame is given the height the wall has by default - centred, it was a
+   thin panel floating in the middle of the tablet. */
+.hud--fill .hud__frame {
+  height: 100%;
+}
+
+/* And the stage has to hand that height down: with `align-content: start` the
+   row is only as tall as its content, so `.welcome { height: 100% }` resolved
+   against itself and the cards stayed a band in the middle. */
+.hud--fill .hud__stage {
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+}
+
 /* Game content reads left to right; only the waiting room centres its text.
    `overflow-x: hidden` matters: a scroll container that also scrolls sideways
    paints a bar across the bottom of every game screen. */

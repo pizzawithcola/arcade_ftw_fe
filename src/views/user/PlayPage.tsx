@@ -157,7 +157,7 @@ function NodeStage({
   // runs off the node clock, so pausing the show freezes it mid-build.
   if (node.type === 'intro') {
     return (
-      <div className="hud hud--game" key={nodeIndex}>
+      <div className="hud hud--game hud--fill" key={nodeIndex}>
         <div className="hud__matrix" aria-hidden="true" />
         <div className="hud__frame">
           <div className="hud__inner">

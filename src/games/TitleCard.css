@@ -10,7 +10,8 @@
   height: 100%;
   padding: clamp(1rem, 3vh, 2rem) 0;
   overflow: hidden;
-  --tcard-title: clamp(1.5rem, 6.4vmin, 2.6rem);
+  /* 42px on the tablet, the same as the welcome screen's title. */
+  --tcard-title: min(42px, 11vw);
 }
 
 .tcard--display {

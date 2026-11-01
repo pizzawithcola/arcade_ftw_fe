@@ -5,6 +5,8 @@
 .welcome {
   position: relative;
   display: grid;
+  /* Full height, content centred: the wash below has to cover the whole frame,
+     so the box fills even though the cards do not. */
   align-content: center;
   justify-items: center;
   gap: clamp(0.7rem, 2.4vh, 1.4rem);
@@ -14,7 +16,8 @@
   overflow: hidden;
   text-align: center;
   --wcard-name: clamp(0.72rem, 1.5vw, 0.9rem);
-  --welcome-title: clamp(1.5rem, 5.2vmin, 2.4rem);
+  /* 42px on the tablet, the same as a game's title card. */
+  --welcome-title: min(42px, 11vw);
 }
 
 .welcome--display {
