@@ -51,6 +51,21 @@ function roleName(role: string | undefined): string {
   return 'SPECTATOR'
 }
 
+/**
+ * Two people, drawn rather than imported: the badge is measured in pixels at
+ * card size, and an icon font would either be too heavy or land off-baseline.
+ */
+function PeopleIcon() {
+  return (
+    <svg className="sab__peopleicon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle cx="5.4" cy="5" r="2.5" />
+      <circle cx="11.4" cy="6" r="2" />
+      <path d="M1 13.4c0-2.4 2-4 4.4-4s4.4 1.6 4.4 4z" />
+      <path d="M10.6 9.6c2 .1 3.4 1.5 3.4 3.6h-3z" />
+    </svg>
+  )
+}
+
 const DOMAINS: SabotageDomain[] = ['data', 'people', 'infra']
 
 /** One domain on a card: a label, three pips and the number.
@@ -348,6 +363,16 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
                         <CardVector vector={card.vector} />
                         <span className="sab__cardcost">{money(card.cost)}</span>
                       </span>
+                      {/* How many of this side are on this card. Its own team
+                          only - the other side's picks are nobody's business
+                          until the round is scored - and it counts the reader,
+                          because their own tick is in there. */}
+                      {(build?.votes[id] ?? 0) > 0 && (
+                        <span className="sab__cardvotes">
+                          <PeopleIcon />
+                          {build?.votes[id]}
+                        </span>
+                      )}
                     </button>
                   )
                 })}
