@@ -493,11 +493,15 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
   if (sabotage.phase === 'reveal' && sabotage.last_result) {
     const r = sabotage.last_result
     const won = r.winner ? sabTeam(r.winner) : null
+    // The verdict is written in the colour of the job that won it: purple for a
+    // breach, blue for a hold, so the line and the panels agree at a glance.
+    const tone =
+      r.winner === null ? '' : r.winner === r.attacker ? ' is-atk' : ' is-def'
     return (
       <article className="battle">
         <RoundRail sabotage={sabotage} />
         <p className="battle__eyebrow">Round {r.round} · {r.theme}</p>
-        <p className={`battle__outcome${won ? '' : ' is-draw'}`}>{outcomeLabel(r)}</p>
+        <p className={`battle__outcome${won ? tone : ' is-draw'}`}>{outcomeLabel(r)}</p>
 
         {/* Three columns, drawn as the two hands that met in each one. */}
         <ul className="battle__dims">
@@ -750,7 +754,14 @@ export default function DisplayPage() {
                 <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
               </div>
 
-              <div className="hud__stage display__stage" data-screen={node?.game ?? node?.type ?? 'none'}>
+              {/* `data-kind` matters: `data-screen` carries the game's key, so a
+                  rule written for the Data Shadow *game* also matched its
+                  fifteen-second rules card and pinned the rules to the top. */}
+              <div
+                className="hud__stage display__stage"
+                data-screen={node?.game ?? node?.type ?? 'none'}
+                data-kind={node?.type ?? 'none'}
+              >
 
           {node?.type === 'game' && node?.game === 'data_shadow' && <PostOnScreen />}
 

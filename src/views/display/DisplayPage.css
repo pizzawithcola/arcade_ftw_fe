@@ -343,7 +343,7 @@
    band of empty panel above the first line, which read as a loading state. */
 /* Three classes: `.hud--display .hud__stage` sets `align-content: center` too,
    and which one lands later depends on import order. */
-.hud--display .display__stage[data-screen='data_shadow'] {
+.hud--display .display__stage[data-screen='data_shadow'][data-kind='game'] {
   align-content: start;
   padding-top: clamp(0.4rem, 1.2vh, 0.8rem);
 }
@@ -1116,6 +1116,17 @@
   letter-spacing: 0.02em;
   color: var(--c-text);
   text-shadow: 0 0 34px color-mix(in srgb, var(--c-brand) 45%, transparent);
+}
+
+/* The colour of the job that won the round, not of the side that won it. */
+.battle__outcome.is-atk {
+  color: var(--c-attack);
+  text-shadow: 0 0 32px color-mix(in srgb, var(--c-attack) 45%, transparent);
+}
+
+.battle__outcome.is-def {
+  color: var(--c-defend);
+  text-shadow: 0 0 32px color-mix(in srgb, var(--c-defend) 45%, transparent);
 }
 
 .battle__outcome.is-draw {
