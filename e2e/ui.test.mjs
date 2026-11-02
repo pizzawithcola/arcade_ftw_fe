@@ -624,6 +624,24 @@ describe('the Ultimate round', () => {
         assert.notEqual(review.openLetter, null)
       }
       await snap(page, 'ipad-quiz-review.png')
+
+      // Half of a question is for being right and half for being quick, so an
+      // answer inside the first second pays the whole hundred - and a wrong one
+      // pays nothing at all. Both are read off the board the server wrote.
+      const board = await fetch(`${BASE}/api/players?room=${ROOM}`, {
+        headers: { Authorization: `Bearer ${api.adminToken}` },
+      }).then((response) => response.json())
+      const me = (board.players ?? []).find((row) => row.nickname.startsWith(HOST))
+      const scored = me?.score?.ultimate_score ?? 0
+      const right = review.openLetter?.trim() === 'A'
+      if (right) {
+        assert.ok(
+          scored >= 50 && scored <= 100,
+          `a correct answer is worth 50-100, not ${scored}`,
+        )
+      } else {
+        assert.equal(scored, 0, `a wrong answer is worth nothing, not ${scored}`)
+      }
     } finally {
       await context.close()
     }

@@ -20,6 +20,10 @@ const FALLBACK_SECONDS_EACH = 20 + REVIEW_SECONDS
 
 export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex: number }) {
   const [picks, setPicks] = useState<Picks>({})
+  // How long each answer took, which is what the speed half of the score reads.
+  // Kept beside the picks rather than derived later: the clock has moved on by
+  // the time the final screen adds the round up.
+  const [taken, setTaken] = useState<Record<string, number>>({})
   const report = useScoreReport(room, nodeIndex)
 
   // There is no intro card: the brief in front of the round already announced
@@ -91,12 +95,17 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   )
   const total = useMemo(
     () =>
-      questions.reduce(
-        (sum, item, at) =>
-          sum + questionScore(picks[item.id], item.correct_option, slotAt(at).multiplier),
-        0,
-      ),
-    [picks, questions],
+      questions.reduce((sum, item, at) => {
+        const limit = item.time_limit * 1000
+        // An unanswered question is scored at the buzzer, which is zero: it is
+        // the same sum either way, and using the limit keeps it honest.
+        const used = taken[item.id] ?? limit
+        return (
+          sum +
+          questionScore(picks[item.id], item.correct_option, slotAt(at).multiplier, used, limit)
+        )
+      }, 0),
+    [picks, taken, questions],
   )
 
   if (finished) {
@@ -207,8 +216,20 @@ return (
                     className={classes}
                     disabled={waiting || revealed}
                     onClick={() => {
+                      const limit = question.time_limit * 1000
+                      const used = Math.min(inCycleMs, limit)
                       setPicks((current) => ({ ...current, [question.id]: option.letter }))
-                      report(index, questionScore(option.letter, question.correct_option))
+                      setTaken((current) => ({ ...current, [question.id]: used }))
+                      report(
+                        index,
+                        questionScore(
+                          option.letter,
+                          question.correct_option,
+                          slotAt(index).multiplier,
+                          used,
+                          limit,
+                        ),
+                      )
                     }}
                   >
                     <span className="quiz__letter">{option.letter}</span>
