@@ -394,8 +394,13 @@
    `pileAt()` and this only takes over the parts a transform cannot do: the glow
    when a place lands, and the louder glow for the three that matter. */
 
+/* `transition` has to go with the animation, and it is the one that matters
+   here: the pile writes a new transform every frame from JavaScript, and a 700ms
+   transition on `transform` turned each frame into the start of another chase -
+   the rows rubber-banded behind the clock instead of falling with it. */
 .ldb--pile .ldb__row {
   animation: none;
+  transition: border-color 400ms ease-out;
   will-change: transform, opacity;
 }
 
