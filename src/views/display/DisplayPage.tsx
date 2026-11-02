@@ -822,7 +822,9 @@ export default function DisplayPage() {
             (node?.game !== 'sabotage' || sabotage?.phase === 'select') && (
             <p className="display__look">Answer on your iPad →</p>
           )}
-          {phase === 'finished' && (
+          {/* The outro says its own goodbye; this line only covers a show that
+              was ended from the console mid-node. */}
+          {phase === 'finished' && node?.type !== 'outro' && (
             <p className="display__look">That's the show. Thank you for playing.</p>
           )}
               </div>

@@ -2,30 +2,48 @@
 
 .wrapup {
   display: grid;
-  place-items: center;
+  justify-items: center;
   align-content: center;
-  width: min(100%, 46rem);
+  gap: clamp(0.8rem, 2.4vh, 1.6rem);
+  width: min(100%, 48rem);
   margin: 0 auto;
-  padding: clamp(1rem, 4vh, 2.5rem);
+  padding: clamp(1rem, 3vh, 2rem);
+  text-align: center;
+}
+
+/* Who is talking, before the sentence: the same small red mark the games open
+   with, so the sign-off belongs to the same show. */
+.wrapup__kicker {
+  margin: 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.66rem, 1.1vw, 0.86rem);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--c-brand) 72%, var(--c-text));
 }
 
 .wrapup__text {
   margin: 0;
-  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
-  line-height: 1.6;
-  letter-spacing: 0.01em;
-  color: var(--c-text);
-  text-align: center;
+  font-size: clamp(1.05rem, 1.7vw, 1.5rem);
+  line-height: 1.65;
+  letter-spacing: 0.005em;
+  color: var(--c-text-muted);
   /* The paragraph grows line by line as it types; keeping the box the same
      height stops the whole block jumping on the first character. */
   min-height: 6.4em;
+  text-wrap: pretty;
 }
 
 /* The line the show has been about. Red is a fill or a rail everywhere else,
    but this is the last thing anyone reads, at heading size, which is the one
    place the brand red is legible on black. */
 .wrapup__call {
+  display: block;
+  margin-top: clamp(0.5rem, 1.6vh, 1rem);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 1.18em;
   font-weight: 700;
+  line-height: 1.35;
   color: var(--c-brand);
   text-shadow: 0 0 26px color-mix(in srgb, var(--c-brand) 45%, transparent);
 }
@@ -38,6 +56,10 @@
   vertical-align: -0.15em;
   background: var(--c-text);
   animation: wrapup-blink 0.9s steps(1, end) infinite;
+}
+
+.wrapup__call + .wrapup__caret {
+  background: var(--c-brand);
 }
 
 .wrapup__caret.is-done {
@@ -56,17 +78,17 @@
   }
 }
 
-/* The wall is read from the back of a room, so it gets the larger setting - but
-   this is a paragraph, not a headline: at 2.6rem it was half again the size of
-   every other reading text on the wall (the rules points are 1.65vw, the
+/* The wall is read from the back of a room, so it gets the larger setting -
+   but this is a paragraph, not a headline: at 2.6rem it was half again the size
+   of every other reading text on the wall (the rules points are 1.65vw, the
    question prompts 1.6vw), which made the sign-off look like a title. */
 .wrapup--display {
-  width: min(100%, 62rem);
+  width: min(100%, 58rem);
 }
 
 .wrapup--display .wrapup__text {
   font-size: clamp(1.2rem, 1.8vw, 1.95rem);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 @media (prefers-reduced-motion: reduce) {

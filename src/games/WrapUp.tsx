@@ -39,8 +39,12 @@ export default function WrapUp({
 
   return (
     <div className={`wrapup wrapup--${size}`}>
+      <p className="wrapup__kicker">AI Cyber Arcade</p>
       <p className="wrapup__text">
         {head}
+        {/* The call is its own line once it starts: run on the end of a centred
+            paragraph it left a two-word rag, and it is the one sentence the
+            room is meant to leave with. */}
         {call && <strong className="wrapup__call">{call}</strong>}
         {/* The caret is the reason this reads as being typed rather than as
             text that happened to arrive in pieces. */}
