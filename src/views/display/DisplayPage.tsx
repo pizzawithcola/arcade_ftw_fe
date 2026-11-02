@@ -94,11 +94,6 @@ function LobbyPanel({
   )
 }
 
-function formatClock(ms: number): string {
-  const total = Math.max(0, Math.ceil(ms / 1000))
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
-}
-
 /** The 15s rules card: the iPad's words, sized for the back row. */
 /** The wall's version of the fifteen seconds that open a game: name, then rules. */
 function OpeningOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: number }) {
@@ -712,16 +707,6 @@ export default function DisplayPage() {
     node?.type === 'quiz' &&
     question !== null &&
     inQuestionMs(question) >= (node.seconds_each ?? 0) * 1000 - 5_000
-  // Sabotage has its own per-phase countdown; show that instead of the node's
-  // 170-second slot, which only matters for when the flow moves on.
-  const sabotageRemaining = sabotage
-    ? sabotage.paused
-      ? sabotage.heldMs
-      : sabotage.endsAt !== null
-        ? Math.max(0, sabotage.endsAt - now)
-        : sabotage.remaining_ms
-    : 0
-
   return (
     <main className={`display display--${phase}`}>
       {phase === 'waiting' ? (
@@ -745,12 +730,6 @@ export default function DisplayPage() {
               <div className="hud__bar">
                 <span className="hud__chevrons" aria-hidden="true" />
                 <span className="hud__event">{node?.title ?? '—'}</span>
-                {/* The display only ever has one clock, so it always shows the
-                    node's remaining time - unlike the player screen, where the
-                    game's own timer would otherwise compete with it. */}
-                <span className="display__clock">
-                  {formatClock(node?.game === 'sabotage' ? sabotageRemaining : remaining)}
-                </span>
                 <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
               </div>
 

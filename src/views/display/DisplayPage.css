@@ -180,16 +180,6 @@
 
 /* Orbitron's colon is drawn as a slashed zero, so the clock keeps the UI face:
    "1:06" has to be unmistakable at five metres. */
-.display__clock {
-  margin-left: auto;
-  padding-right: 0.2rem;
-  font-family: inherit;
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--c-text);
-}
-
 /* The stage bar carries the section name, so it needs room to breathe. */
 .display__kicker {
   margin: 0;
