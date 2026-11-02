@@ -56,14 +56,17 @@
   }
 }
 
-/* The wall is read from the back of a room, so it gets the larger setting. */
+/* The wall is read from the back of a room, so it gets the larger setting - but
+   this is a paragraph, not a headline: at 2.6rem it was half again the size of
+   every other reading text on the wall (the rules points are 1.65vw, the
+   question prompts 1.6vw), which made the sign-off look like a title. */
 .wrapup--display {
   width: min(100%, 62rem);
 }
 
 .wrapup--display .wrapup__text {
-  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-  line-height: 1.45;
+  font-size: clamp(1.2rem, 1.8vw, 1.95rem);
+  line-height: 1.55;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -223,8 +223,14 @@ function NodeStage({
     if (!entry) return null
     const at = gameNumber(entry.key, node.section)
     const half = openingPhase(node.title_sec, elapsed)
+    // The name fills the screen; the rules do not. Twelve seconds of three short
+    // lines in a full-height panel read as a slide with two empty ends, so that
+    // frame shrinks back to its content and centres itself.
     return (
-      <div className={`hud ${half === 'title' ? 'hud--game' : 'hud--brief'} hud--fill`} key={nodeIndex}>
+      <div
+        className={`hud ${half === 'title' ? 'hud--game hud--fill' : 'hud--brief'}`}
+        key={nodeIndex}
+      >
         <div className="hud__matrix" aria-hidden="true" />
         <div className="hud__frame">
           <div className="hud__inner">
