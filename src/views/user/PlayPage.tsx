@@ -28,7 +28,32 @@ import './PlayPage.css'
  * are, and that nothing is expected of them yet. No roster, no clock, no chrome -
  * the screen is held for a minute at most.
  */
-function WaitingRoom({ nickname, eventName }: { nickname: string; eventName: string }) {
+/**
+ * Signing out from a screen that has no bar.
+ *
+ * The waiting room and the between-shows screens deliberately hide the header -
+ * there is no progress to show yet - and the only Logout button lived in that
+ * header. A device signed in as the wrong person, or one handed to the next
+ * person between rounds, had no way back to the login page short of closing the
+ * tab.
+ */
+function SignOut({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <button type="button" className="wait__signout" onClick={onSignOut}>
+      Sign out
+    </button>
+  )
+}
+
+function WaitingRoom({
+  nickname,
+  eventName,
+  onSignOut,
+}: {
+  nickname: string
+  eventName: string
+  onSignOut: () => void
+}) {
   return (
     <div className="hud">
       {/* Dot matrix behind everything: reads as a projection surface rather than
@@ -67,6 +92,7 @@ function WaitingRoom({ nickname, eventName }: { nickname: string; eventName: str
 
             <p className="hud__label">You are in as</p>
             <p className="hud__name">{nickname}</p>
+            <SignOut onSignOut={onSignOut} />
           </div>
         </div>
       </div>
@@ -83,10 +109,12 @@ function BetweenShows({
   eventName,
   headline,
   note,
+  onSignOut,
 }: {
   eventName: string
   headline: string
   note: string
+  onSignOut: () => void
 }) {
   return (
     <div className="hud">
@@ -123,6 +151,7 @@ function BetweenShows({
               <span className="wait__hi">{headline}</span>
             </h1>
             <p className="wait__note">{note}</p>
+            <SignOut onSignOut={onSignOut} />
           </div>
         </div>
       </div>
@@ -469,6 +498,14 @@ export default function PlayPage() {
   const me = preview ? PREVIEW_SESSION : session
   if (!me) return <Navigate to="/" replace />
 
+  // The console's mirror of this screen is a staff view, not a device: it stays
+  // signed in, so it is given a no-op rather than a button that lies.
+  const signOut = () => {
+    if (preview) return
+    clearToken()
+    navigate('/', { replace: true })
+  }
+
   // A finished round is the signal that this device's round is over - the room
   // and the player are locked together.
   const roomMissing = !pinned && resolved === null
@@ -519,21 +556,24 @@ export default function PlayPage() {
           eventName={eventName}
           headline="Between rounds"
           note="Waiting for the host to open the next show…"
+          onSignOut={signOut}
         />
       ) : phase === 'finished' && sawPlaying ? (
         <BetweenShows
           eventName={eventName}
           headline="Thanks for playing"
           note="That's a wrap — signing you out…"
+          onSignOut={signOut}
         />
       ) : phase === 'finished' ? (
         <BetweenShows
           eventName={eventName}
           headline="Between rounds"
           note="Waiting for the host to open the next show…"
+          onSignOut={signOut}
         />
       ) : phase === 'waiting' ? (
-        <WaitingRoom nickname={me.nickname} eventName={eventName} />
+        <WaitingRoom nickname={me.nickname} eventName={eventName} onSignOut={signOut} />
       ) : (
         <NodeStage node={node} nodeIndex={index} room={code} team={me.team} nickname={me.nickname} />
       )}

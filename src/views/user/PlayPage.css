@@ -252,3 +252,28 @@
 .stage--waiting {
   color: var(--c-text-dim);
 }
+
+/* Sign out, on the two screens that have no header to carry one. Quiet on
+   purpose: it is a correction, not part of the show, and it must not read as
+   something the player is meant to press. */
+.wait__signout {
+  margin-top: clamp(0.8rem, 2.4vh, 1.4rem);
+  padding: 0.4rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--c-border) 80%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+  letter-spacing: 0.06em;
+  color: var(--c-text-dim);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease-out,
+    color 160ms ease-out;
+}
+
+.wait__signout:hover,
+.wait__signout:focus-visible {
+  border-color: color-mix(in srgb, var(--c-brand) 60%, transparent);
+  color: var(--c-text);
+}
