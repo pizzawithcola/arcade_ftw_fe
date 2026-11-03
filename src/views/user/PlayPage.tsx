@@ -72,10 +72,6 @@ function WaitingRoom({
           <div className="hud__bar">
             <span className="hud__chevrons" aria-hidden="true" />
             <span className="hud__event">{eventName || 'AI Cyber Arcade'}</span>
-            <span className="hud__status">
-              <span className="hud__dot" aria-hidden="true" />
-              get ready
-            </span>
             <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
           </div>
 
@@ -132,10 +128,6 @@ function BetweenShows({
           <div className="hud__bar">
             <span className="hud__chevrons" aria-hidden="true" />
             <span className="hud__event">{eventName || 'AI Cyber Arcade'}</span>
-            <span className="hud__status">
-              <span className="hud__dot" aria-hidden="true" />
-              get ready
-            </span>
             <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
           </div>
 

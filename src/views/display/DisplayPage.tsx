@@ -13,6 +13,7 @@ import Opening from '../../games/Opening'
 import { BattleRules } from '../../games/sabotage/SabotageGame'
 import { outcomeLabel } from '../../games/sabotage/revealCopy'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
+import StandbyBoard from '../../components/StandbyBoard'
 import '../../games/hallucination/HallucinationGame.css'
 import '../hud.css'
 import { useGameSocket } from '../../hooks/useGameSocket'
@@ -56,10 +57,6 @@ function LobbyPanel({
           <div className="hud__bar">
             <span className="hud__chevrons" aria-hidden="true" />
             <span className="hud__event">Arcade FTW</span>
-            <span className="hud__status">
-              <span className="hud__dot" aria-hidden="true" />
-              get ready
-            </span>
             <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
           </div>
 
@@ -687,13 +684,17 @@ export default function DisplayPage() {
     return <StaffLogin scope="display" title="Arcade FTW" onSignedIn={setSession} />
   }
 
+  // Between rounds: no room exists yet, so there is nothing to rank. The wall
+  // shows the event's board instead of a ring and the words "stand by", which
+  // told the room nothing while they waited.
   if (!pinned && !current) {
     return (
       <main className="display display--idle">
         <header className="display__bar">
-          <span className="display__brand">Arcade FTW</span>
+          <span className="display__brand">Arcade Fintech Week</span>
         </header>
-        <LobbyPanel names={[]} note="The host opens the round shortly." />
+        <StandbyBoard />
+        <p className="display__standbynote">Next round will be started soon.</p>
       </main>
     )
   }

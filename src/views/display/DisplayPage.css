@@ -1502,3 +1502,79 @@
     scale: 0.8;
   }
 }
+
+/* ─── between rounds: the event's board, not a loading ring ──────────────────
+   The wall used to hold a ring and the words "stand by" for as long as it took
+   the host to open the next room. Nothing about that told anybody anything, and
+   the room sat looking at it. It shows the top players of the event instead. */
+.display--idle {
+  padding-bottom: clamp(1rem, 3vh, 2rem);
+}
+
+.standby {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 92rem);
+  margin: clamp(0.4rem, 1.6vh, 1.2rem) auto 0;
+}
+
+/* The plate takes the height left between the bar and the note, so the list can
+   work out how many rows it has to fill. */
+.standby .ldb__frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.standby .ldb__list {
+  min-height: 0;
+}
+
+/* Two columns, down the first and then the second - reading order, not a grid
+   of pairs - and the rows keep their own height instead of being stretched. */
+.standby .ldb__row {
+  break-inside: avoid;
+}
+
+.standby .ldb__rank,
+.standby .ldb__name,
+.standby .ldb__score {
+  font-size: clamp(0.95rem, 1.35vw, 1.35rem);
+}
+
+.display__standbynote {
+  margin: clamp(0.6rem, 2vh, 1.4rem) 0 0;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(0.95rem, 1.5vw, 1.5rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--c-text-muted);
+}
+
+/* The legend repeats over each column, in the row's own three-column grid. */
+.standby__legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1rem;
+  padding: 0 0 0.5rem;
+  border-bottom: 0;
+  margin-bottom: 0.6rem;
+}
+
+.standby__legendcol {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--c-border);
+  padding-bottom: 0.5rem;
+}
+
+.standby__legendcol span:last-child {
+  text-align: right;
+}
