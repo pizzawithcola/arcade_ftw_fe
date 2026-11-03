@@ -263,15 +263,16 @@
   line-height: 1.45;
 }
 
-/* The pictures sit side by side as a pair of squares, cropped through the
-   middle: stacked with a gap they read as two separate illustrations floating
-   beside the post rather than as the two attachments of one. */
+/* Two squares, stacked down the right edge: the pair is the post's two
+   attachments, and the wall reads them in the order they were posted. A column
+   also keeps the pair inside the post's height, which two across could not. */
 .display__post--split .display__postshots {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: none;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, auto));
   gap: 0;
   align-content: center;
+  justify-items: center;
   min-height: 0;
   margin-top: 0;
   padding-top: 0;
@@ -280,6 +281,9 @@
 
 .display__post--split .display__postshot {
   aspect-ratio: 1;
+  /* A square sized off the column, and off the height it has to fit in, so the
+     second one cannot push the first out of the post. */
+  width: min(100%, clamp(7rem, 17vh, 13rem));
   height: auto;
   min-height: 0;
   overflow: hidden;

@@ -58,10 +58,11 @@ export const POST_TEXT = BLOCKS.join('')
  *      vendor, a colleague's name) are what stop "select every number" from
  *      being a winning strategy.
  *
- * `weight` is the severity of the leak: 120 for the four that carry legal or
- * regulatory exposure, 80 for the commercial and personal ones - a perfect
- * report is 4 x 120 + 4 x 80 = 800. A decoy is worth nothing to catch and -80 to
- * flag, so the two sides are not symmetric on purpose.
+ * One tap is worth 160, and there are five things to tap - four paragraphs and
+ * one picture - so a perfect report is 800. Two of the paragraphs carry two
+ * leaks each, which is why the weights below are 80 and 80 rather than 160: the
+ * score is added up per leak, and the pair is one tap. A decoy is worth nothing
+ * to catch and -80 to flag, so the two sides are not symmetric on purpose.
  *
  * `alt` holds second anchors for the same mistake. Either anchor counts, and
  * catching both does not double the score - they are one error seen from two
@@ -72,14 +73,14 @@ export const LEAKS: LeakSpec[] = [
   {
     id: 'customer-data',
     text: 'real customer conversations',
-    weight: 120,
+    weight: 160,
     why: 'Training on real customer conversations is a regulatory matter, not an achievement. Said publicly, with no mention of consent or legal basis, it invites the privacy regulator to ask how those conversations were obtained.',
   },
   {
     id: 'regulator',
     text: 'the regulator verbally approved it',
     alt: ['formal notice will be announced soon'],
-    weight: 120,
+    weight: 160,
     why: 'Verbal approval has no legal force, and the formal notice is not out yet. Saying "approved" before the regulator says it is selective disclosure - the timing of the gap is the violation, not the information.',
   },
   {
@@ -134,7 +135,7 @@ export const IMAGES: ImageSpec[] = [
     label: 'Sprint Review',
     src: '/data_shadow/risk_dashboard_leak.JPG',
     alt: 'Photo attached to the post: Sprint Review.',
-    weight: 120,
+    weight: 160,
     why: 'Nobody redacts a screen before taking the photo. Volume, handling time and unit cost in one frame is the operating picture of the business, and it stays legible at full size forever.',
   },
 ]
