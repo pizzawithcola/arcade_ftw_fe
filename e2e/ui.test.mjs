@@ -397,7 +397,9 @@ describe('the data shadow post', () => {
       assert.equal(added.report.length, 1)
       assert.match(added.report[0] ?? '', /real customer conversations/)
       assert.equal(added.pressed.filter((state) => state === 'true').length, 1)
-      assert.match(added.count, /^1\/7$/, `the count says one of seven: ${added.count}`)
+      // Out of the things worth tapping - four paragraphs and one picture - not
+      // out of the seven leaks: two of those paragraphs hold two each.
+      assert.match(added.count, /^1\/5$/, `the count says one of five: ${added.count}`)
 
       // Tapping it again is how a mistaken paragraph comes back out.
       await leak.click()

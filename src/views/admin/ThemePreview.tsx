@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react'
 
 import { findOpening } from '../../games/openings'
 import { BLOCKS, IMAGES, LEAKS, POST_META } from '../../games/dataShadow/content'
-import { targetCount } from '../../games/dataShadow/scoring'
+import { tapTargetCount } from '../../games/dataShadow/scoring'
 import { ReportKindIcon } from '../../games/dataShadow/ReportKindIcon'
 import DesignPage from './DesignPage'
 import './AdminPage.css'
@@ -521,7 +521,10 @@ export default function ThemePreview() {
                       <header className="report__head">
                         <h2 className="report__title">Your report</h2>
                         <span className="report__count">
-                          2<span className="report__total">/{targetCount(LEAKS, IMAGES)}</span>
+                          2
+                          <span className="report__total">
+                            /{tapTargetCount(BLOCKS, LEAKS, IMAGES)}
+                          </span>
                         </span>
                       </header>
                       <div className="report__list">

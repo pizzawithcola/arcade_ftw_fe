@@ -8,7 +8,7 @@ import {
   evaluate,
   maxScore,
   resolveLeaks,
-  targetCount,
+  tapTargetCount,
   type Evaluation,
   type LeakSpan,
   type Selection,
@@ -36,6 +36,10 @@ const BLOCK_OFFSETS: number[] = (() => {
 })()
 
 const LEAK_SPANS: LeakSpan[] = resolveLeaks(POST_TEXT, LEAKS)
+
+/** What the report rail counts against: the paragraphs and pictures that hold a
+ *  leak, because a tap flags a paragraph and two leaks can share one. */
+const TAP_TARGETS = tapTargetCount(BLOCKS, LEAKS, IMAGES)
 
 /** The character range one paragraph occupies in `POST_TEXT`. */
 function blockRange(index: number) {
@@ -314,11 +318,14 @@ export default function DataShadowGame({
       <aside className="report">
         <header className="report__head">
           <h2 className="report__title">Your report</h2>
-          {/* Out of the total to find, so the rail says how much work is left
-              rather than just how much has been typed in so far. */}
+          {/* Out of the number of things worth tapping - paragraphs and
+              pictures, not leaks: two leaks can share one paragraph, and the
+              player taps paragraphs. The numerator counts every tap, decoys
+              included, so the rail stays honest about what has been flagged
+              and still drops the instant one is taken back. */}
           <span className="report__count">
             {flaggedCount}
-            <span className="report__total">/{targetCount(LEAKS, IMAGES)}</span>
+            <span className="report__total">/{TAP_TARGETS}</span>
           </span>
         </header>
 

@@ -119,8 +119,35 @@ export function resolveLeaks(postText: string, specs: LeakSpec[]): LeakSpan[] {
   return resolved
 }
 
-/** The most a perfect report can score - every leak, no false alarms. */
-/** The most a perfect report can score - every leak, no false alarms. */
+/**
+ * How many things the player has to tap: the paragraphs that hold a leak, plus
+ * the pictures that do.
+ *
+ * Not the number of leaks. The round is read a paragraph at a time now, and two
+ * leaks can sit in one paragraph - "19 markets" and "our internal forecasting"
+ * are one tap, not two - so counting leaks left a rail that could never be
+ * filled: a perfect report read 5/7.
+ */
+export function tapTargetCount(
+  blocks: string[],
+  specs: LeakSpec[],
+  images: ImageSpec[] = [],
+): number {
+  const spans = resolveLeaks(blocks.join(''), specs)
+  const ranges: Span[] = []
+  let cursor = 0
+  for (const block of blocks) {
+    const lead = block.length - block.trimStart().length
+    ranges.push({ start: cursor + lead, end: cursor + lead + block.trim().length })
+    cursor += block.length
+  }
+  // One count a paragraph, however many leaks it carries.
+  const hit = ranges.filter((range) =>
+    spans.some((span) => span.start < range.end && span.end > range.start),
+  ).length
+  return hit + images.filter((image) => image.weight > 0).length
+}
+
 /** How many things the player is looking for: every leak, plus every picture
  *  that is worth catching. Decoys pay nothing, so they are not targets. */
 export function targetCount(specs: LeakSpec[], images: ImageSpec[] = []): number {
