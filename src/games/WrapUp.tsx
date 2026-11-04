@@ -13,7 +13,7 @@ import './WrapUp.css'
  */
 
 /** The line the show has been building to, and the only red text on the screen. */
-const CALL = 'Remember to keep a human in the loop.'
+const CALL = 'Use human judgement. Make secure choices.'
 
 const LEAD =
   'Thank you for your participation. AI is evolving fast, and the AI Cyber Arcade brings to life how we can use it safely. Embrace the change and '
