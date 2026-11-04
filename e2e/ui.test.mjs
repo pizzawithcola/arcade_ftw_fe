@@ -526,7 +526,7 @@ describe('the sabotage draw', () => {
       assert.equal(paused, 'Game Paused')
       await api.resume(ROOM)
 
-      // Round 1 gives the picking screen 35s; the reveal lands after that.
+      // Round 1 gives the picking screen 40s; the reveal lands after that.
       await page.waitForSelector('.sab__reveal', { timeout: 60000 })
       const reveal = await page.evaluate(() => {
         const text = (sel) => document.querySelector(sel)?.textContent?.replace(/\s+/g, ' ').trim()

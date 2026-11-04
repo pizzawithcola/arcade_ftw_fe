@@ -212,8 +212,8 @@ describe('the rundown is the 13-node show the frontend draws', () => {
 
   test('the sabotage slot outlasts the engine clock', () => {
     const node = state.flow.find((n) => n.game === 'sabotage' && n.type === 'game')
-    // 10 draw + 15 rules + 45 first pick + 3 x 35 picks + 4 x 8 reveals + 5 final
-    const engine = 10 + 15 + 45 + 3 * 35 + 4 * 8 + 5
+    // 10 draw + 15 rules + 40 first pick + 3 x 30 picks + 4 x 8 reveals + 5 final
+    const engine = 10 + 15 + 40 + 3 * 30 + 4 * 8 + 5
     assert.ok(node.duration_sec > engine, `${node.duration_sec} must beat ${engine}`)
   })
 

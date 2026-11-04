@@ -701,12 +701,13 @@ export default function DisplayPage() {
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
   const question = questionOnScreen(node, remaining) ?? broadcast
-  // The Ultimate wall shows the four options while the room is answering, then
-  // swaps them for the standings once the answers close - the same five seconds
-  // the iPads hold a verdict for.
-  const quizReviewing =
-    node?.type === 'quiz' &&
+  // While the room is answering, the wall shows the question; once the answers
+  // close it shows the standings, for the same five seconds the iPads spend on
+  // the verdict. Both question rounds do this: the Ultimate quiz, and
+  // Hallucination, where the verdict is the only moment the room looks up.
+  const reviewing =
     question !== null &&
+    (node?.type === 'quiz' || node?.game === 'hallucination') &&
     inQuestionMs(question) >= (node.seconds_each ?? 0) * 1000 - 5_000
   return (
     <main className={`display display--${phase}`}>
@@ -774,12 +775,19 @@ export default function DisplayPage() {
                 // the same thing, so the room and the screens agree on why the
                 // next answer is worth more.
                 <BonusOnScreen index={question.index} multiplier={slotAt(question.index).multiplier} />
-              ) : quizReviewing ? (
-                // The answer is closed: the room gets the standings for the five
-                // seconds the iPads spend on the verdict.
+              ) : reviewing ? (
+                // The answer is closed: the room gets the standings of the round
+                // it is playing, for the five seconds the iPads spend on the
+                // verdict. The section is the node's own, so Hallucination and
+                // the Ultimate quiz draw their own boards rather than one board
+                // for both.
                 <div className="display__liveboard">
                   <p className="display__liveboardhead">Standings</p>
-                  <RoomLeaderboard key={`live-${question.index}`} code={code} section="ultimate" />
+                  <RoomLeaderboard
+                    key={`live-${nodeIndex}-${question.index}`}
+                    code={code}
+                    section={node?.score ?? 'ultimate'}
+                  />
                 </div>
               ) : (
                 <QuestionOnScreen
