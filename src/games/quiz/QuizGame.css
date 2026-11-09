@@ -57,6 +57,10 @@
 
 .quiz__options {
   display: grid;
+  /* Every option takes the height of the tallest one: `1fr` rows all resolve to
+     the same size in an auto-height grid, so a one-line answer and a three-line
+     answer wear the same box. The text inside centres on that box. */
+  grid-auto-rows: 1fr;
   gap: clamp(0.35rem, 1vh, 0.55rem);
   width: 100%;
 }
@@ -119,6 +123,13 @@
    it explains, which is the only place a player is already looking. */
 .quiz__slot {
   display: grid;
+  /* The button fills the cell, so the box is the row's height rather than the
+     text's. */
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.quiz__slot > .quiz__option {
+  height: 100%;
 }
 
 .quiz__option {

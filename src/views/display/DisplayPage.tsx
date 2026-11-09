@@ -100,6 +100,28 @@ function OpeningOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: n
   return <Opening node={node} elapsedMs={elapsedMs} size="display" />
 }
 
+/** What the wall's header clock counts down.
+ *
+ *  A game node can run several rounds: three Hallucination questions, four
+ *  Battle rounds, five quiz questions. Showing the node's own clock told the
+ *  room "8:12 left" when the question in front of them had twenty seconds, so
+ *  the header follows the round the room is actually playing.
+ */
+function roundRemainingMs(
+  node: FlowNode | null,
+  remainingMs: number,
+  question: QuestionState | null,
+  sabotage: SabotageState | null,
+): number {
+  if (question) {
+    // A bonus card is its own three seconds; the question behind it has not
+    // started, so the card's clock is the honest one.
+    return question.bonus_ms ? question.bonus_ms : question.remaining_ms
+  }
+  if (node?.game === 'sabotage' && sabotage) return sabotage.remaining_ms
+  return remainingMs
+}
+
 /** Minutes and seconds left on the node, for the wall's own header clock. */
 function clock(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000))
@@ -707,6 +729,7 @@ export default function DisplayPage() {
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
   const question = questionOnScreen(node, remaining) ?? broadcast
+  const roundLeft = roundRemainingMs(node, remaining, question, sabotage)
   // While the room is answering, the wall shows the question; once the answers
   // close it shows the standings, for the same five seconds the iPads spend on
   // the verdict. Both question rounds do this: the Ultimate quiz, and
@@ -738,12 +761,16 @@ export default function DisplayPage() {
               <div className="hud__bar">
                 <span className="hud__chevrons" aria-hidden="true" />
                 <span className="hud__event">{node?.title ?? '—'}</span>
-                {/* The node's own clock, in the same place the games put theirs:
-                    dead centre. It answers "how long have we got" without the
-                    host having to call it out. */}
+                {/* The current round's clock, in the same place the games put
+                    theirs: dead centre. It answers "how long have we got" for
+                    the round in front of the room, not for the game as a whole. */}
                 {phase === 'playing' || phase === 'paused' ? (
-                  <span className={`display__clock ${remaining <= 10_000 ? 'is-urgent' : ''}`}>
-                    {clock(remaining)}
+                  <span
+                    className={`display__clock ${
+                      roundLeft <= 10_000 ? 'is-urgent' : ''
+                    }`}
+                  >
+                    {clock(roundLeft)}
                   </span>
                 ) : null}
                 <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />

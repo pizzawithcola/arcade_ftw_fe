@@ -524,6 +524,9 @@
 .display__options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Every option takes the height of the tallest, so a two-line answer and a
+     one-line answer wear the same box; the text centres inside it. */
+  grid-auto-rows: 1fr;
   gap: clamp(0.5rem, 1.2vw, 0.9rem);
   width: 100%;
   margin: 0;

@@ -271,10 +271,6 @@ function NodeStage({
                     : 'Next game'
                   : entry.name}
               </span>
-              <span className="hud__status">
-                <span className="hud__dot" aria-hidden="true" />
-                {half === 'title' ? 'starting' : 'briefing'}
-              </span>
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>
 
