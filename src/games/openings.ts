@@ -11,6 +11,7 @@
  * The wording below is the client's, supplied verbatim - including its
  * punctuation and its remaining slip ("choices loses points"). Do not
  * copy-edit it: only the person whose show this is may change how it reads.
+ * Counts are the exception: they have to follow the round they describe.
  * Everything else in this file (structure, timings, the welcome map) is fair
  * game.
  *
@@ -80,7 +81,7 @@ const OPENINGS: GameOpening[] = [
     name: 'Ultimate Showdown',
     icon: '/game_icons/ultimate_icon.PNG',
     rules: [
-      'Five chances to test your knowledge',
+      'Three chances to test your knowledge',
       'Fast and correct answers gain more points',
       'Bonus rounds can shake up the rankings on the leaderboard',
     ],

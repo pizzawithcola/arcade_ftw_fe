@@ -56,7 +56,7 @@ function LobbyPanel({
 
           <div className="hud__bar">
             <span className="hud__chevrons" aria-hidden="true" />
-            <span className="hud__event">Arcade FTW</span>
+            <span className="hud__event">Arcade Fintech Festival</span>
             <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
           </div>
 
@@ -98,6 +98,12 @@ function OpeningOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: n
   // burned of the node, which is the clock the opening is paced by.
   const elapsedMs = Math.max(0, (node.duration_sec ?? 0) * 1000 - remainingMs)
   return <Opening node={node} elapsedMs={elapsedMs} size="display" />
+}
+
+/** Minutes and seconds left on the node, for the wall's own header clock. */
+function clock(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000))
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
 /** The Data Shadow post is one static page, so the big screen can show it whole.
@@ -621,7 +627,7 @@ export default function DisplayPage() {
   const phase = useGameStore((state) => state.phase)
   const node = useGameStore((state) => state.node)
   // The node index is half the draw seed for the Ultimate round: the wall and
-  // the iPads must derive the same five questions from the same pair.
+  // the iPads must derive the same questions from the same pair.
   const nodeIndex = useGameStore((state) => state.index)
   const endsAt = useGameStore((state) => state.endsAt)
   const heldMs = useGameStore((state) => state.heldMs)
@@ -681,7 +687,7 @@ export default function DisplayPage() {
 
   if (!checked) return null
   if (!session) {
-    return <StaffLogin scope="display" title="Arcade FTW" onSignedIn={setSession} />
+    return <StaffLogin scope="display" title="AI Cyber Arcade" onSignedIn={setSession} />
   }
 
   // Between rounds: no room exists yet, so there is nothing to rank. The wall
@@ -732,6 +738,14 @@ export default function DisplayPage() {
               <div className="hud__bar">
                 <span className="hud__chevrons" aria-hidden="true" />
                 <span className="hud__event">{node?.title ?? '—'}</span>
+                {/* The node's own clock, in the same place the games put theirs:
+                    dead centre. It answers "how long have we got" without the
+                    host having to call it out. */}
+                {phase === 'playing' || phase === 'paused' ? (
+                  <span className={`display__clock ${remaining <= 10_000 ? 'is-urgent' : ''}`}>
+                    {clock(remaining)}
+                  </span>
+                ) : null}
                 <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
               </div>
 

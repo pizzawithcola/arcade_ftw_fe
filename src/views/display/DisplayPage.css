@@ -178,6 +178,30 @@
   overflow-x: hidden;
 }
 
+/* The wall's own clock, centred in the bar above the stage. Same pill as the
+   games' clocks, so the room reads one kind of number all night. */
+.display__clock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 4.2em;
+  padding: 0.12rem 0.7rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(0.95rem, 1.6vw, 1.5rem);
+  font-weight: 600;
+  text-align: center;
+  color: var(--c-text);
+}
+
+.display__clock.is-urgent {
+  border-color: var(--c-brand-deep);
+  background: color-mix(in srgb, var(--c-brand-deep) 16%, transparent);
+}
+
 /* Orbitron's colon is drawn as a slashed zero, so the clock keeps the UI face:
    "1:06" has to be unmistakable at five metres. */
 /* The stage bar carries the section name, so it needs room to breathe. */
@@ -247,20 +271,26 @@
 /* The wall has no report panel, so the column the iPads give it goes to the
    pictures and the copy gets the rest. Wider measure, bigger type. */
 .display__post--split {
-  width: min(84rem, 100%);
+  width: min(92rem, 100%);
   display: grid;
-  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
-  gap: clamp(1rem, 2vw, 2rem);
-  align-items: stretch;
+  /* The picture column is sized by the pictures themselves, so no strip of dead
+     space sits between them and the copy: `1fr` gave the pair a third of the
+     post and left 80px empty either side of each square. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1.2rem, 2.4vw, 2.4rem);
+  align-items: center;
 }
 
 /* Two classes: `.display__post p` is declared further down and would win.
    Sized to fit - a projector does not scroll - and a step down from where it
    was, where the copy ran wider than the pictures beside it needed. */
 .display__post.display__post--split p {
-  margin: 0 0 0.45rem;
+  /* Air between the paragraphs: at 0.45rem they ran together as one block of
+     text on a projector. A quarter more again on review - the copy still read
+     as a single slab from the back row. */
+  margin: 0 0 clamp(0.75rem, 1.63vh, 1.25rem);
   font-size: clamp(0.82rem, 1.05vw, 1rem);
-  line-height: 1.45;
+  line-height: 1.55;
 }
 
 /* Two squares, stacked down the right edge: the pair is the post's two
@@ -268,11 +298,12 @@
    also keeps the pair inside the post's height, which two across could not. */
 .display__post--split .display__postshots {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: repeat(2, minmax(0, auto));
-  gap: 0;
+  grid-template-columns: auto;
+  grid-template-rows: repeat(2, auto);
+  /* A gap, not `0`: flush squares read as one tall picture. */
+  gap: clamp(0.6rem, 1.4vh, 1.1rem);
   align-content: center;
-  justify-items: center;
+  justify-items: stretch;
   min-height: 0;
   margin-top: 0;
   padding-top: 0;
@@ -281,12 +312,13 @@
 
 .display__post--split .display__postshot {
   aspect-ratio: 1;
-  /* A square sized off the column, and off the height it has to fit in, so the
-     second one cannot push the first out of the post. */
-  width: min(100%, clamp(7rem, 17vh, 13rem));
+  /* Between the two extremes: the pair is an attachment beside the copy, not a
+     poster, so it stays a fifth smaller than the first attempt. */
+  width: clamp(7.2rem, 20.8vh, 15.2rem);
   height: auto;
   min-height: 0;
   overflow: hidden;
+  border-radius: 10px;
 }
 
 /* Centre crop: the subject of both pictures is in the middle of the frame, and
@@ -343,9 +375,11 @@
    band of empty panel above the first line, which read as a loading state. */
 /* Three classes: `.hud--display .hud__stage` sets `align-content: center` too,
    and which one lands later depends on import order. */
+/* The post centres in the stage like every other screen does: it used to be
+   pinned to the top, which on a 1080p wall left a third of the frame empty
+   underneath and read as a screen that had stopped loading. */
 .hud--display .display__stage[data-screen='data_shadow'][data-kind='game'] {
-  align-content: start;
-  padding-top: clamp(0.4rem, 1.2vh, 0.8rem);
+  align-content: center;
 }
 
 /* The question, sized to be read from the back of the room. */
@@ -1516,14 +1550,18 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* The board is as tall as its rows and centred in the space it was given, so
+     a short list sits in the middle of the wall instead of hugging the top. */
+  justify-content: center;
   width: min(100%, 92rem);
-  margin: clamp(0.4rem, 1.6vh, 1.2rem) auto 0;
+  margin: 0 auto;
 }
 
-/* The plate takes the height left between the bar and the note, so the list can
-   work out how many rows it has to fill. */
+/* Content height, not stretched: centring only reads as centring when the plate
+   is the size of what it holds. `StandbyBoard` divides the leftover height by
+   the row height to decide how many rows it can show. */
 .standby .ldb__frame {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;

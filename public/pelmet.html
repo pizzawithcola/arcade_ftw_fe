@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Cyber Arcade — Pelmet (2112 × 384)</title>
+<style>
+  /* ───────────────────────────────────────────────────────────────────────────
+     Pelmet marquee, 2112 × 384 px, full bleed.
+
+     Same hardware as the arcade screens: a red frame with corner brackets and
+     side labels, a black body, white type, red rails. The event name sits above
+     the ticker and the festival name below it, each flanked by the chevron
+     stripe the game bars use, so the two bands use the full width instead of
+     leaving the middle of the board empty.
+     ─────────────────────────────────────────────────────────────────────────── */
+  :root {
+    --brand: #db0011;
+    --brand-deep: #af000e;
+    --ink: #f4f4f6;
+    --ink-muted: #a0a0a8;
+    --canvas: #000;
+    --w: 2112px;
+    --h: 384px;
+    --scroll: 62s;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    background: #050506;
+    color: var(--ink);
+    font-family: 'Orbitron', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  /* Preview page only: the artwork is fixed size, scaled down to fit here. */
+  .stage {
+    position: relative;
+    width: 2112px;
+    height: 384px;
+    margin: 0 auto;
+  }
+
+  /* ── The artwork ──────────────────────────────────────────────────────────── */
+  .pelmet {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--w);
+    height: var(--h);
+    transform-origin: top left;
+    display: grid;
+    grid-template-rows: 92px minmax(0, 1fr) 74px;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(ellipse 58% 130% at 50% 50%, rgba(175, 0, 14, 0.20), transparent 72%),
+      linear-gradient(180deg, #0a0a0c, #000 45%, #0a0a0c);
+  }
+
+  /* The frame: 3px red edge all round, exactly like the game chassis. */
+  .frame {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    border: 3px solid var(--brand-deep);
+    box-shadow:
+      inset 0 0 60px -18px var(--brand),
+      0 0 0 1px #1a1a1f;
+  }
+
+  /* Corner brackets. */
+  .corner {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--brand);
+    filter: drop-shadow(0 0 8px rgba(219, 0, 17, 0.8));
+  }
+  .corner.tl { top: 12px; left: 12px; border-right: 0; border-bottom: 0; }
+  .corner.tr { top: 12px; right: 12px; border-left: 0; border-bottom: 0; }
+  .corner.bl { bottom: 12px; left: 12px; border-right: 0; border-top: 0; }
+  .corner.br { bottom: 12px; right: 12px; border-left: 0; border-top: 0; }
+
+  /* Vertical side labels, the same words the game frame prints. */
+  /* ── The two bands ────────────────────────────────────────────────────────── */
+  .band {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    padding: 0 52px;
+  }
+
+  .band--top { padding-top: 10px; }
+  .band--bottom { padding-bottom: 10px; }
+
+  .chevrons {
+    height: 12px;
+    background: repeating-linear-gradient(115deg, var(--brand) 0 7px, transparent 7px 22px);
+    opacity: 0.55;
+  }
+  .band--bottom .chevrons {
+    height: 9px;
+    background: repeating-linear-gradient(115deg, var(--brand) 0 6px, transparent 6px 20px);
+    opacity: 0.4;
+  }
+
+  .band__title {
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: 0.30em;
+    text-indent: 0.30em;
+    line-height: 1;
+    color: var(--ink);
+    text-shadow: 0 0 40px rgba(219, 0, 17, 0.55);
+  }
+
+  .band__sub {
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.42em;
+    text-indent: 0.42em;
+    line-height: 1;
+    color: var(--ink-muted);
+  }
+
+  /* A hairline under the top band and over the bottom one, so the ticker reads
+     as a strip inside the frame rather than as loose text. */
+  .band--top::after,
+  .band--bottom::before {
+    content: '';
+    position: absolute;
+    left: 52px;
+    right: 52px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(175, 0, 14, 0.45), transparent);
+  }
+  .band--top::after { bottom: 0; }
+  .band--bottom::before { top: 0; }
+
+  /* ── The ticker strip ─────────────────────────────────────────────────────── */
+  .strip {
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  /* A slow sweep, the "little TV window" the old login page had. */
+  .sweep {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.07) 50%, transparent 58%);
+    background-size: 260% 100%;
+    animation: sweep 9s linear infinite;
+  }
+  @keyframes sweep {
+    from { background-position: 150% 0; }
+    to   { background-position: -70% 0; }
+  }
+
+  /* A red scan bar travelling down the strip. */
+  .scanbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 3;
+    pointer-events: none;
+    background: rgba(219, 0, 17, 0.55);
+    box-shadow: 0 0 14px var(--brand);
+    animation: scanbar 4.5s linear infinite;
+  }
+  @keyframes scanbar {
+    0%   { top: -4%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: 104%; opacity: 0; }
+  }
+
+  /* ── Old TV texture ───────────────────────────────────────────────────────── */
+  /* Film grain: an inline noise tile jittered a few times a second, sitting on
+     top of everything. Kept very low so it reads as a worn tube, not as dirt. */
+  .grain {
+    position: absolute;
+    inset: -20%;
+    z-index: 9;
+    pointer-events: none;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain 0.7s steps(1) infinite;
+  }
+  @keyframes grain {
+    0%   { transform: translate3d(0, 0, 0); }
+    20%  { transform: translate3d(-2px, 1px, 0); }
+    40%  { transform: translate3d(1px, -2px, 0); }
+    60%  { transform: translate3d(-1px, -1px, 0); }
+    80%  { transform: translate3d(2px, 2px, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+  }
+
+  /* Tube falloff: corners go dark and slightly warm, the way a curved CRT face
+     loses brightness at the edges. */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 120% 150% at 50% 50%, transparent 52%, rgba(0, 0, 0, 0.55) 100%),
+      radial-gradient(ellipse 100% 130% at 50% 50%, transparent 62%, rgba(90, 0, 6, 0.28) 100%);
+  }
+
+  /* Faint full-height scanlines, so the bands carry the same screen texture as
+     the ticker instead of looking like flat print. Painted as a base coat under
+     the type - the letters sit on the lines, the lines never cross them. */
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.34) 0 1px,
+      transparent 1px 3px
+    );
+  }
+
+  /* ── Flickering game marks behind the text ────────────────────────────────── */
+  .marks {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .mark {
+    position: absolute;
+    width: 37px;
+    height: 37px;
+    opacity: 0;
+    color: var(--brand);
+    filter: drop-shadow(0 0 10px rgba(219, 0, 17, 0.75));
+    animation: mark-flicker 18s steps(1, end) infinite;
+  }
+
+  .mark svg { width: 100%; height: 100%; display: block; }
+
+  /* Deliberately off a grid: uneven gaps, uneven heights, uneven timing, and
+     some of them high enough to sit in the bands, so the strip does not read as
+     a row of stamps marching by. */
+  .mark:nth-child(1)  { left: 1.8%;  top: 24%; animation-delay: 0s;    animation-duration: 17s; }
+  .mark:nth-child(2)  { left: 7.1%;  top: 66%; animation-delay: 6.1s;  animation-duration: 21s; }
+  .mark:nth-child(3)  { left: 14.6%; top: 21%; animation-delay: 11.4s; animation-duration: 19s; }
+  .mark:nth-child(4)  { left: 21.3%; top: 44%; animation-delay: 3.3s;  animation-duration: 23s; }
+  .mark:nth-child(5)  { left: 28.9%; top: 76%; animation-delay: 8.8s;  animation-duration: 18s; }
+  .mark:nth-child(6)  { left: 35.7%; top: 26%; animation-delay: 14.2s; animation-duration: 22s; }
+  .mark:nth-child(7)  { left: 43.2%; top: 60%; animation-delay: 1.7s;  animation-duration: 20s; }
+  .mark:nth-child(8)  { left: 50.4%; top: 19%; animation-delay: 9.6s;  animation-duration: 24s; }
+  .mark:nth-child(9)  { left: 57.8%; top: 48%; animation-delay: 5.2s;  animation-duration: 19s; }
+  .mark:nth-child(10) { left: 64.1%; top: 79%; animation-delay: 12.7s; animation-duration: 21s; }
+  .mark:nth-child(11) { left: 71.9%; top: 20%; animation-delay: 2.4s;  animation-duration: 18s; }
+  .mark:nth-child(12) { left: 79.6%; top: 64%; animation-delay: 10.3s; animation-duration: 23s; }
+  .mark:nth-child(13) { left: 87.3%; top: 34%; animation-delay: 7.5s;  animation-duration: 20s; }
+  .mark:nth-child(14) { left: 94.2%; top: 74%; animation-delay: 15.1s; animation-duration: 22s; }
+
+  /* A slow bloom and fade, half a minute at a time, with a couple of short
+     dropouts so it reads as a screen flickering rather than as a pulse. */
+  @keyframes mark-flicker {
+    0%   { opacity: 0;    transform: translateY(6px)   scale(0.94); }
+    6%   { opacity: 0.42; transform: translateY(2px)   scale(1); }
+    28%  { opacity: 0.52; transform: translateY(-4px)  scale(1.01); }
+    30%  { opacity: 0.18; }
+    32%  { opacity: 0.48; }
+    62%  { opacity: 0.38; transform: translateY(-8px)  scale(1); }
+    64%  { opacity: 0.12; }
+    66%  { opacity: 0.34; }
+    86%  { opacity: 0.18; transform: translateY(-10px) scale(1); }
+    100% { opacity: 0;    transform: translateY(-12px) scale(0.97); }
+  }
+
+  /* ── The scrolling lines ──────────────────────────────────────────────────── */
+  .track {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    flex: none;
+    animation: scroll var(--scroll) linear infinite;
+    will-change: transform;
+  }
+
+  /* Two identical runs; the animation moves the track by half its own width, so
+     run two lands exactly where run one began. */
+  @keyframes scroll {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
+
+  .run {
+    display: flex;
+    align-items: center;
+    flex: none;
+  }
+
+  .item {
+    flex: none;
+    white-space: nowrap;
+    font-size: 72px;
+    font-weight: 800;
+    letter-spacing: 0.005em;
+    line-height: 1;
+    color: var(--ink);
+    text-shadow: 0 0 46px rgba(219, 0, 17, 0.45);
+  }
+
+  .item.is-alt {
+    color: #ff2436;
+    text-shadow: 0 0 44px rgba(219, 0, 17, 0.95);
+    animation: hot 3.6s steps(1, end) infinite;
+  }
+  /* A rare dropout in the red lines only: the strip reads as a lit sign that is
+     not quite running perfectly. */
+  @keyframes hot {
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.35; }
+    98% { opacity: 1; }
+    99% { opacity: 0.6; }
+  }
+
+  .dot {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0 62px;
+    border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 26px rgba(219, 0, 17, 0.95);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track, .sweep, .scanbar, .mark, .grain, .item.is-alt { animation: none; }
+    .mark { opacity: 0.28; }
+  }
+
+  /* ── Preview chrome (not part of the artwork) ─────────────────────────────── */
+  .note {
+    max-width: min(var(--w), 100%);
+    margin: 20px auto 40px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+    color: #6d6d75;
+  }
+  .note b { color: #a0a0a8; }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="pelmet" id="pelmet">
+
+    <!-- Flickering game marks, behind everything -->
+    <div class="marks" aria-hidden="true"></div>
+
+    <!-- Top band: the arcade -->
+    <div class="band band--top">
+      <span class="chevrons" aria-hidden="true"></span>
+      <p class="band__title">AI CYBER ARCADE</p>
+      <span class="chevrons" aria-hidden="true"></span>
+    </div>
+
+    <!-- The ticker -->
+    <div class="strip">
+      <div class="scanbar" aria-hidden="true"></div>
+      <div class="sweep" aria-hidden="true"></div>
+      <div class="track" id="track">
+        <div class="run" id="run-a"></div>
+        <div class="run" aria-hidden="true" id="run-b"></div>
+      </div>
+    </div>
+
+    <!-- Bottom band: the event -->
+    <div class="band band--bottom">
+      <span class="chevrons" aria-hidden="true"></span>
+      <p class="band__sub">SINGAPORE FINTECH FESTIVAL</p>
+      <span class="chevrons" aria-hidden="true"></span>
+    </div>
+
+    <!-- Frame, brackets, side labels -->
+    <div class="frame" aria-hidden="true">
+      <span class="corner tl"></span>
+      <span class="corner tr"></span>
+      <span class="corner bl"></span>
+      <span class="corner br"></span>
+    </div>
+
+    <!-- Old TV texture, on top of everything -->
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+  </div>
+</div>
+
+<p class="note">
+  <b>Pelmet artwork — 2112 × 384 px.</b> Full bleed: the red frame, brackets and side
+  labels are the game chassis. Six lines scroll right to left on a 62 second loop,
+  with flickering game marks, a CRT sweep and light tube grain over them. Open with
+  <b>?fit=0</b> for the true 1:1 size.
+</p>
+
+<script>
+  const LINES = [
+    'Can You Outsmart AI?',
+    'AI Threats vs. AI Defenses',
+    'Can Your AI Knowledge Keep You Safe?',
+    'Are You Ready to Navigate the AI Cyber Threat Landscape?',
+    'Are You Giving Away Your Data?',
+    'Think Twice Before Trusting AI Outputs',
+  ]
+
+  /* Three marks - a trophy for the winner, a shield for the cyber theme, and a
+     phishing hook for the threat half of the bill -
+     drawn inline so this file travels on its own. */
+  const MARKS = [
+    // trophy
+    `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+       <path d="M22 10h20v12c0 7-4 12-10 12s-10-5-10-12z"/>
+       <path d="M22 16h-8v4c0 5 4 8 8 8M42 16h8v4c0 5-4 8-8 8"/>
+       <path d="M32 34v10M22 50h20"/>
+     </svg>`,
+    // shield
+    `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+       <path d="M32 8l18 7v16c0 11-8 20-18 25-10-5-18-14-18-25V15z"/>
+       <circle cx="32" cy="29" r="4.5"/><path d="M32 34v9"/>
+     </svg>`,
+    // phishing: a hook through the corner of an envelope
+    `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+       <rect x="8" y="26" width="34" height="24" rx="3"/>
+       <path d="M8 30l17 12 17-12"/>
+       <circle cx="45" cy="9" r="3"/>
+       <path d="M45 12v8c0 7-13 7-13 0v-2"/>
+     </svg>`,
+  ]
+
+  function buildMarks() {
+    const host = document.querySelector('.marks')
+    // Fourteen marks, the three shapes cycled, spread unevenly across the width.
+    for (let i = 0; i < 14; i += 1) {
+      const span = document.createElement('span')
+      span.className = 'mark'
+      span.innerHTML = MARKS[i % MARKS.length]
+      host.appendChild(span)
+    }
+  }
+
+  function buildRun(target) {
+    LINES.forEach((line, index) => {
+      const item = document.createElement('span')
+      // The dots are siblings, so the alternation is set here rather than with
+      // `nth-child` in CSS, which would count them too.
+      item.className = index % 2 === 0 ? 'item' : 'item is-alt'
+      item.textContent = line
+      target.appendChild(item)
+      const dot = document.createElement('span')
+      dot.className = 'dot'
+      dot.setAttribute('aria-hidden', 'true')
+      target.appendChild(dot)
+    })
+  }
+
+  buildMarks()
+  buildRun(document.getElementById('run-a'))
+  buildRun(document.getElementById('run-b'))
+
+  // Scale for the preview window only; the artwork keeps its 2112 × 384.
+  function fit() {
+    const stage = document.getElementById('stage')
+    if (new URLSearchParams(location.search).get('fit') === '0') {
+      stage.style.width = '2112px'
+      stage.style.height = '384px'
+      return
+    }
+    const scale = Math.max(
+      0.15,
+      Math.min(1, (window.innerWidth - 24) / 2112, (window.innerHeight - 120) / 384),
+    )
+    document.getElementById('pelmet').style.transform = `scale(${scale})`
+    stage.style.width = `${2112 * scale}px`
+    stage.style.height = `${384 * scale}px`
+  }
+  window.addEventListener('resize', fit)
+  fit()
+</script>
+</body>
+</html>

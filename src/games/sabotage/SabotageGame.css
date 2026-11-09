@@ -69,6 +69,13 @@
   min-width: 0;
 }
 
+/* `.hud__chevrons--flip` carries `margin-left: auto` for the one-line bars; in
+   this flex-end row it would strand the round badge beside the clock, so the
+   group packs to the right instead. */
+.sab__headright .hud__chevrons--flip {
+  margin-left: 0;
+}
+
 .sab__round {
   padding: 0.1rem 0.5rem;
   border: 1px solid var(--c-border);
@@ -79,13 +86,19 @@
   white-space: nowrap;
 }
 
+/* Centre column of the header row, sized like the other games' clocks so the
+   countdown reads the same no matter which round is running. */
 .sab__timer {
-  padding: 0.1rem 0.55rem;
+  justify-self: center;
+  min-width: 4.2em;
+  padding: 0.12rem 0.7rem;
   border: 1px solid var(--c-border);
   border-radius: 999px;
+  font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+  font-size: clamp(0.95rem, 2.2vw, 1.2rem);
   font-weight: 600;
+  text-align: center;
   color: var(--c-text);
   white-space: nowrap;
 }

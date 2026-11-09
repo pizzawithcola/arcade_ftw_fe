@@ -152,21 +152,25 @@ export default function DataShadowGame({
               post needs every pixel of height, and "find what leaked" was
               saying the same thing as the task line below it. */}
           <div className="shadow__head">
-            <span className="hud__chevrons" aria-hidden="true" />
-            <div className="hud__tab">Data Shadow</div>
-            <div className="shadow__headright">
-              {!done ? (
-                <span className={`shadow__timer ${secondsLeft <= 10 ? 'is-urgent' : ''}`}>
-                  {secondsLeft}s
+            <div className="shadow__headleft">
+              <span className="hud__chevrons" aria-hidden="true" />
+              <div className="hud__tab">Data Shadow</div>
+            </div>
+            {/* The clock owns the middle column: the name is a label, the number
+                is what the room judges itself against. */}
+            {!done ? (
+              <span className={`shadow__timer ${secondsLeft <= 10 ? 'is-urgent' : ''}`}>
+                {secondsLeft}s
+              </span>
+            ) : (
+              result && (
+                <span className={`shadow__score ${result.score < 0 ? 'is-bad' : 'is-good'}`}>
+                  {result.score > 0 ? '+' : ''}
+                  {result.score}
                 </span>
-              ) : (
-                result && (
-                  <span className={`shadow__score ${result.score < 0 ? 'is-bad' : 'is-good'}`}>
-                    {result.score > 0 ? '+' : ''}
-                    {result.score}
-                  </span>
-                )
-              )}
+              )
+            )}
+            <div className="shadow__headright">
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>
           </div>

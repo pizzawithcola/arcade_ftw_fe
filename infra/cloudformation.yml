@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Arcade FTW - frontend infrastructure.
+  Arcade Fintech Festival - frontend infrastructure.
   Creates a private S3 bucket served through CloudFront via OAC, a distribution
   that proxies /api/* and /health* to the backend ALB, an SPA fallback function,
   and the GitHub OIDC deploy role for this repository.

@@ -52,7 +52,7 @@ export default function DesignPage() {
                 <code className="design__font-stack">{font.stack.split(',')[0]}</code>
               </div>
               <p className="design__font-sample" style={{ fontFamily: font.stack }}>
-                Arcade FTW
+                Arcade Fintech Festival
               </p>
               <p className="design__font-role">{font.role}</p>
             </li>

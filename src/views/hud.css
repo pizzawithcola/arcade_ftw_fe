@@ -100,6 +100,9 @@
 }
 
 .hud__bar {
+  /* The clock is pinned to the middle of this bar in every game, so the bar has
+     to be the containing block. */
+  position: relative;
   display: flex;
   align-items: center;
   gap: clamp(0.5rem, 1.5vw, 1rem);
@@ -461,8 +464,10 @@
 .hud__bar::after {
   content: '';
   position: absolute;
-  left: clamp(1.1rem, 3vw, 2.2rem);
-  right: clamp(1.1rem, 3vw, 2.2rem);
+  /* Flush with the bar's own edges: it used to be inset from `.hud__inner`,
+     which the bar now sits inside as a positioned box. */
+  left: 0;
+  right: 0;
   bottom: -1px;
   height: 4px;
   background-image: repeating-linear-gradient(

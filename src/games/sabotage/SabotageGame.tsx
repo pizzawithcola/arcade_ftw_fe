@@ -224,19 +224,21 @@ export default function SabotageGame({ room, team }: { room: string; team?: stri
           <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
           <div className="sab__head">
-            <span className="sab__headleft">
+            <div className="sab__headleft">
               <span className="hud__chevrons" aria-hidden="true" />
+              <div className="hud__tab">AI Cyber Battle</div>
               {/* The only place the pause shows. It used to sit in the corner of
                   the spend card, where it read as part of the money. */}
               {sabotage.paused && <span className="sab__paused">Game Paused</span>}
+            </div>
+            {/* The clock owns the middle column: the round badge is context, the
+                number is what the room counts down with. */}
+            <span className={`sab__timer ${remaining <= 10_000 ? 'is-urgent' : ''}`}>
+              {clock(remaining)}
             </span>
-            <div className="hud__tab">AI Cyber Battle</div>
             <div className="sab__headright">
               <span className="sab__round">
                 R{sabotage.round}/{sabotage.rounds}
-              </span>
-              <span className={`sab__timer ${remaining <= 10_000 ? 'is-urgent' : ''}`}>
-                {clock(remaining)}
               </span>
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>

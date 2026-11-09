@@ -701,7 +701,7 @@ describe('the Ultimate round', () => {
     }
   })
 
-  test('a bonus card opens each bonus question, and the round closes on /800', async () => {
+  test('a bonus card opens each bonus question, and the round closes on /600', async () => {
     const errors = []
     const { context, page } = await stage(IPAD, {
       path: `/r/${ROOM}`,
@@ -717,7 +717,7 @@ describe('the Ultimate round', () => {
         bonus: document.querySelector('.quiz__bonus')?.textContent ?? null,
         from: document.querySelector('.quiz__from')?.textContent ?? '',
       }))
-      assert.equal(first.count, '1 / 5')
+      assert.equal(first.count, '1 / 3')
       assert.equal(first.bonus, null, 'question one is not a bonus')
       assert.ok(first.from.length > 0, 'question one does not say where it came from')
 
@@ -743,7 +743,7 @@ describe('the Ultimate round', () => {
         { timeout: 95_000 },
       )
       const twice = await readCard()
-      assert.equal(twice.count, '4 / 5', 'the card belongs to question four')
+      assert.equal(twice.count, '2 / 3', 'the card belongs to question two')
       assert.match(twice.worth, /Gain 200 instead of 100/, 'the card says what you gain')
       assert.ok(twice.cells > 9, 'the reel has a strip to spin through')
       assert.notEqual(twice.landed, 'none', 'the reel lands on a transform, not on nothing')
@@ -751,10 +751,12 @@ describe('the Ultimate round', () => {
       // The wall shows the same card, or the room is told a different story.
       // Its clock ticks on a 250ms timer, so the card can land a beat after the
       // tablet's: poll rather than sampling the frame the iPad happened to win.
+      // The budget covers the card's own three seconds, because the iPad can
+      // already be most of the way through it by the time it is read.
       await wall.page.waitForFunction(
         () => document.querySelector('.display__reelstrip .is-landed')?.textContent === '2',
         null,
-        { timeout: 3_500 },
+        { timeout: 5_000 },
       )
       await snap(page, 'ipad-quiz-bonus-card.png')
 
@@ -764,11 +766,11 @@ describe('the Ultimate round', () => {
         { timeout: 45_000 },
       )
       const thrice = await readCard()
-      assert.equal(thrice.count, '5 / 5')
+      assert.equal(thrice.count, '3 / 3')
       assert.match(thrice.worth, /300/)
 
       // Then the question itself, with the badge that says why it matters. The
-      // count reads 5 / 5 during the card as well, so the options are what says
+      // count reads 3 / 3 during the card as well, so the options are what says
       // the card has handed over.
       await page.waitForFunction(
         () => document.querySelectorAll('.quiz__option').length === 4,
@@ -782,7 +784,7 @@ describe('the Ultimate round', () => {
         count: document.querySelector('.quiz__count')?.innerText.replace(/\s+/g, ' ') ?? '',
         options: document.querySelectorAll('.quiz__option').length,
       }))
-      assert.equal(last.count, '5 / 5')
+      assert.equal(last.count, '3 / 3')
       assert.match(last.bonus ?? '', /×3/)
       assert.equal(last.options, 4, 'the question is back')
       assert.deepEqual(errors, [])
@@ -854,7 +856,7 @@ describe('the final board', () => {
 })
 
 describe('the console', () => {
-  test('the jump board lists every node and the quiz tables reflect five slots', async () => {
+  test('the jump board lists every node and the quiz tables reflect three slots', async () => {
     const errors = []
     const { context, page } = await stage(WALL, {
       path: '/admin',
@@ -890,11 +892,11 @@ describe('the console', () => {
         }
       })
       await snap(page, 'admin-settings.png')
-      assert.equal(settings.drawRows, 5, 'the draw table should have five slots')
+      assert.equal(settings.drawRows, 3, 'the draw table should have three slots')
       assert.equal(settings.bankRows, 20, 'the bank table should have 20 questions')
       // The heading is uppercased by CSS, so `innerText` comes back shouting.
-      assert.match(settings.head, /5 questions/i)
-      assert.match(settings.head, /800/i)
+      assert.match(settings.head, /3 questions/i)
+      assert.match(settings.head, /600/i)
       assert.deepEqual(errors, [])
     } finally {
       await context.close()

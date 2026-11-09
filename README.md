@@ -1,6 +1,6 @@
 # arcade_ftw_fe
 
-Arcade FTW 前端（React 19 + TypeScript + Vite）。与现有 `cyber_ai_festival` 完全隔离。
+Arcade Fintech Festival 前端（React 19 + TypeScript + Vite）。与现有 `cyber_ai_festival` 完全隔离。
 
 > 跨项目文档（系统手册 / WS 协议 / 题型契约 / AWS）见 [`../arcade_ftw_docs`](../arcade_ftw_docs)。
 

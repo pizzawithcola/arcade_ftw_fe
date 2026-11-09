@@ -5,26 +5,42 @@
   padding: 2rem 1.25rem;
 }
 
+/* Card and the two staff doors below it, on one column so the doors line up
+   with the card's edges instead of floating in a corner. */
+.login__stack {
+  display: grid;
+  gap: 0.75rem;
+  width: min(450px, 100%);
+}
+
 .login__card {
   position: relative;
-  width: min(380px, 100%);
+  /* Width is the only dimension the card sets: the height follows its content,
+     so widening the card makes it wider and not taller. */
+  display: flex;
+  flex-direction: column;
+  width: min(450px, 100%);
   padding: 2rem;
   border: 1px solid var(--c-border);
   border-radius: 10px;
   background: var(--c-surface);
 }
 
+/* Inside the column the card gives up its own width: the stack sets it, so the
+   staff buttons below can line up with the card's edges. Outside it (the staff
+   sign-in) the card keeps `min(380px, 100%)` - without that it would stretch to
+   the whole grid area and collapse into a ribbon. */
+.login__stack > .login__card {
+  width: 100%;
+}
+
 .login__card h1 {
-  margin: 0 0 0.25rem;
+  /* The caption that used to sit under the heading is gone, so the heading
+     carries the gap to the first field itself. */
+  margin: 0 0 1.5rem;
   font-size: 1.6rem;
   letter-spacing: 0.08em;
   color: var(--c-text);
-}
-
-.login__hint {
-  margin: 0 0 1.5rem;
-  color: var(--c-text-muted);
-  font-size: 0.85rem;
 }
 
 .login__field {
@@ -82,7 +98,10 @@
 
 .login__card button[type='submit'] {
   width: 100%;
-  margin-top: 0.4rem;
+  /* Push the button (and anything under it) to the foot of the card, so the
+     extra height opens up between the fields and the button instead of sitting
+     as dead space below everything. */
+  margin-top: auto;
   padding: 0.7rem;
   border: none;
   border-radius: 6px;
@@ -106,55 +125,66 @@
   font-size: 0.8rem;
 }
 
-/* The scoreboard door: visible, but it never blocks the sign-in flow. */
-.login__leaderboard {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.login__leaderboard a {
-  color: var(--c-text);
-  font-size: 0.85rem;
-  text-decoration: none;
-}
-
-.login__leaderboard a:hover {
-  text-decoration: underline;
-}
-
 /* Deliberately low-key: the audience never needs to notice this exists. */
+/* The way out of the staff sign-in. It used to hide in the corner in the
+   border colour, which made it read as a smudge; it now sits centred under the
+   Sign in button in the same grey as the field labels, 4px clear of both. */
 .login__admin-toggle {
-  position: absolute;
-  right: 0.75rem;
-  bottom: 0.6rem;
-  padding: 0.15rem 0.4rem;
+  display: block;
+  width: fit-content;
+  /* 16px clear of the Sign in button above, and 16px clear of the card's bottom
+     edge below: the negative bottom margin cancels the card's 2rem padding,
+     which would otherwise leave the label floating far above the border. */
+  margin: 16px auto calc(16px - 2rem);
+  padding: 0.2rem 0.6rem;
   border: none;
   background: none;
-  color: var(--c-border);
+  color: var(--c-text-muted);
   font: inherit;
-  font-size: 0.7rem;
+  /* Two sizes up from the 0.78rem it started at: 12.5px -> 14.4px. */
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
   cursor: pointer;
 }
 
-.login__admin-toggle:hover {
+.login__admin-toggle:hover,
+.login__admin-toggle:focus-visible {
+  color: var(--c-text);
+}
+
+/* The three doors under the card: Leaderboard for the audience, Display and
+   Admin for staff. One row, equal thirds, wearing the same border, surface and
+   small caps as the fields above them.
+
+   `minmax(0, 1fr)` rather than `1fr`: a grid track defaults to at least its
+   content width, and "Leaderboard" is wide enough to push the row past the
+   card's edge on a narrow screen. */
+.login__doors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.login__doors a {
+  padding: 0.65rem 0.35rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface);
   color: var(--c-text-muted);
-}
-
-/* Staff links sit in the corner: present, never part of the audience flow. */
-.login__staff {
-  position: absolute;
-  right: 0.75rem;
-  bottom: 0.6rem;
-  display: flex;
-  gap: 0.6rem;
-}
-
-.login__staff a {
-  color: var(--c-border);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
   text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 120ms ease, color 120ms ease;
 }
 
-.login__staff a:hover {
-  color: var(--c-text-muted);
+.login__doors a:hover,
+.login__doors a:focus-visible {
+  border-color: var(--c-brand-deep);
+  color: var(--c-text);
 }

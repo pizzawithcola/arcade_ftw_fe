@@ -27,6 +27,29 @@ import './AdminPage.css'
 
 const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
 
+/** The marks in front of the control labels, drawn inline so the console has no
+ *  asset to load and the glyphs inherit the button's colour. */
+const ICONS: Record<(typeof ACTIONS)[number], string> = {
+  start: 'M7 4.5l10 5.5-10 5.5z',
+  pause: 'M8.5 4.5v11M13.5 4.5v11',
+  resume: 'M7 4.5l10 5.5-10 5.5z',
+  finish: 'M6 6h10v10H6z',
+  reset: 'M15.5 9a6 6 0 1 0-1.8 4.3M15.5 4.5V9H11',
+}
+
+/** The four buttons the console shows. Pause and resume are one control in two
+ *  states - a show is either running or held, never both - so the same square
+ *  changes its mark and its action with the phase. */
+function controlButtons(phase: string) {
+  const paused = phase === 'paused'
+  return [
+    { action: 'start' as const, label: 'start' },
+    { action: (paused ? 'resume' : 'pause') as 'pause' | 'resume', label: paused ? 'resume' : 'pause' },
+    { action: 'finish' as const, label: 'finish' },
+    { action: 'reset' as const, label: 'reset' },
+  ]
+}
+
 /** How the show's state is written next to the node title. */
 const PHASE_LABELS: Record<string, string> = {
   waiting: 'Waiting',
@@ -207,7 +230,7 @@ export default function AdminPage() {
 
   if (!checked) return null
   if (!session) {
-    return <StaffLogin scope="full" title="Operator" onSignedIn={setSession} />
+    return <StaffLogin scope="full" title="Facilitator Login" onSignedIn={setSession} />
   }
 
   const startRound = async () => {
@@ -292,7 +315,7 @@ export default function AdminPage() {
   return (
     <main className="admin" ref={shell}>
       <header className="admin__bar">
-        <h1>Arcade FTW · Operator</h1>
+        <h1>Arcade Fintech Festival · Operator</h1>
         <button
           type="button"
           onClick={() => {
@@ -370,8 +393,10 @@ const FRAMES: Record<PreviewScreen, { width: number; height: number }> = {
  * 1080 wall screen, a landscape 1194×834 iPad) and then scaled by
  * `min(boxWidth / frameWidth, boxHeight / frameHeight)`, so the operator sees
  * the actual layout squeezed down rather than a desktop window where the same
- * text reflows. Both frames land in the same 16:9 window, so switching screens
- * never moves the furniture.
+ * text reflows.
+ *
+ * Both frames land in the same 16:9 window, so switching screens never moves
+ * the furniture.
  */
 function ScreenPreview({ code, screen }: { code: string; screen: PreviewScreen }) {
   const box = useRef<HTMLDivElement | null>(null)
@@ -465,27 +490,41 @@ function ConsoleView({
       {room ? (
         <>
           <div className="admin__stage">
-            <div className="admin__state">
-              <p className="admin__node">
-                {room.state.node?.title ?? '—'}
-                <span className="admin__node-sep" aria-hidden="true">
-                  ·
-                </span>
-                <span className={`admin__phase is-${phase}`}>{PHASE_LABELS[phase]}</span>
-              </p>
-              <p className="admin__hint">
-                {room.players} joined · {room.clients} online
-              </p>
+            {/* Everything on the left: the state line, then the control pad
+                filling whatever height is left under it. */}
+            <div className="admin__left">
+              <div className="admin__state">
+                <p className="admin__node">
+                  {room.state.node?.title ?? '—'}
+                  <span className="admin__node-sep" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className={`admin__phase is-${phase}`}>{PHASE_LABELS[phase]}</span>
+                </p>
+                <p className="admin__hint">
+                  {room.players} joined · {room.clients} online
+                </p>
+              </div>
 
-              <div className="admin__controls admin__controls--stacked">
-                {ACTIONS.map((action) => (
+              {/* 2x2 pad that fills the rest of the column, width and height:
+                  four equal cells, sized by the space beside the preview. */}
+              <div className="admin__controls admin__controls--pad">
+                {controlButtons(phase).map(({ action, label }) => (
                   <button
-                    key={action}
+                    key={label}
                     type="button"
                     disabled={busy}
                     onClick={() => onAction(action)}
                   >
-                    {action}
+                    <svg
+                      viewBox="0 0 22 20"
+                      aria-hidden="true"
+                      focusable="false"
+                      data-icon={action}
+                    >
+                      <path d={ICONS[action]} />
+                    </svg>
+                    <span>{label}</span>
                   </button>
                 ))}
               </div>
@@ -857,11 +896,12 @@ function SettingsView() {
           <span className="admin__phase">{ULTIMATE_SLOTS.length} questions · {perfectScore()} max</span>
         </div>
         <p className="admin__table-note">
-          Five questions, each drawn at random from one category, so no two rooms sit the same
+          Three questions, each drawn at random from its pool, so no two rooms sit the same
           round. The draw is seeded on the room code and the node index, which is what keeps
           the wall and every iPad on the same question. Re-running the node replays the same
-          five. Row 1 pools Data Shadow and phishing email together: both are about information
-          leaving the building on someone else's instruction. Edited in
+          three. Row 1 pools Data Shadow, phishing email and hallucination together: all three
+          are about information that looks trustworthy and is not. Row 2 pools CEO
+          impersonation with the AI assistant pair. Edited in
           <code> src/games/quiz/draw.ts</code>.
         </p>
         <div className="admin__table-wrap">

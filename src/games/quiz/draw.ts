@@ -1,31 +1,30 @@
 /**
- * How the Ultimate round picks its five questions.
+ * How the Ultimate round picks its three questions.
  *
  * The draw is random per room, not per device: the wall and every iPad compute
- * the same five questions from the same seed (`room:node`), so a player can never
+ * the same three questions from the same seed (`room:node`), so a player can never
  * be looking at a different question from the one on the screen behind them.
  * That is why this is a seeded generator rather than `Math.random()` - two
  * devices calling `Math.random()` draw two different rounds.
  *
  * The seed is the room code and the node index, so re-running the node in the
- * same room replays the same five questions: a rehearsal that jumps back and
+ * same room replays the same three questions: a rehearsal that jumps back and
  * forth does not reshuffle under the operator, and two different rooms still get
  * different questions.
  *
  * The shape of the round is fixed, only the questions vary:
  *
- *   slot 1  Data / phishing     1 of 5   x1
- *   slot 2  Hallucination       1 of 5   x1
- *   slot 3  CEO impersonation   1 of 3   x1
- *   slot 4  Assistant / sources 1 of 4   x2   bonus
- *   slot 5  Hong Kong           1 of 3   x3   bonus
+ *   slot 1  Data / Hallucination  1 of 10  x1   100
+ *   slot 2  CEO / AI assistant    1 of 7   x2   200  bonus
+ *   slot 3  Hong Kong             1 of 3   x3   300  bonus
  *
- * Slot 1 merges Data Shadow with phishing email: both are about information
- * leaving the building on someone else's instruction, and the pool is the five
- * questions those two categories hold between them.
+ * Slot 1 merges Data Shadow, phishing email and hallucination: all three are
+ * about information that looks trustworthy and is not, and the pool is the ten
+ * questions those categories hold between them. Slot 2 does the same for CEO
+ * impersonation and the AI assistant pair.
  *
- * The two bonuses are last on purpose: the round gets harder and worth more as
- * it goes, so a team that is behind still has something to play for.
+ * The bonuses are last on purpose: the round gets harder and worth more as it
+ * goes, so a team that is behind still has something to play for.
  */
 
 import { QUESTION_BANK, type BankQuestion, type QuizCategory } from './bank'
@@ -37,27 +36,25 @@ export interface DrawSlot {
   label: string
   /** Which bank categories this slot may draw from. */
   categories: QuizCategory[]
-  /** Points multiplier. 1 for the three theme questions, 2 and 3 for the bonuses. */
+  /** Points multiplier: 1, then 2 and 3 for the two bonuses. */
   multiplier: number
 }
 
-/** Base points for a correct answer, before the slot's multiplier. Five slots
- *  at 1/1/1/2/3 make a perfect round 800. */
+/** Base points for a correct answer, before the slot's multiplier. Three slots
+ *  at 1/2/3 make a perfect round 600. */
 export const BASE_POINTS = 100
 
 export const ULTIMATE_SLOTS: DrawSlot[] = [
   {
     key: 'leak',
-    label: 'Data and phishing',
-    categories: ['data-shadow', 'phishing-email'],
+    label: 'Data and hallucination',
+    categories: ['data-shadow', 'phishing-email', 'hallucination'],
     multiplier: 1,
   },
-  { key: 'hal', label: 'Hallucination', categories: ['hallucination'], multiplier: 1 },
-  { key: 'ceo', label: 'CEO impersonation', categories: ['ceo-impersonation'], multiplier: 1 },
   {
     key: 'agent',
-    label: 'Assistant and sources',
-    categories: ['ai-assistant', 'knowledge-base'],
+    label: 'CEO and AI assistant',
+    categories: ['ceo-impersonation', 'ai-assistant', 'knowledge-base'],
     multiplier: 2,
   },
   { key: 'hk', label: 'Hong Kong', categories: ['hk'], multiplier: 3 },
@@ -80,7 +77,7 @@ function seedFrom(text: string): number {
   return (hash >>> 0) || 0x9e3779b9
 }
 
-/** mulberry32: small, fast, and good enough to shuffle five short lists. */
+/** mulberry32: small, fast, and good enough to shuffle three short lists. */
 function mulberry32(seed: number): () => number {
   let state = seed >>> 0
   return () => {

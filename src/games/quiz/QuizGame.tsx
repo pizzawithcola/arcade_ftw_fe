@@ -32,7 +32,7 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   // subtract it, and a card here without it there would put them one question
   // apart.
   //
-  // The five questions are drawn from the seed `room:node`, the same seed the
+  // The three questions are drawn from the seed `room:node`, the same seed the
   // wall uses. `Math.random()` here would give every iPad its own round.
   const questions = useMemo(() => drawQuestions(`${room}:${nodeIndex}`), [room, nodeIndex])
   // The schedule is the flow node's, not this screen's: it carries the bonus

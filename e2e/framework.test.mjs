@@ -188,9 +188,9 @@ describe('the rundown is the 13-node show the frontend draws', () => {
     }
   })
 
-  test('the quiz is five questions and has no intro card', () => {
+  test('the quiz is three questions and has no intro card', () => {
     const quiz = state.flow.find((node) => node.type === 'quiz')
-    assert.equal(quiz.questions, 5)
+    assert.equal(quiz.questions, 3)
     assert.equal(quiz.seconds_each, 25)
     assert.equal(quiz.intro_sec ?? 0, 0)
     assert.equal(quiz.score, 'ultimate')
@@ -198,10 +198,10 @@ describe('the rundown is the 13-node show the frontend draws', () => {
 
   test('the two bonus questions open with a card the whole room can see', () => {
     const quiz = state.flow.find((node) => node.type === 'quiz')
-    // The slots that pay more than x1 are 4 and 5; the card is what says so out
+    // The slots that pay more than x1 are 2 and 3; the card is what says so out
     // loud. If these drift, the wall announces a bonus in front of a question
     // that pays nothing.
-    assert.deepEqual(quiz.bonus_questions, [4, 5])
+    assert.deepEqual(quiz.bonus_questions, [2, 3])
     assert.equal(quiz.bonus_intro_sec, 3)
     const schedule = quiz.questions * quiz.seconds_each + quiz.bonus_questions.length * quiz.bonus_intro_sec
     assert.ok(
@@ -266,11 +266,11 @@ describe('the engine drives the show, node by node', () => {
     await api.resume(ROOM)
   })
 
-  test('the quiz node reports which of its five questions is live', async () => {
+  test('the quiz node reports which of its three questions is live', async () => {
     await api.jump(ROOM, 10)
     const state = await api.state(ROOM)
     assert.equal(state.node.type, 'quiz')
-    assert.equal(state.question.count, 5)
+    assert.equal(state.question.count, 3)
     assert.equal(state.question.index, 0, 'the first second is the first question')
     assert.ok(state.question.seconds_each > 0)
   })

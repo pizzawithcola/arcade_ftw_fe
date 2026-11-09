@@ -43,9 +43,6 @@ export default function StaffLogin({
     <main className="login">
       <form className="login__card" onSubmit={submit}>
         <h1>{title}</h1>
-        <p className="login__hint">
-          {scope === 'display' ? 'Read-only screen sign-in.' : 'Operator sign-in.'}
-        </p>
 
         <label className="login__field">
           <span>Username</span>

@@ -86,7 +86,7 @@ function StatusPage() {
 
   return (
     <main className="status">
-      <h1>Arcade FTW</h1>
+      <h1>Arcade Fintech Festival</h1>
       <p className="muted">
         Same-origin smoke test against <code>{location.host}</code>. This page and the API
         share one CloudFront hostname, so there is no CORS involved.

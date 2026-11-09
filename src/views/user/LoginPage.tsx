@@ -72,57 +72,55 @@ export default function LoginPage() {
 
   return (
     <main className="login">
-      <form className="login__card" onSubmit={submit}>
-        <h1>Arcade FTW</h1>
-        <p className="login__hint">Pick a name and your event.</p>
+      <div className="login__stack">
+        <form className="login__card" onSubmit={submit}>
+          <h1>AI Cyber Arcade</h1>
 
-        <label className="login__field">
-          <span>Nickname</span>
-          <input
-            value={nickname}
-            onChange={(changeEvent) => setNickname(changeEvent.target.value)}
-            placeholder="e.g. NeonFox"
-            maxLength={64}
-            autoFocus
-          />
-        </label>
-        <label className="login__field">
-          <span>Event</span>
-          <select
-            value={event}
-            onChange={(changeEvent) => setEvent(changeEvent.target.value)}
-            disabled={events === null}
-            className={event === '' ? 'is-placeholder' : ''}
-          >
-            <option value="" disabled>
-              {eventPlaceholder}
-            </option>
-            {events?.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
+          <label className="login__field">
+            <span>Nickname</span>
+            <input
+              value={nickname}
+              onChange={(changeEvent) => setNickname(changeEvent.target.value)}
+              placeholder="e.g. NeonFox"
+              maxLength={64}
+              autoFocus
+            />
+          </label>
+          <label className="login__field">
+            <span>Event</span>
+            <select
+              value={event}
+              onChange={(changeEvent) => setEvent(changeEvent.target.value)}
+              disabled={events === null}
+              className={event === '' ? 'is-placeholder' : ''}
+            >
+              <option value="" disabled>
+                {eventPlaceholder}
               </option>
-            ))}
-          </select>
-        </label>
+              {events?.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        {eventsError && <p className="login__error">Could not load the event list: {eventsError}</p>}
-        {error && <p className="login__error">{error}</p>}
+          {eventsError && <p className="login__error">Could not load the event list: {eventsError}</p>}
+          {error && <p className="login__error">{error}</p>}
 
-        <button type="submit" disabled={busy || !filledIn}>
-          {busy ? '…' : 'Enter'}
-        </button>
+          <button type="submit" disabled={busy || !filledIn}>
+            {busy ? '…' : 'Enter'}
+          </button>
+        </form>
 
-        {/* The public scoreboard: anyone can open it from the door. */}
-        <div className="login__leaderboard">
+        {/* The three doors, outside the form so pressing one can never submit a
+            half-filled sign-in. Leaderboard is public; the other two are staff. */}
+        <nav className="login__doors" aria-label="Other pages">
           <Link to="/leaderboard">Leaderboard</Link>
-        </div>
-
-        {/* Staff entrances, deliberately quiet: the audience never needs them. */}
-        <div className="login__staff">
-          <Link to="/display">display</Link>
-          <Link to="/admin">admin</Link>
-        </div>
-      </form>
+          <Link to="/display">Display</Link>
+          <Link to="/admin">Admin</Link>
+        </nav>
+      </div>
     </main>
   )
 }

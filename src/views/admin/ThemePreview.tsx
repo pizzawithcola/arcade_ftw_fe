@@ -123,7 +123,7 @@ export default function ThemePreview() {
   return (
     <main className="admin">
       <div className="admin__bar">
-        <h1>Arcade FTW · Theme</h1>
+        <h1>Arcade Fintech Festival · Theme</h1>
         <span className="admin__current">dev only · no auth · no room</span>
       </div>
 
@@ -568,7 +568,7 @@ export default function ThemePreview() {
                   <span className="hud__corner hud__corner--tr" aria-hidden="true" />
                   <span className="hud__corner hud__corner--bl" aria-hidden="true" />
                   <span className="hud__corner hud__corner--br" aria-hidden="true" />
-                  <div className="hud__tab">Arcade FTW</div>
+                  <div className="hud__tab">Arcade Fintech Festival</div>
                   <div className="hud__bar">
                     <span className="hud__chevrons" aria-hidden="true" />
                     <span className="hud__event">Data Shadow</span>

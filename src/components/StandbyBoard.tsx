@@ -61,7 +61,13 @@ export default function StandbyBoard() {
       const gap = parseFloat(getComputedStyle(item).marginBottom) || 0
       const rowHeight = item.offsetHeight + gap
       if (rowHeight <= 0) return
-      const available = element.parentElement?.clientHeight ?? 0
+      // The plate is no longer stretched to the stage: it is as tall as its rows
+      // and centres in the stage, so the height to divide up is the stage minus
+      // the chrome the plate always carries (rail, live tag, legend).
+      const plate = element.parentElement
+      const stage = plate?.parentElement
+      const chrome = plate && stage ? plate.offsetHeight - element.offsetHeight : 0
+      const available = stage ? Math.max(0, stage.clientHeight - chrome) : 0
       const perColumn = Math.max(1, Math.floor(available / rowHeight))
       setCapacity(Math.max(MIN_ROWS, perColumn * 2))
     }
