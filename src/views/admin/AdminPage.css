@@ -233,6 +233,76 @@
   font-weight: 600;
 }
 
+/* ── module picker ──────────────────────────────────────────────────────────
+   Seven checkboxes over the console: four games and the three pieces of
+   furniture around them. Quiet by default - the games get the weight, because
+   they are what changes the length and the maximum score. */
+.admin__modules {
+  margin-bottom: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface);
+}
+
+.admin__modules-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.admin__modules-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.admin__modules-summary {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+.admin__modules-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+}
+
+.admin__module {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+
+.admin__module.is-game {
+  color: var(--c-text);
+}
+
+.admin__module input {
+  accent-color: var(--c-brand-deep);
+  cursor: pointer;
+}
+
+.admin__module-sec {
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-dim);
+}
+
+.admin__modules-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.7rem;
+  color: var(--c-text-dim);
+}
+
 .admin__node {
   display: flex;
   align-items: center;

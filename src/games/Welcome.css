@@ -114,7 +114,9 @@
    is wide - the same breakpoint the Sabotage hand uses. */
 .welcome__games {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Set by the component: a room that runs three games fills the row with
+     three, instead of leaving a hole where the fourth card used to be. */
+  grid-template-columns: repeat(var(--wgame-cols, 4), minmax(0, 1fr));
   gap: clamp(0.5rem, 1.4vw, 1.1rem);
   width: min(96%, 82rem);
   margin: 0;

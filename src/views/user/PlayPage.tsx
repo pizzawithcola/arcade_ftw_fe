@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   clearToken,
@@ -14,7 +15,7 @@ import QuizGame from '../../games/quiz/QuizGame'
 import SabotageGame from '../../games/sabotage/SabotageGame'
 import Welcome from '../../games/Welcome'
 import WrapUp from '../../games/WrapUp'
-import { GAME_COUNT, findOpening, gameNumber, openingPhase } from '../../games/openings'
+import { activeGames, findOpening, gameNumber, openingPhase } from '../../games/openings'
 import Opening from '../../games/Opening'
 import '../hud.css'
 import RoomLeaderboard from '../../components/RoomLeaderboard'
@@ -167,6 +168,9 @@ function NodeStage({
   // Unconditional, so it sits above every branch below: the title card needs the
   // node clock, and a hook cannot hide behind an `if`.
   const elapsed = useNodeElapsed()
+  // A room can run three games instead of four, so the count in "Round 2 of 3"
+  // comes from what this room was built with.
+  const modules = useGameStore((state) => state.modules)
 
   if (!node) {
     return (
@@ -242,7 +246,7 @@ function NodeStage({
   if (node.type === 'opening') {
     const entry = findOpening(node.game ?? node.title)
     if (!entry) return null
-    const at = gameNumber(entry.key, node.section)
+    const at = gameNumber(entry.key, node.section, modules)
     const half = openingPhase(node.title_sec, elapsed)
     // The name fills the screen; the rules do not. Twelve seconds of three short
     // lines in a full-height panel read as a slide with two empty ends, so that
@@ -267,7 +271,7 @@ function NodeStage({
               <span className="hud__event">
                 {half === 'title'
                   ? at
-                    ? `Round ${at} of ${GAME_COUNT}`
+                    ? `Round ${at} of ${activeGames(modules).length}`
                     : 'Next game'
                   : entry.name}
               </span>
@@ -328,17 +332,26 @@ function NodeStage({
 /** How long a finished round keeps its closing screen before signing out. */
 const WRAP_UP_MS = 8000
 
-/** The four scored games, in the order the show runs them. */
-const GAME_STAGES = ['hallucination', 'data', 'sabotage', 'ultimate'] as const
+/**
+ * The scored games this room runs, in the order the show runs them.
+ *
+ * A room's modules decide this, so a three-game show draws three diamonds
+ * rather than four with one that never fills. The module key and the section
+ * key are the same word for all four games (`data` / `data`, `ultimate` /
+ * `ultimate`), which is what lets one list serve both.
+ */
+function gameStages(modules: string[]): string[] {
+  return activeGames(modules).map((game) => game.module)
+}
 
 /**
- * Which game the show is on, 1-4, or null outside the games (welcome, briefs,
- * the activity board, the wrap-up). Briefs name their section, so a rules card
- * already counts as being in its game.
+ * Which game the show is on, 1-based, or null outside the games (welcome,
+ * briefs, the activity board, the wrap-up). Briefs name their section, so a
+ * rules card already counts as being in its game.
  */
-function gameStage(node: FlowNode | null): number | null {
+function gameStage(node: FlowNode | null, stages: string[]): number | null {
   const section = node?.section ?? node?.score
-  const at = GAME_STAGES.indexOf((section ?? '') as (typeof GAME_STAGES)[number])
+  const at = stages.indexOf(section ?? '')
   return at === -1 ? null : at + 1
 }
 
@@ -379,6 +392,7 @@ export default function PlayPage() {
   const node = useGameStore((state) => state.node)
   const index = useGameStore((state) => state.index)
   const sawPlaying = useGameStore((state) => state.sawPlaying)
+  const modules = useGameStore((state) => state.modules)
 
   useEffect(() => {
     if (preview) return
@@ -497,17 +511,22 @@ export default function PlayPage() {
   // A finished round is the signal that this device's round is over - the room
   // and the player are locked together.
   const roomMissing = !pinned && resolved === null
-  const stage_ = gameStage(node)
+  const stages = gameStages(modules)
+  const stage_ = gameStage(node, stages)
 
   return (
     <main className="game">
       {phase !== 'waiting' && (
       <header className="game__bar">
-        {/* Four flat diamonds, one per game: the filled ones are behind you, the
-            red one is where the show is now. It says "how far along" without
-            asking anyone to read a node index. */}
-        <nav className="game__track" aria-label="Game progress">
-          {GAME_STAGES.map((stage, at) => {
+        {/* One flat diamond per game in this room: the filled ones are behind
+            you, the red one is where the show is now. It says "how far along"
+            without asking anyone to read a node index. */}
+        <nav
+          className="game__track"
+          aria-label="Game progress"
+          style={{ '--gstage-cols': stages.length } as CSSProperties}
+        >
+          {stages.map((stage, at) => {
             const position = at + 1
             return (
               <span

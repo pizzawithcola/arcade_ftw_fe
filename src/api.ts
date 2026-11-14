@@ -56,6 +56,10 @@ export interface FlowNode {
   /** Scored nodes: which score column they add to. */
   score?: string
   duration_sec?: number
+  /** Question nodes: how much of the cycle the room can act in. */
+  questions?: number
+  seconds_each?: number
+  answer_sec?: number
 }
 
 export interface RoomSnapshot {
@@ -71,7 +75,13 @@ export interface RoomSnapshot {
     /** Present on nodes that have a question plan; the engine owns the index. */
     question: QuestionState | null
     server_time_ms: number
+    /** Which modules this room was built from. */
+    modules?: string[]
+    /** How long the whole show runs, in seconds. */
+    total_sec?: number
   }
+  /** The module set this room was built with; `null` means every module. */
+  modules?: string[] | null
   /** Live websocket connections. */
   clients: number
   /** Everyone who joined this room, even after it closed. */
@@ -405,7 +415,7 @@ export function deletePlayer(playerId: number): Promise<unknown> {
 
 /** A new round. Omit the code and the server names it `round-N`. */
 export function createRoom(
-  input: { code?: string } = {},
+  input: { code?: string; modules?: string[] } = {},
 ): Promise<{ code: string }> {
   return request('/api/rooms', { method: 'POST', body: JSON.stringify(input) })
 }

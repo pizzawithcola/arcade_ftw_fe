@@ -28,6 +28,9 @@ export interface FlowNode {
   /** Question nodes: how many, and how long each cycle runs. */
   questions?: number
   seconds_each?: number
+  /** Question nodes: how much of that cycle the room can act in. The rest is
+   *  the verdict, and the wall's clock counts this part so it matches the iPad. */
+  answer_sec?: number
   /** Quiz nodes: a title card before the first question. */
   intro_sec?: number
   /** Quiz nodes: how long the card announcing a bonus question holds. */
@@ -43,6 +46,10 @@ interface StateMessage {
   remaining_ms: number
   question: QuestionState | null
   server_time_ms: number
+  /** Which modules this room was built from, e.g. `['welcome', 'data', …]`. */
+  modules?: string[]
+  /** How long the whole show runs, in seconds. */
+  total_sec?: number
 }
 
 export interface WsMessage {
@@ -167,6 +174,14 @@ interface GameState {
   heldMs: number
   /** Which question the engine says is on screen, so every screen agrees. */
   question: QuestionState | null
+  /**
+   * The modules this room runs, as the server built it. The welcome map and the
+   * "round 2 of 3" lines count from this rather than from the four games the
+   * frontend knows, so a room without a game never promises it.
+   */
+  modules: string[]
+  /** The whole show's length in seconds, for the console. */
+  totalSec: number
   /** The Sabotage game state, present only while that game is running. */
   sabotage: (SabotageState & { endsAt: number | null; heldMs: number }) | null
   /**
@@ -190,6 +205,8 @@ export const useGameStore = create<GameState>((set) => ({
   heldMs: 0,
   question: null,
   sabotage: null,
+  modules: [],
+  totalSec: 0,
   sawPlaying: false,
 
   setConnection: (connection) => set({ connection }),
@@ -204,6 +221,8 @@ export const useGameStore = create<GameState>((set) => ({
       heldMs: 0,
       question: null,
       sabotage: null,
+      modules: [],
+      totalSec: 0,
       sawPlaying: false,
     }),
 
@@ -235,6 +254,8 @@ export const useGameStore = create<GameState>((set) => ({
       endsAt: state.phase === 'playing' ? Date.now() + state.remaining_ms : null,
       heldMs: state.phase === 'paused' ? state.remaining_ms : 0,
       question: state.question ?? null,
+      modules: state.modules ?? [],
+      totalSec: state.total_sec ?? 0,
       sawPlaying:
         state.phase === 'playing' || state.phase === 'paused'
           ? true

@@ -18,7 +18,8 @@ import type { ReactNode } from 'react'
 
 import type { FlowNode } from '../store/gameStore'
 import TitleCard from './TitleCard'
-import { DEFAULT_TITLE_SEC, findOpening, GAME_COUNT, gameNumber, type RuleLine } from './openings'
+import { useGameStore } from '../store/gameStore'
+import { activeGames, DEFAULT_TITLE_SEC, findOpening, gameNumber, type RuleLine } from './openings'
 import './Opening.css'
 
 /** After the hand-over: when the first point lands, and the beat between them. */
@@ -35,15 +36,17 @@ export default function Opening({
   size?: 'device' | 'display'
 }) {
   const entry = findOpening(node.game ?? node.title)
+  const modules = useGameStore((state) => state.modules)
+  const total = activeGames(modules).length
   if (!entry) return null
 
   const titleMs = (node.title_sec ?? DEFAULT_TITLE_SEC) * 1000
   if (elapsedMs < titleMs) {
-    const at = gameNumber(entry.key, node.section)
+    const at = gameNumber(entry.key, node.section, modules)
     return (
       <TitleCard
         title={entry.name}
-        kicker={at ? `game ${at} of ${GAME_COUNT}` : 'next up'}
+        kicker={at ? `game ${at} of ${total}` : 'next up'}
         countdown={Math.max(0, Math.ceil((titleMs - elapsedMs) / 1000))}
         size={size}
       />

@@ -1,4 +1,7 @@
-import { GAME_ORDER } from './openings'
+import type { CSSProperties } from 'react'
+
+import { useGameStore } from '../store/gameStore'
+import { activeGames } from './openings'
 import './Welcome.css'
 
 /**
@@ -27,6 +30,10 @@ import './Welcome.css'
  * card (1.2 + 3 x 0.9 = 3.9s) is fully settled at 4.8s. The remaining five
  * seconds are for reading, not animation.
  */
+/** The count spelled out for the subhead, so a three-game show reads "Three
+ *  Games" rather than "4 Games" or "Four Games" over three cards. */
+const NUMBER_WORDS = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven']
+
 const SUBHEAD_AT = 500
 const CARD_AT = 1200
 const CARD_STAGGER = 900
@@ -39,6 +46,12 @@ export default function Welcome({
   size?: 'device' | 'display'
 }) {
   const shown = (at: number) => elapsedMs >= at
+  const modules = useGameStore((state) => state.modules)
+  const games = activeGames(modules)
+  const subhead =
+    games.length > 1
+      ? `${NUMBER_WORDS[games.length] ?? games.length} Games, One Winner!`
+      : 'One Game, One Winner!'
 
   return (
     <div className={`welcome welcome--${size}`}>
@@ -51,15 +64,18 @@ export default function Welcome({
           AI CYBER ARCADE
         </h1>
         <span className={`welcome__rule ${shown(SUBHEAD_AT) ? 'is-in' : ''}`} aria-hidden="true" />
-        <p className={`welcome__sub ${shown(SUBHEAD_AT) ? 'is-in' : ''}`}>
-          Four Games, One Winner!
-        </p>
+        <p className={`welcome__sub ${shown(SUBHEAD_AT) ? 'is-in' : ''}`}>{subhead}</p>
       </header>
 
-      {/* All four slots exist from the first frame, transparent until their turn:
-          mounting them late would shove the footer up as each one arrived. */}
-      <ol className="welcome__games">
-        {GAME_ORDER.map((game, index) => {
+      {/* Every slot exists from the first frame, transparent until its turn:
+          mounting them late would shove the footer up as each one arrived. The
+          column count follows the room, so three games fill the same width the
+          four did rather than leaving a hole. */}
+      <ol
+        className="welcome__games"
+        style={{ '--wgame-cols': games.length } as CSSProperties}
+      >
+        {games.map((game, index) => {
           const at = CARD_AT + index * CARD_STAGGER
           return (
             <li key={game.key} className={`wcard ${shown(at) ? 'is-in' : ''}`} aria-hidden={!shown(at)}>

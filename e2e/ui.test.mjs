@@ -928,3 +928,109 @@ describe('a player mid-show', () => {
     }
   })
 })
+
+describe('a room built without a game', () => {
+  test('draws three cards, says "three", and counts to three', async () => {
+    // The Singapore cut: three games, no battle. Everything that counts the
+    // games - the welcome map, the subhead, the round line, the progress
+    // diamonds - has to follow the room rather than the four games the bundle
+    // knows about, or the screens promise a show that is not in the rundown.
+    const code = e2eRoomCode('SHORT')
+    const created = await api.post('/api/rooms', {
+      token: api.adminToken,
+      body: {
+        code,
+        modules: ['welcome', 'hallucination', 'data', 'ultimate', 'total', 'wrapup'],
+      },
+      expect: 201,
+    })
+    assert.equal(created.state.node_count, 11, 'the battle nodes are not in the flow')
+
+    const { context, page } = await stage(IPAD, { path: `/r/${code}`, as: 'player' })
+    try {
+      // The room opens on WAITING, so the welcome card only appears once the
+      // show starts; jumping to node 0 is the shortest way in.
+      await api.jump(code, 0)
+      await page.waitForTimeout(2500)
+      const welcome = await page.evaluate(() => ({
+        sub: document.querySelector('.welcome__sub')?.textContent?.trim(),
+        cards: document.querySelectorAll('.wcard').length,
+        names: [...document.querySelectorAll('.wcard__name')].map((el) => el.textContent?.trim()),
+        diamonds: document.querySelectorAll('.game__seg').length,
+      }))
+      assert.equal(welcome.cards, 3, 'one card per game in this room')
+      assert.deepEqual(welcome.names, ['AI Hallucination', 'Data Shadow', 'Ultimate Showdown'])
+      assert.match(welcome.sub ?? '', /three games/i)
+      assert.equal(welcome.diamonds, 3, 'the progress track counts this room too')
+
+      await api.jump(code, 1)
+      await page.waitForTimeout(1200)
+      const opening = await page.evaluate(
+        () => document.querySelector('.hud__event')?.textContent?.trim(),
+      )
+      assert.equal(opening, 'Round 1 of 3')
+    } finally {
+      await context.close()
+      await api.finishRoom(code).catch(() => {})
+      await api.deleteRoom(code).catch(() => {})
+    }
+  })
+})
+
+describe('the clocks in the room agree', () => {
+  test('the wall counts the window the iPads count, not the node', async () => {
+    // A node's clock is longer than the window the room can act in: five
+    // seconds of verdict follow each question, ten of reveal follow Data
+    // Shadow. The wall used to publish the node clock, so it read "0:25" while
+    // every iPad read "0:20" - the one number in the room nobody could agree on.
+    const ipad = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
+    const wall = await stage(WALL, { path: `/display/${ROOM}` })
+    // A background tab has its timers throttled, which would make this test
+    // measure the harness rather than the clocks.
+    await wall.page.bringToFront()
+    const CASES = [
+      { node: 2, timer: '.hallu__timer', answer: 25, label: 'Hallucination' },
+      { node: 5, timer: '.shadow__timer', answer: 50, label: 'Data Shadow' },
+      { node: 10, timer: '.quiz__timer', answer: 20, label: 'Ultimate Quiz' },
+    ]
+    try {
+      for (const one of CASES) {
+        await api.jump(ROOM, one.node)
+        await wall.page.waitForTimeout(2200)
+        const [onWall, onPad] = await Promise.all([
+          wall.page.evaluate(
+            () => document.querySelector('.display__clock')?.textContent?.trim() ?? '',
+          ),
+          ipad.page.evaluate(
+            (timer) => document.querySelector(timer)?.textContent?.trim() ?? '',
+            one.timer,
+          ),
+        ])
+        // The wall writes `0:24`, the games write `24s`.
+        const asSeconds = (text) => {
+          const plain = text.replace('s', '')
+          if (!plain.includes(':')) return Number(plain)
+          const [minutes, seconds] = plain.split(':')
+          return Number(minutes) * 60 + Number(seconds)
+        }
+        const wallSeconds = asSeconds(onWall)
+        const padSeconds = asSeconds(onPad)
+        assert.ok(
+          Math.abs(wallSeconds - padSeconds) <= 1,
+          `${one.label}: wall ${onWall} vs iPad ${onPad}`,
+        )
+        assert.ok(
+          wallSeconds <= one.answer,
+          `${one.label}: the wall is counting the node (${onWall}), not the ${one.answer}s answer window`,
+        )
+        assert.ok(
+          padSeconds <= one.answer,
+          `${one.label}: the iPad is counting (${onPad}), more than its ${one.answer}s window`,
+        )
+      }
+    } finally {
+      await ipad.context.close()
+      await wall.context.close()
+    }
+  })
+})

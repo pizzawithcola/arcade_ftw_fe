@@ -107,6 +107,18 @@ function OpeningOnScreen({ node, remainingMs }: { node: FlowNode; remainingMs: n
  *  room "8:12 left" when the question in front of them had twenty seconds, so
  *  the header follows the round the room is actually playing.
  */
+/**
+ * The number the iPads are counting down right now.
+ *
+ *  A node's clock covers more than the window the room can act in: five seconds
+ *  of verdict follow each quiz question, ten of reveal follow Data Shadow. The
+ *  device in a player's hand counts only the window it can act in, so a wall
+ *  that published the node clock read "0:25" while every iPad read "0:20" - the
+ *  one number in the room nobody could agree on. `answer_sec` on the flow node
+ *  is that window; the tail is what is left once it closes, and while the tail
+ *  runs the wall shows the tail's own clock, which is the verdict the iPads show
+ *  too.
+ */
 function roundRemainingMs(
   node: FlowNode | null,
   remainingMs: number,
@@ -116,10 +128,19 @@ function roundRemainingMs(
   if (question) {
     // A bonus card is its own three seconds; the question behind it has not
     // started, so the card's clock is the honest one.
-    return question.bonus_ms ? question.bonus_ms : question.remaining_ms
+    if (question.bonus_ms) return question.bonus_ms
   }
   if (node?.game === 'sabotage' && sabotage) return sabotage.remaining_ms
-  return remainingMs
+  const answerSec = node?.answer_sec
+  const left = question ? question.remaining_ms : remainingMs
+  if (!answerSec) return left
+  // Question nodes: the tail is whatever `seconds_each` adds on top of the
+  // answer window. One-shot nodes (Data Shadow): it is the rest of the node.
+  const tailMs = question
+    ? question.seconds_each * 1000 - answerSec * 1000
+    : Math.max(0, (node?.duration_sec ?? 0) * 1000 - answerSec * 1000)
+  const answerLeft = left - tailMs
+  return answerLeft > 0 ? answerLeft : left
 }
 
 /** Minutes and seconds left on the node, for the wall's own header clock. */
@@ -737,7 +758,7 @@ export default function DisplayPage() {
   const reviewing =
     question !== null &&
     (node?.type === 'quiz' || node?.game === 'hallucination') &&
-    inQuestionMs(question) >= (node.seconds_each ?? 0) * 1000 - 5_000
+    inQuestionMs(question) >= (node.answer_sec ?? 0) * 1000
   return (
     <main className={`display display--${phase}`}>
       {phase === 'waiting' ? (

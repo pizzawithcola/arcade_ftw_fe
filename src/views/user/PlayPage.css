@@ -141,7 +141,9 @@
   flex: 1 1 90%;
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Set by the component: a room running three games gets three wider
+     segments instead of a hole where the fourth used to be. */
+  grid-template-columns: repeat(var(--gstage-cols, 4), minmax(0, 1fr));
   gap: clamp(0.25rem, 0.7vw, 0.5rem);
   align-items: center;
 }

@@ -27,6 +27,40 @@ import './AdminPage.css'
 
 const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
 
+/**
+ * The modules a room can be built from, and how long each one runs.
+ *
+ * `seconds` mirrors `flow.py` so the console can say what a set will cost before
+ * the room exists. The authoritative number is the room's own `total_sec`, which
+ * the server sends with its state and which the panel shows once it is there -
+ * if the two ever disagree, that one is right and this table is stale.
+ */
+const MODULE_OPTIONS = [
+  { key: 'welcome', label: 'Welcome', seconds: 10, scored: 0 },
+  { key: 'hallucination', label: 'Hallucination', seconds: 113, scored: 600 },
+  { key: 'data', label: 'Data Shadow', seconds: 83, scored: 800 },
+  { key: 'sabotage', label: 'AI Cyber Battle', seconds: 203, scored: 800 },
+  { key: 'ultimate', label: 'Ultimate', seconds: 99, scored: 600 },
+  { key: 'total', label: 'Final board', seconds: 10, scored: 0 },
+  { key: 'wrapup', label: 'Wrap up', seconds: 10, scored: 0 },
+] as const
+
+const ALL_MODULES = MODULE_OPTIONS.map((option) => option.key)
+
+/** `5m25s`, for the console's estimate and the room's own length. */
+function duration(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds))
+  return `${Math.floor(total / 60)}m${String(total % 60).padStart(2, '0')}s`
+}
+
+function moduleSummary(modules: readonly string[]): string {
+  const chosen = MODULE_OPTIONS.filter((option) => modules.includes(option.key))
+  const games = chosen.filter((option) => option.scored > 0).length
+  const seconds = chosen.reduce((sum, option) => sum + option.seconds, 0)
+  const best = chosen.reduce((sum, option) => sum + option.scored, 0)
+  return `${games} game${games === 1 ? '' : 's'} · ${duration(seconds)} · max ${best}`
+}
+
 /** The marks in front of the control labels, drawn inline so the console has no
  *  asset to load and the glyphs inherit the button's colour. */
 const ICONS: Record<(typeof ACTIONS)[number], string> = {
@@ -157,6 +191,9 @@ export default function AdminPage() {
   const [current, setCurrent] = useState<string>('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // Which modules the *next* room is built from. A room's set is fixed once it
+  // exists, so this is a plan for the next one, never an edit of the current.
+  const [modules, setModules] = useState<string[]>(ALL_MODULES)
 
   useEffect(() => {
     void fetchSession().then((found) => {
@@ -236,7 +273,10 @@ export default function AdminPage() {
   const startRound = async () => {
     setBusy(true)
     try {
-      const created = await createRoom()
+      // All seven is the same as saying nothing, so send `undefined` and let the
+      // server treat the room as a full show (`modules` stays null).
+      const all = modules.length === ALL_MODULES.length
+      const created = await createRoom(all ? {} : { modules })
       await load()
       setCurrent(created.code)
     } catch (caught) {
@@ -350,6 +390,8 @@ export default function AdminPage() {
               onAction={run}
               onStartRound={startRound}
               busy={busy}
+              modules={modules}
+              onModules={setModules}
             />
           )}
           {section === 'data' && (
@@ -440,16 +482,75 @@ function ScreenPreview({ code, screen }: { code: string; screen: PreviewScreen }
   )
 }
 
+/**
+ * The module checkboxes for the next room.
+ *
+ * Ticking a game off shortens the show: the server builds the room's flow from
+ * this set, so a game that is not ticked has no nodes at all rather than nodes
+ * the engine skips. The estimate beside the boxes is the raw sum of the modules'
+ * own lengths; the room's `total_sec` replaces it once the room exists.
+ */
+function ModulePicker({
+  modules,
+  onModules,
+}: {
+  modules: string[]
+  onModules: (next: string[]) => void
+}) {
+  const toggle = (key: string) => {
+    // The last module cannot be removed: a room with no nodes would finish on
+    // its first tick and leave every screen on a wrap-up for a show that never
+    // ran. The server refuses it too, this just keeps the button from offering.
+    const next = modules.includes(key) ? modules.filter((one) => one !== key) : [...modules, key]
+    if (next.length === 0) return
+    // Always stored in the show's own order, so the summary and the request
+    // never depend on the order the operator happened to click.
+    onModules(MODULE_OPTIONS.filter((option) => next.includes(option.key)).map((one) => one.key))
+  }
+
+  return (
+    <div className="admin__modules">
+      <div className="admin__modules-head">
+        <span className="admin__modules-title">Modules for the next room</span>
+        <span className="admin__modules-summary">{moduleSummary(modules)}</span>
+      </div>
+      <div className="admin__modules-list">
+        {MODULE_OPTIONS.map((option) => (
+          <label
+            key={option.key}
+            className={`admin__module ${option.scored > 0 ? 'is-game' : ''}`}
+          >
+            <input
+              type="checkbox"
+              checked={modules.includes(option.key)}
+              onChange={() => toggle(option.key)}
+            />
+            <span>{option.label}</span>
+            <span className="admin__module-sec">{option.seconds}s</span>
+          </label>
+        ))}
+      </div>
+      <p className="admin__modules-note">
+        A room is built from these once, when it is created. To change the show, create a new room.
+      </p>
+    </div>
+  )
+}
+
 function ConsoleView({
   room,
   onAction,
   onStartRound,
   busy,
+  modules,
+  onModules,
 }: {
   room: RoomSnapshot | undefined
   onAction: (action: string) => void
   onStartRound: () => void
   busy: boolean
+  modules: string[]
+  onModules: (next: string[]) => void
 }) {
   const phase = room?.state.phase ?? 'waiting'
   const [screen, setScreen] = useState<PreviewScreen>('display')
@@ -475,7 +576,9 @@ function ConsoleView({
           <span className="admin__current">
             {room ? (
               <>
-                room <strong>{room.code}</strong>
+                room <strong>{room.code}</strong> ·{' '}
+                {room.state.total_sec ? duration(room.state.total_sec) : '—'} ·{' '}
+                {room.state.node_count} nodes
               </>
             ) : (
               <>no room yet</>
@@ -486,6 +589,11 @@ function ConsoleView({
           </button>
         </div>
       </div>
+
+      {/* The set for the *next* room. A room's nodes are fixed when it is
+          built, so this cannot edit the show that is already running - which is
+          what keeps every node index (and every score keyed by one) stable. */}
+      <ModulePicker modules={modules} onModules={onModules} />
 
       {room ? (
         <>

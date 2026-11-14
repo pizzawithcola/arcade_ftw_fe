@@ -33,6 +33,11 @@ export interface RuleLine {
 export interface GameOpening {
   /** Matches the `game` key on the flow node. */
   key: string
+  /** The module this game belongs to, as the server names it. The two differ:
+   *  the flow calls Data Shadow `data_shadow`, the module is `data`; the quiz is
+   *  `ultimate_quiz`, the module `ultimate`. Declared here so a room that hides
+   *  one is filtered by the server's vocabulary, not by a second guess. */
+  module: string
   /** The name on the card, and under the icon on the welcome map. */
   name: string
   /** The mark on the welcome map. Square, transparent, 384px. */
@@ -44,6 +49,7 @@ export interface GameOpening {
 const OPENINGS: GameOpening[] = [
   {
     key: 'hallucination',
+    module: 'hallucination',
     name: 'AI Hallucination',
     icon: '/game_icons/hallucination_icon.PNG',
     rules: [
@@ -60,6 +66,7 @@ const OPENINGS: GameOpening[] = [
   },
   {
     key: 'data_shadow',
+    module: 'data',
     name: 'Data Shadow',
     icon: '/game_icons/data_icon.PNG',
     rules: [
@@ -73,11 +80,13 @@ const OPENINGS: GameOpening[] = [
     // card inside the node (see `SabotageGame`'s `Rules`), so the flow has no
     // opening in front of it. Name and icon still feed the welcome map.
     key: 'sabotage',
+    module: 'sabotage',
     name: 'AI Cyber Battle',
     icon: '/game_icons/sabotage_icon.PNG',
   },
   {
     key: 'ultimate_quiz',
+    module: 'ultimate',
     name: 'Ultimate Showdown',
     icon: '/game_icons/ultimate_icon.PNG',
     rules: [
@@ -93,8 +102,27 @@ const OPENINGS: GameOpening[] = [
  *  follow it. */
 export const GAME_ORDER: GameOpening[] = OPENINGS
 
-/** How many games the show runs, for the "Round 2 of 4" line. */
+/** How many games the show can run. What a room actually runs is
+ *  `activeGames(modules).length`. */
 export const GAME_COUNT = OPENINGS.length
+
+/**
+ * The games a room actually runs.
+ *
+ * A room is built from a set of modules (`flow.MODULES` on the server), so a
+ * show can run three games instead of four. Everything the audience reads about
+ * the count - the welcome map, `game 2 of 3`, `Round 1 of 3` - counts from this
+ * list rather than from `GAME_ORDER`, or the screens would promise a game that
+ * is not in the rundown.
+ *
+ * An empty list means "the server has not said yet": the first state message
+ * arrives before the welcome card, but the store starts empty, so falling back
+ * to all four keeps the first paint from claiming a one-game show.
+ */
+export function activeGames(modules: string[]): GameOpening[] {
+  if (modules.length === 0) return GAME_ORDER
+  return GAME_ORDER.filter((game) => modules.includes(game.module))
+}
 
 /** How long the name holds before the rules take over, when the flow does not
  *  say. The backend sends `title_sec`, so this is only the fallback. */
@@ -111,9 +139,13 @@ export function findOpening(key: string | undefined): GameOpening | undefined {
   return OPENINGS.find((entry) => entry.key === key)
 }
 
-/** Which game this is, 1-based, or 0 for a key we do not know. */
-export function gameNumber(key: string | undefined, section?: string): number {
-  const at = OPENINGS.findIndex((entry) => entry.key === (key ?? section))
+/** Which game this is, 1-based, or 0 for a game the room is not running. */
+export function gameNumber(
+  key: string | undefined,
+  section: string | undefined,
+  modules: string[] = [],
+): number {
+  const at = activeGames(modules).findIndex((entry) => entry.key === (key ?? section))
   return at === -1 ? 0 : at + 1
 }
 
