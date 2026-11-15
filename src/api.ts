@@ -455,6 +455,8 @@ export function listRoomParticipants(code: string): Promise<RoomParticipantRow[]
 export interface ConsoleSettings {
   /** Which modules the next room will be built from, in the show's own order. */
   modules: string[]
+  /** Which event every shared board ranks; null means all of them at once. */
+  active_event: string | null
 }
 
 /** The console's own settings. Readable by any operator screen. */
@@ -462,8 +464,9 @@ export function fetchSettings(): Promise<ConsoleSettings> {
   return request<ConsoleSettings>('/api/settings')
 }
 
-/** Replace the settings. Full-scope only: this decides what the next room runs. */
-export function saveSettings(settings: ConsoleSettings): Promise<ConsoleSettings> {
+/** Change one or both settings. Full-scope only: these decide what the room runs
+ *  and which event the boards rank. */
+export function saveSettings(settings: Partial<ConsoleSettings>): Promise<ConsoleSettings> {
   return request<ConsoleSettings>('/api/settings', {
     method: 'PUT',
     body: JSON.stringify(settings),

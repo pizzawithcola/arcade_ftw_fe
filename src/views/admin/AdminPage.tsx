@@ -170,7 +170,7 @@ interface PlayerDraft {
 const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
   { key: 'data', label: 'Arcade Data', note: 'Rooms and players' },
-  { key: 'events', label: 'Event Results', note: 'Per-event numbers' },
+  { key: 'events', label: 'Event Control', note: 'Which event is shown' },
   { key: 'settings', label: 'Game Setting', note: 'Quiz bank' },
   { key: 'design', label: 'Design', note: 'Tokens and palette' },
 ]
@@ -432,7 +432,6 @@ export default function AdminPage() {
               onAction={run}
               onStartRound={startRound}
               busy={busy}
-              modules={modules}
             />
           )}
           {section === 'data' && (
@@ -586,13 +585,11 @@ function ConsoleView({
   onAction,
   onStartRound,
   busy,
-  modules,
 }: {
   room: RoomSnapshot | undefined
   onAction: (action: string) => void
   onStartRound: () => void
   busy: boolean
-  modules: string[]
 }) {
   const phase = room?.state.phase ?? 'waiting'
   const [screen, setScreen] = useState<PreviewScreen>('display')
@@ -615,22 +612,17 @@ function ConsoleView({
               </button>
             ))}
           </div>
+          {/* Just the room and its length: everything else in this bar is
+              something the operator can act on. */}
           <span className="admin__current">
             {room ? (
               <>
-                room <strong>{room.code}</strong> ·{' '}
-                {room.state.total_sec ? duration(room.state.total_sec) : '—'} ·{' '}
-                {room.state.node_count} nodes
+                <strong>{room.code}</strong> ·{' '}
+                {room.state.total_sec ? duration(room.state.total_sec) : '—'}
               </>
             ) : (
               <>no room yet</>
             )}
-          </span>
-          {/* The module set is chosen in Game Setting, so the button that acts
-              on it has to say what it will build - otherwise a room could be
-              created minutes after someone changed the set, unlooked at. */}
-          <span className="admin__next" title="Modules for the next room">
-            next · {moduleSummary(modules)}
           </span>
           <button type="button" className="admin__new-round" disabled={busy} onClick={onStartRound}>
             new room
@@ -761,29 +753,31 @@ function DataView({
 
   return (
     <section className="admin__panel">
-      <div className="admin__panel-head">
+      {/* The switch sits dead centre: it is the page's primary control, not a
+          toolbar extra, and pinning it to the right made it read as one. */}
+      <div className="admin__panel-head admin__panel-head--centre">
         <h2>Arcade Data</h2>
+        <div className="admin__toggle" role="tablist" aria-label="Data view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'rooms'}
+            className={tab === 'rooms' ? 'is-active' : ''}
+            onClick={() => onTab('rooms')}
+          >
+            Rooms
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'players'}
+            className={tab === 'players' ? 'is-active' : ''}
+            onClick={() => onTab('players')}
+          >
+            Players
+          </button>
+        </div>
         <div className="admin__head-tools">
-          <div className="admin__toggle" role="tablist" aria-label="Data view">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'rooms'}
-              className={tab === 'rooms' ? 'is-active' : ''}
-              onClick={() => onTab('rooms')}
-            >
-              Rooms
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'players'}
-              className={tab === 'players' ? 'is-active' : ''}
-              onClick={() => onTab('players')}
-            >
-              Players
-            </button>
-          </div>
           {tab === 'players' && (
             <button
               type="button"
@@ -1274,9 +1268,9 @@ function SettingsView({
           Three questions, each drawn at random from its pool, so no two rooms sit the same
           round. The draw is seeded on the room code and the node index, which is what keeps
           the wall and every iPad on the same question. Re-running the node replays the same
-          three. Row 1 pools Data Shadow, phishing email and hallucination together: all three
-          are about information that looks trustworthy and is not. Row 2 pools CEO
-          impersonation with the AI assistant pair. Edited in
+          three. Each row draws from one game&rsquo;s own questions, in the order the show met
+          them: hallucination first, then phishing and the Data Shadow post, then what the CEO
+          asked for. Edited in
           <code> src/games/quiz/draw.ts</code>.
         </p>
         <div className="admin__table-wrap">
@@ -1323,8 +1317,9 @@ function SettingsView({
         </div>
         <p className="admin__table-note">
           Twenty-five questions written against the four games: five each for Data Shadow
-          and Hallucination, ten across AI Cyber Battle&rsquo;s four rounds, and five on Hong Kong
-          for the final slot. This is the pool the Ultimate round draws from. Edited in
+          and Hallucination, ten across AI Cyber Battle&rsquo;s four rounds, and five on Hong Kong.
+          Only the first three groups feed the Ultimate round now; the Hong Kong set is kept
+          for another slot. Edited in
           <code> src/games/quiz/bank.ts</code>.
         </p>
         <ul className="admin__cats">

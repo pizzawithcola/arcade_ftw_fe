@@ -146,3 +146,25 @@
 .admin__toggle button.is-active .report__tab-count {
   color: var(--c-text-muted);
 }
+
+/* Which event the room is being shown. Sits inside the button it belongs to so
+   it can never point at a different one than the label beside it. */
+.report__tab-live {
+  margin-left: 0.4rem;
+  padding: 0.02rem 0.32rem;
+  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 70%, transparent);
+  border-radius: 999px;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-brand);
+}
+
+.report__saving {
+  font-size: 0.7rem;
+  color: var(--c-text-dim);
+}
+
+.report__boards {
+  margin: 0 0 0.9rem;
+}

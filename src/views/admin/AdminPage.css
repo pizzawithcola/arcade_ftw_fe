@@ -157,6 +157,18 @@
   margin: 0;
 }
 
+/* Title left, switch centred, tools right. Equal side columns rather than an
+   absolute centre: on a narrow console the switch then stays clear of both. */
+.admin__panel-head--centre {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.admin__panel-head--centre .admin__head-tools {
+  justify-self: end;
+}
+
 /* Segmented switch: Rooms | Players. Two buttons, one panel. */
 .admin__toggle {
   display: inline-flex;
@@ -196,16 +208,6 @@
 }
 
 /* Starting a round must not require a code or a second screen. */
-/* What "new room" will build. The module set is chosen on another tab now, so
-   the button that acts on it has to name it. */
-.admin__next {
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--c-text-dim);
-  white-space: nowrap;
-}
-
 .admin__new-round {
   padding: 0.38rem 0.8rem;
   border: 1px solid var(--c-brand-deep);

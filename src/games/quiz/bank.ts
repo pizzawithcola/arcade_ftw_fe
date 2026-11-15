@@ -43,7 +43,7 @@ export const QUIZ_CATEGORIES: { key: QuizCategory; label: string; game: string }
   { key: 'ceo-impersonation', label: 'CEO impersonation', game: 'Sabotage · round 2' },
   { key: 'ai-assistant', label: 'AI assistant', game: 'Sabotage · round 3' },
   { key: 'knowledge-base', label: 'Knowledge base', game: 'Sabotage · round 4' },
-  { key: 'hk', label: 'Hong Kong', game: 'Ultimate · final slot' },
+  { key: 'hk', label: 'Hong Kong', game: 'Not drawn any more' },
 ]
 
 export interface BankQuestion {

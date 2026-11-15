@@ -100,7 +100,11 @@ async function stage(viewport, { path, as = 'display', onError } = {}) {
   await page.addInitScript((token) => {
     sessionStorage.setItem('arcade_ftw_token', token)
   }, login.token)
-  await page.goto(`${BASE}${path}`)
+  // `domcontentloaded`, not the default `load`: every screen here holds a
+  // websocket open, and waiting for the load event turns a slow suite into a
+  // 30-second timeout that says nothing about the page. The assertions that
+  // follow all wait for the element they care about.
+  await page.goto(`${BASE}${path}`, { waitUntil: 'domcontentloaded' })
   return { context, page }
 }
 
@@ -1040,15 +1044,17 @@ describe('the clocks in the room agree', () => {
   })
 })
 
-describe('the event report', () => {
+describe('event control', () => {
   test('draws one event at a time and never touches the show', async () => {
-    // A read-only page: it is in the console so an operator can look at the last
-    // event while this one is running. The test therefore also asserts the room
-    // is untouched - a report that moved the show would be worse than no report.
+    // The page is in the console so an operator can look at the last event while
+    // this one is running. It may change which event the boards rank, but it must
+    // never move the show - asserted at the end.
     const before = await api.state(ROOM)
+    const original = (await api.get('/api/settings', { token: api.adminToken, expect: 200 }))
+      .active_event
     const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
     try {
-      await page.getByRole('button', { name: /event results/i }).click()
+      await page.getByRole('button', { name: /event control/i }).click()
       await page.waitForTimeout(1500)
 
       const tabs = await page.locator('.admin__toggle button').allInnerTexts()
@@ -1084,8 +1090,32 @@ describe('the event report', () => {
         .allInnerTexts()
       const numbers = totals.map((value) => Number(value.replace(/,/g, '')))
       assert.deepEqual(numbers, [...numbers].sort((a, b) => b - a), 'the board is best first')
+
+      // Picking an event is a decision, not a filter: it is stored, so the wall
+      // and the waiting room draw that event's board too.
+      const stored = await api.get('/api/settings', { token: api.adminToken, expect: 200 })
+      assert.ok(stored.active_event, 'picking an event stored nothing')
+      assert.equal(
+        await page.locator('.report__tab-live').count(),
+        1,
+        'exactly one event is marked as the one being shown',
+      )
+      const board = await api.get('/api/leaderboard?limit=50', { expect: 200 })
+      assert.equal(board.event, stored.active_event, 'the shared board ignored the choice')
+      for (const row of board.players) {
+        assert.ok(row.nickname, 'the scoped board returned a row without a name')
+      }
+      // A one-off look elsewhere does not disturb the stored choice.
+      const mixed = await api.get('/api/leaderboard?limit=50&event=all', { expect: 200 })
+      assert.equal(mixed.event, null, '`all` should rank every event together')
     } finally {
       await context.close()
+      // Leave the console as it was found: the boards are shared state.
+      await api.put('/api/settings', {
+        token: api.adminToken,
+        body: { active_event: original },
+        expect: 200,
+      })
     }
 
     const after = await api.state(ROOM)
@@ -1228,12 +1258,11 @@ describe('the module setting', () => {
       await page.getByRole('button', { name: /arcade console/i }).click()
       await page.waitForTimeout(600)
       assert.equal(await page.locator('.admin__modules').count(), 0, 'the console no longer picks')
-      // The label is uppercased by CSS, so `innerText` comes back shouting.
-      assert.match(
-        await page.locator('.admin__next').innerText(),
-        /next · \d+ games?/i,
-        'the console names the next room',
-      )
+      // The head is the room and its length. It used to carry the node count and
+      // a summary of the next room's modules, which is noise next to four buttons
+      // that drive the show.
+      const head = (await page.locator('.admin__current').innerText()).replace(/\s+/g, ' ')
+      assert.match(head, /^[\w-]+ · \d+m\d+s$|^[\w-]+ · —$/, `the console head read "${head}"`)
 
       await page.getByRole('button', { name: /game setting/i }).click()
       await page.waitForTimeout(600)

@@ -14,14 +14,14 @@
  *
  * The shape of the round is fixed, only the questions vary:
  *
- *   slot 1  Data / Hallucination  1 of 10  x1   100
- *   slot 2  CEO / AI assistant    1 of 7   x2   200  bonus
- *   slot 3  Hong Kong             1 of 3   x3   300  bonus
+ *   slot 1  Hallucination          1 of 5   x1   100
+ *   slot 2  Phishing / Data        1 of 5   x2   200  bonus
+ *   slot 3  CEO impersonation      1 of 3   x3   300  bonus
  *
- * Slot 1 merges Data Shadow, phishing email and hallucination: all three are
- * about information that looks trustworthy and is not, and the pool is the ten
- * questions those categories hold between them. Slot 2 does the same for CEO
- * impersonation and the AI assistant pair.
+ * Each slot draws from one game's own questions, in the order the show plays
+ * them: the first game the room met, then the phishing round and the Data
+ * Shadow post, then what the CEO asked for. A slot whose pools are small is
+ * still a draw - three CEO questions mean three possible rounds, not one.
  *
  * The bonuses are last on purpose: the round gets harder and worth more as it
  * goes, so a team that is behind still has something to play for.
@@ -46,18 +46,23 @@ export const BASE_POINTS = 100
 
 export const ULTIMATE_SLOTS: DrawSlot[] = [
   {
-    key: 'leak',
-    label: 'Data and hallucination',
-    categories: ['data-shadow', 'phishing-email', 'hallucination'],
+    key: 'hallucination',
+    label: 'Hallucination',
+    categories: ['hallucination'],
     multiplier: 1,
   },
   {
-    key: 'agent',
-    label: 'CEO and AI assistant',
-    categories: ['ceo-impersonation', 'ai-assistant', 'knowledge-base'],
+    key: 'phishing',
+    label: 'Phishing and Data Shadow',
+    categories: ['phishing-email', 'data-shadow'],
     multiplier: 2,
   },
-  { key: 'hk', label: 'Hong Kong', categories: ['hk'], multiplier: 3 },
+  {
+    key: 'ceo',
+    label: 'CEO impersonation',
+    categories: ['ceo-impersonation'],
+    multiplier: 3,
+  },
 ]
 
 /**

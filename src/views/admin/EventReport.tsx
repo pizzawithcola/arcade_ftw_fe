@@ -1,10 +1,12 @@
 /**
- * Results per event.
+ * Event control: one event's numbers, and which event the room is being shown.
  *
- * A read-only page: it asks the API for one event's numbers and draws them. It
- * has no controls that touch a room, which is deliberate - the point of putting
- * it in the console is that an operator can look at the last event's scores
- * while the current show is running without any way to disturb it.
+ * Nothing here touches a room, a score or a player, so it is safe to use while a
+ * show is running. What it *does* control is the board every screen draws: the
+ * pick is stored on the server (`settings.active_event`), so the wall, the
+ * waiting room and the public leaderboard all rank the same event the operator
+ * chose here. Picking in this page is therefore a decision, not a filter - it
+ * used to change nothing but this page's own numbers.
  *
  * Every count comes from the event the players chose at the login screen
  * (`players.event`). The one inferred number is the round count: rooms carry no
@@ -17,6 +19,8 @@ import {
   fetchEventLeaderboard,
   fetchEventOptions,
   fetchEventSummary,
+  fetchSettings,
+  saveSettings,
   type EventLeaderboardRow,
   type EventOptionRow,
   type EventSummary,
@@ -71,6 +75,10 @@ export default function EventReport() {
     latest: null,
   })
   const [chosen, setChosen] = useState('')
+  // What the boards are actually ranking right now. Kept apart from `chosen`
+  // so the switch can show a save in progress instead of lying about it.
+  const [active, setActive] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const [summary, setSummary] = useState<EventSummary | null>(null)
   const [board, setBoard] = useState<EventLeaderboardRow[]>([])
   const [error, setError] = useState('')
@@ -79,9 +87,14 @@ export default function EventReport() {
   // the "most recently played" default, neither of which the console has.
   useEffect(() => {
     let live = true
-    fetchEventOptions()
-      .then((next) => {
-        if (live) setOptions(next)
+    Promise.all([fetchEventOptions(), fetchSettings()])
+      .then(([next, settings]) => {
+        if (!live) return
+        setOptions(next)
+        setActive(settings.active_event)
+        // Opening the page on the event the room is being shown is what an
+        // operator expects; a remembered pick only wins if there is no active one.
+        if (settings.active_event) setChosen(settings.active_event)
       })
       .catch((problem: unknown) => {
         if (!live) return
@@ -128,19 +141,33 @@ export default function EventReport() {
     }
   }, [key])
 
-  const pick = (next: string) => {
+  const pick = async (next: string) => {
     // The old event's numbers must not sit on screen while the new ones load:
     // they would read as the answer for the event just chosen.
     setSummary(null)
     setError('')
     setChosen(next)
     window.localStorage.setItem(STORE_KEY, next)
+    setSaving(true)
+    try {
+      const saved = await saveSettings({ active_event: next })
+      setActive(saved.active_event)
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : 'Could not change the event.')
+      // Fall back to whatever the server still holds, so the badge never claims
+      // a choice that was not stored.
+      void fetchSettings()
+        .then((settings) => setActive(settings.active_event))
+        .catch(() => undefined)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <section className="admin__panel report">
       <div className="admin__panel-head">
-        <h2>Event Results</h2>
+        <h2>Event Control</h2>
         <div className="admin__head-tools">
           <div className="admin__toggle" role="tablist" aria-label="Event">
             {events.map((option) => (
@@ -150,15 +177,32 @@ export default function EventReport() {
                 role="tab"
                 aria-selected={option.key === key}
                 className={option.key === key ? 'is-active' : ''}
-                onClick={() => pick(option.key)}
+                onClick={() => void pick(option.key)}
               >
                 {option.label}
                 <span className="report__tab-count">{number(option.players)}</span>
+                {/* Which one the room is actually being shown. A tick, not a
+                    second control: the badge follows the server, so it cannot
+                    claim a choice a failed save never stored. */}
+                {option.key === active && (
+                  <span className="report__tab-live" title="Shown on the wall and the leaderboard">
+                    live
+                  </span>
+                )}
               </button>
             ))}
           </div>
+          {saving && <span className="report__saving">saving…</span>}
         </div>
       </div>
+
+      <p className="report__note report__boards">
+        {active
+          ? `The wall, the waiting room and the public leaderboard rank ${
+              events.find((option) => option.key === active)?.label ?? active
+            } only.`
+          : 'Every event is ranked together on the board. Pick one to show a single event.'}
+      </p>
 
       {error !== '' ? (
         <p className="report__note report__note--error">{error}</p>
