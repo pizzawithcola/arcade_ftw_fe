@@ -7,14 +7,18 @@ import {
   deleteRoom,
   fetchEvents,
   fetchSession,
+  fetchSettings,
   isAuthError,
   listPlayers,
+  listRoomParticipants,
   listRooms,
   roomAction,
+  saveSettings,
   updatePlayer,
   type EventOption,
   type FlowNode,
   type PlayerRow,
+  type RoomParticipantRow,
   type RoomSnapshot,
   type Session,
 } from '../../api'
@@ -23,6 +27,7 @@ import { bankCounts, bankOptions, QUIZ_CATEGORIES, QUESTION_BANK } from '../../g
 import { BASE_POINTS, perfectScore, ULTIMATE_SLOTS } from '../../games/quiz/draw'
 import StaffLogin from '../StaffLogin'
 import DesignPage from './DesignPage'
+import EventReport from './EventReport'
 import './AdminPage.css'
 
 const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
@@ -151,7 +156,7 @@ function jumpGroups(flow: FlowNode[]): JumpGroup[] {
   return groups
 }
 
-type Section = 'console' | 'data' | 'settings' | 'design'
+type Section = 'console' | 'data' | 'events' | 'settings' | 'design'
 type DataTab = 'rooms' | 'players'
 
 interface PlayerDraft {
@@ -165,6 +170,7 @@ interface PlayerDraft {
 const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
   { key: 'data', label: 'Arcade Data', note: 'Rooms and players' },
+  { key: 'events', label: 'Event Results', note: 'Per-event numbers' },
   { key: 'settings', label: 'Game Setting', note: 'Quiz bank' },
   { key: 'design', label: 'Design', note: 'Tokens and palette' },
 ]
@@ -193,6 +199,9 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false)
   // Which modules the *next* room is built from. A room's set is fixed once it
   // exists, so this is a plan for the next one, never an edit of the current.
+  // Which modules the *next* room is built from. Kept on the server, so the
+  // venue laptop and this one agree and a refreshed browser does not quietly
+  // restore the full show; `modules` is the local copy the checkboxes draw.
   const [modules, setModules] = useState<string[]>(ALL_MODULES)
 
   useEffect(() => {
@@ -205,6 +214,37 @@ export default function AdminPage() {
   useEffect(() => {
     void fetchEvents().then(setEvents).catch(() => setEvents([]))
   }, [])
+
+  useEffect(() => {
+    if (!session) return
+    let live = true
+    void fetchSettings()
+      .then((loaded) => {
+        if (live) setModules(loaded.modules)
+      })
+      // A console that cannot read the setting still has to run: the full show
+      // is the safe assumption, and the picker shows it plainly.
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+  }, [session])
+
+  const onModules = useCallback(
+    (next: string[]) => {
+      // Optimistic: a checkbox that waits for a round trip feels broken. A
+      // failed save re-reads the server, so the boxes stop showing a set that
+      // was never stored.
+      setModules(next)
+      void saveSettings({ modules: next }).catch((caught: unknown) => {
+        setError(caught instanceof Error ? caught.message : String(caught))
+        void fetchSettings()
+          .then((loaded) => setModules(loaded.modules))
+          .catch(() => undefined)
+      })
+    },
+    [],
+  )
 
   const load = useCallback(
     () =>
@@ -235,29 +275,31 @@ export default function AdminPage() {
     return () => window.clearInterval(id)
   }, [session, load])
 
-  // Players are only pulled while the data section is open: a roster nobody is
-  // looking at would be a query every few seconds for nothing.
-  useEffect(() => {
-    if (!session || section !== 'data') return
-    let live = true
-    const pull = () =>
-      listPlayers({ room: current })
+  // The whole roster, pulled once when the data section opens and then on
+  // demand. It used to be scoped to the current room and re-read every three
+  // seconds, which both hid everyone else and asked the database for 250 rows
+  // sixty times a minute while nobody was editing anything.
+  const loadPlayers = useCallback(
+    () =>
+      listPlayers()
         .then((rows) => {
-          if (live) {
-            setPlayers(rows)
-            setError('')
-          }
+          setPlayers(rows)
+          setError('')
         })
         .catch((caught: unknown) => {
-          if (live) setError(caught instanceof Error ? caught.message : String(caught))
-        })
-    void pull()
-    const id = window.setInterval(() => void pull(), 3000)
-    return () => {
-      live = false
-      window.clearInterval(id)
-    }
-  }, [session, section, current])
+          if (isAuthError(caught)) {
+            setSession(null)
+            return
+          }
+          setError(caught instanceof Error ? caught.message : String(caught))
+        }),
+    [],
+  )
+
+  useEffect(() => {
+    if (!session || section !== 'data') return
+    void loadPlayers()
+  }, [session, section, loadPlayers])
 
   useEffect(() => {
     // Switching panels can otherwise leave the console shifted sideways, because
@@ -391,7 +433,6 @@ export default function AdminPage() {
               onStartRound={startRound}
               busy={busy}
               modules={modules}
-              onModules={setModules}
             />
           )}
           {section === 'data' && (
@@ -410,7 +451,10 @@ export default function AdminPage() {
               onDeletePlayer={(player) => void removePlayer(player)}
             />
           )}
-          {section === 'settings' && <SettingsView />}
+          {section === 'events' && <EventReport />}
+          {section === 'settings' && (
+            <SettingsView modules={modules} onModules={onModules} />
+          )}
           {section === 'design' && <DesignPage />}
           {error && <p className="admin__error">{error}</p>}
         </div>
@@ -543,14 +587,12 @@ function ConsoleView({
   onStartRound,
   busy,
   modules,
-  onModules,
 }: {
   room: RoomSnapshot | undefined
   onAction: (action: string) => void
   onStartRound: () => void
   busy: boolean
   modules: string[]
-  onModules: (next: string[]) => void
 }) {
   const phase = room?.state.phase ?? 'waiting'
   const [screen, setScreen] = useState<PreviewScreen>('display')
@@ -584,16 +626,17 @@ function ConsoleView({
               <>no room yet</>
             )}
           </span>
+          {/* The module set is chosen in Game Setting, so the button that acts
+              on it has to say what it will build - otherwise a room could be
+              created minutes after someone changed the set, unlooked at. */}
+          <span className="admin__next" title="Modules for the next room">
+            next · {moduleSummary(modules)}
+          </span>
           <button type="button" className="admin__new-round" disabled={busy} onClick={onStartRound}>
             new room
           </button>
         </div>
       </div>
-
-      {/* The set for the *next* room. A room's nodes are fixed when it is
-          built, so this cannot edit the show that is already running - which is
-          what keeps every node index (and every score keyed by one) stable. */}
-      <ModulePicker modules={modules} onModules={onModules} />
 
       {room ? (
         <>
@@ -767,11 +810,10 @@ function DataView({
       )}
 
       {tab === 'rooms' ? (
-        <RoomsTable rooms={rooms} current={current} busy={busy} onDelete={onDeleteRoom} />
+        <RoomsList rooms={rooms} current={current} busy={busy} onDelete={onDeleteRoom} />
       ) : (
         <PlayersTable
           players={players}
-          room={current}
           busy={busy}
           onEdit={(player) =>
             onPlayerDraft({
@@ -867,7 +909,19 @@ function PlayerForm({
   )
 }
 
-function RoomsTable({
+/**
+ * Every room, one line each, with a page of history.
+ *
+ * The console used to draw all 109 rooms as a flat table, which is a wall of
+ * numbers with nowhere to look at a single round. A row now opens: the closed
+ * rooms keep their rosters in `room_participants`, so the list can show who
+ * actually played each one, not just how many.
+ */
+const ROOMS_PER_PAGE = 10
+/** Players to a page. Twice the rooms page: rows are one line each. */
+const PLAYERS_PER_PAGE = 20
+
+function RoomsList({
   rooms,
   current,
   busy,
@@ -878,110 +932,306 @@ function RoomsTable({
   busy: boolean
   onDelete: (code: string) => void
 }) {
+  const [page, setPage] = useState(0)
+  const [open, setOpen] = useState<string | null>(null)
+  const [roster, setRoster] = useState<RoomParticipantRow[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
+  // Which room's roster is being awaited. A second click can overtake the first
+  // request, and the slower answer must not land in the newly opened room.
+  const pending = useRef<string | null>(null)
+
+  const pages = Math.max(1, Math.ceil(rooms.length / ROOMS_PER_PAGE))
+  // Rooms appear and are deleted under this component, so the page it is on can
+  // stop existing. Clamping keeps the list populated instead of blank.
+  const safePage = Math.min(page, pages - 1)
+  const shown = rooms.slice(safePage * ROOMS_PER_PAGE, safePage * ROOMS_PER_PAGE + ROOMS_PER_PAGE)
+
+  // Read on every open rather than cached: a room can gain players between two
+  // looks, and a stale roster is exactly the bug this page exists to avoid.
+  const toggle = async (code: string) => {
+    if (open === code) {
+      setOpen(null)
+      pending.current = null
+      return
+    }
+    setOpen(code)
+    setRoster(null)
+    setFailed(false)
+    setLoading(true)
+    pending.current = code
+    try {
+      const rows = await listRoomParticipants(code)
+      if (pending.current === code) setRoster(rows)
+    } catch {
+      if (pending.current === code) setFailed(true)
+    } finally {
+      if (pending.current === code) setLoading(false)
+    }
+  }
+
   if (rooms.length === 0) return <p className="admin__hint">No rooms yet.</p>
+
   const formatWhen = (iso: string) => {
     const date = new Date(iso)
     return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString()
   }
+
   return (
     <>
       <p className="admin__table-note">
         {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} · newest first · a room is one-shot:
         it records who joined, then closes when finished
       </p>
-      <div className="admin__table-wrap">
-        <table className="admin__table">
-          <thead>
-            <tr>
-              <th scope="col">Room</th>
-              <th scope="col">Created</th>
-              <th scope="col">Players</th>
-              <th scope="col">Status</th>
-              <th scope="col" aria-label="Actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map((item) => (
-              <tr key={item.code} className={item.code === current ? 'is-current' : ''}>
-                <td>{item.code}</td>
-                <td className="admin__dim">{formatWhen(item.createdAt)}</td>
-                <td>{item.players}</td>
-                <td>{item.closedAt ? 'closed' : 'open'}</td>
-                <td className="admin__row-actions">
-                  <button type="button" disabled={busy} onClick={() => onDelete(item.code)}>
-                    delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      <ul className="admin__rooms">
+        {shown.map((item) => {
+          const expanded = open === item.code
+          const live = rooms.length > 0 && item.code === current
+          return (
+            <li
+              key={item.code}
+              className={`admin__room ${expanded ? 'is-open' : ''} ${live ? 'is-current' : ''}`}
+            >
+              <div className="admin__room-head">
+                <button
+                  type="button"
+                  className="admin__room-toggle"
+                  aria-expanded={expanded}
+                  onClick={() => void toggle(item.code)}
+                >
+                  <span className="admin__room-chevron" aria-hidden="true">
+                    {expanded ? '▾' : '▸'}
+                  </span>
+                  <span className="admin__room-code">
+                    {item.code}
+                    {live && <span className="admin__room-live">live</span>}
+                  </span>
+                  <span className="admin__room-when admin__dim">{formatWhen(item.createdAt)}</span>
+                  <span className="admin__room-players">
+                    {item.players} {item.players === 1 ? 'player' : 'players'}
+                  </span>
+                  <span
+                    className={`admin__room-status ${item.closedAt ? 'is-closed' : 'is-open'}`}
+                  >
+                    {item.closedAt ? 'closed' : 'open'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="admin__room-delete"
+                  disabled={busy}
+                  onClick={() => onDelete(item.code)}
+                >
+                  delete
+                </button>
+              </div>
+
+              {expanded && (
+                <div className="admin__room-body">
+                  {loading ? (
+                    <p className="admin__hint">Reading the roster…</p>
+                  ) : failed ? (
+                    <p className="admin__hint">Could not read this room's players.</p>
+                  ) : roster === null ? null : roster.length === 0 ? (
+                    <p className="admin__hint">Nobody joined this room.</p>
+                  ) : (
+                    <div className="admin__table-wrap">
+                      <table className="admin__table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Player</th>
+                            <th scope="col">Event</th>
+                            <th scope="col">Joined</th>
+                            <th scope="col">Hallu</th>
+                            <th scope="col">Data</th>
+                            <th scope="col">AI Cyber Battle</th>
+                            <th scope="col">Ultimate</th>
+                            <th scope="col">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roster.map((player) => (
+                            <tr key={player.player_id}>
+                              <td>{player.nickname}</td>
+                              <td className="admin__dim">{player.event}</td>
+                              <td className="admin__dim">
+                                {player.joined_at ? formatWhen(player.joined_at) : '—'}
+                              </td>
+                              <td>{player.score?.hallucination_score ?? 0}</td>
+                              <td>{player.score?.data_score ?? 0}</td>
+                              <td>{player.score?.sabotage_score ?? 0}</td>
+                              <td>{player.score?.ultimate_score ?? 0}</td>
+                              <td className="admin__total">{player.total_score}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+
+      {pages > 1 && (
+        <nav className="admin__pager" aria-label="Rooms pages">
+          <button type="button" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>
+            prev
+          </button>
+          <span className="admin__pager-note">
+            {safePage * ROOMS_PER_PAGE + 1}–{Math.min(rooms.length, (safePage + 1) * ROOMS_PER_PAGE)}{' '}
+            of {rooms.length}
+          </span>
+          <button
+            type="button"
+            disabled={safePage >= pages - 1}
+            onClick={() => setPage(safePage + 1)}
+          >
+            next
+          </button>
+        </nav>
+      )}
     </>
   )
 }
 
+/**
+ * Every player, whoever they are and wherever they played.
+ *
+ * This used to be scoped to the current room, which made it useless the moment
+ * a round finished - the people were still in the database, just not in that
+ * room any more. The table is now the whole roster and the search box is how you
+ * find one person in it.
+ */
 function PlayersTable({
   players,
-  room,
   busy,
   onEdit,
   onDelete,
 }: {
   players: PlayerRow[]
-  room: string
   busy: boolean
   onEdit: (player: PlayerRow) => void
   onDelete: (player: PlayerRow) => void
 }) {
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(0)
+
+  const needle = query.trim().toLowerCase()
+  // Nickname or event, and not the room: a room code is a substring of the
+  // nicknames made from it, so matching on it turned one person's name into that
+  // room's whole roster. Per-room lookup is the other tab's job.
+  const matching = needle
+    ? players.filter(
+        (player) =>
+          player.nickname.toLowerCase().includes(needle) ||
+          // Also useful when the question is "who came from Singapore".
+          player.event.toLowerCase().includes(needle),
+      )
+    : players
+
+  // Same pager as the room list, and for the same reason: a couple of hundred
+  // rows in one scroll is a list you cannot count, and the row you came for
+  // scrolls away the moment you touch the wheel.
+  const pages = Math.max(1, Math.ceil(matching.length / PLAYERS_PER_PAGE))
+  const safePage = Math.min(page, pages - 1)
+  const shown = matching.slice(
+    safePage * PLAYERS_PER_PAGE,
+    safePage * PLAYERS_PER_PAGE + PLAYERS_PER_PAGE,
+  )
+
   if (players.length === 0) {
-    return <p className="admin__hint">Nobody has joined {room} yet.</p>
+    return <p className="admin__hint">No players have signed in yet.</p>
   }
+
   return (
     <>
-      <p className="admin__table-note">
-        Room · {room} · {players.length} {players.length === 1 ? 'player' : 'players'}, best score
-        first
-      </p>
-      <div className="admin__table-wrap">
-        <table className="admin__table">
-          <thead>
-            <tr>
-              <th scope="col">Player</th>
-              <th scope="col">Event</th>
-              <th scope="col">Hallu</th>
-              <th scope="col">Data</th>
-              <th scope="col">AI Cyber Battle</th>
-              <th scope="col">Ultimate</th>
-              <th scope="col">Total</th>
-              <th scope="col" aria-label="Actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {players.map((player) => (
-              <tr key={player.player_id}>
-                <td>{player.nickname}</td>
-                <td className="admin__dim">{player.event}</td>
-                {/* A missing score row means no game has written one yet, which
-                    reads as zero rather than as a blank cell. */}
-                <td>{player.score?.hallucination_score ?? 0}</td>
-                <td>{player.score?.data_score ?? 0}</td>
-                <td>{player.score?.sabotage_score ?? 0}</td>
-                <td>{player.score?.ultimate_score ?? 0}</td>
-                <td className="admin__total">{player.total_score}</td>
-                <td className="admin__row-actions">
-                  <button type="button" disabled={busy} onClick={() => onEdit(player)}>
-                    edit
-                  </button>
-                  <button type="button" disabled={busy} onClick={() => onDelete(player)}>
-                    delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="admin__search">
+        <input
+          type="search"
+          value={query}
+          placeholder="Search by nickname or event"
+          aria-label="Search players"
+          onChange={(event) => {
+            setQuery(event.target.value)
+            // A narrower list has fewer pages: staying on page 4 of a search
+            // that matched three rows would show an empty table.
+            setPage(0)
+          }}
+        />
+        <span className="admin__search-count">
+          {players.length} {players.length === 1 ? 'player' : 'players'}
+          {needle ? ` · ${matching.length} matching` : ''}
+        </span>
       </div>
+
+      {matching.length === 0 ? (
+        <p className="admin__hint">Nobody matches “{query.trim()}”.</p>
+      ) : (
+        <div className="admin__table-wrap">
+          <table className="admin__table">
+            <thead>
+              <tr>
+                <th scope="col">Player</th>
+                <th scope="col">Event</th>
+                <th scope="col">Room</th>
+                <th scope="col">Hallu</th>
+                <th scope="col">Data</th>
+                <th scope="col">AI Cyber Battle</th>
+                <th scope="col">Ultimate</th>
+                <th scope="col">Total</th>
+                <th scope="col" aria-label="Actions" />
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((player) => (
+                <tr key={player.player_id}>
+                  <td>{player.nickname}</td>
+                  <td className="admin__dim">{player.event}</td>
+                  {/* The room a player is *in right now*: finishing a room clears
+                      it, so an empty cell means "not playing at the moment". */}
+                  <td className="admin__dim">{player.room_code ?? '—'}</td>
+                  <td>{player.score?.hallucination_score ?? 0}</td>
+                  <td>{player.score?.data_score ?? 0}</td>
+                  <td>{player.score?.sabotage_score ?? 0}</td>
+                  <td>{player.score?.ultimate_score ?? 0}</td>
+                  <td className="admin__total">{player.total_score}</td>
+                  <td className="admin__row-actions">
+                    <button type="button" disabled={busy} onClick={() => onEdit(player)}>
+                      edit
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => onDelete(player)}>
+                      delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {pages > 1 && (
+        <nav className="admin__pager" aria-label="Players pages">
+          <button type="button" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>
+            prev
+          </button>
+          <span className="admin__pager-note">
+            {safePage * PLAYERS_PER_PAGE + 1}–
+            {Math.min(matching.length, (safePage + 1) * PLAYERS_PER_PAGE)} of {matching.length}
+          </span>
+          <button
+            type="button"
+            disabled={safePage >= pages - 1}
+            onClick={() => setPage(safePage + 1)}
+          >
+            next
+          </button>
+        </nav>
+      )}
     </>
   )
 }
@@ -994,10 +1244,27 @@ function PlayersTable({
  * live in the frontend (`games/quiz/`), so this is a view of the source rather
  * than of a database - which is exactly why it can show the answer key.
  */
-function SettingsView() {
+function SettingsView({
+  modules,
+  onModules,
+}: {
+  modules: string[]
+  onModules: (next: string[]) => void
+}) {
   const counts = bankCounts()
   return (
     <>
+      {/* A room's node set is fixed when it is built, so this is a setting for
+          the next room rather than an edit of the show in front of the room. */}
+      <section className="admin__panel admin__panel--wide">
+        <div className="admin__panel-head">
+          <h2>Modules</h2>
+        </div>
+        {/* The picker prints its own length and ceiling on the row it belongs
+            to, so repeating them in the head would say it twice. */}
+        <ModulePicker modules={modules} onModules={onModules} />
+      </section>
+
       <section className="admin__panel admin__panel--wide">
         <div className="admin__panel-head">
           <h2>Ultimate Quiz · how it draws</h2>

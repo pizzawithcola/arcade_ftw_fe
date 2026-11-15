@@ -191,6 +191,74 @@ export async function fetchRoomLeaderboard(
   return body.players
 }
 
+export interface EventOptionRow extends EventOption {
+  /** Everyone who ever signed in for this event. */
+  players: number
+  /** ISO timestamp of the newest sign-up, or null for an event nobody chose. */
+  last_registration: string | null
+}
+
+/** Every event with its headcount, and which one was played most recently. */
+export async function fetchEventOptions(): Promise<{
+  events: EventOptionRow[]
+  latest: string | null
+}> {
+  return request<{ events: EventOptionRow[]; latest: string | null }>('/api/events')
+}
+
+export interface EventGameStat {
+  players: number
+  average: number
+  best: number
+}
+
+export interface EventSummary {
+  event: EventOption
+  /** Everyone who signed in for this event. */
+  players: number
+  /** How many of them actually answered anything. */
+  scored: number
+  scored_rate: number
+  score: { average: number; median: number; best: number; lowest: number }
+  games: Record<string, EventGameStat>
+  registrations_per_day: { date: string; count: number }[]
+  rooms: {
+    rounds: number
+    participations: number
+    average_per_round: number
+    /** True while a round's event is inferred from who joined it. */
+    derived: boolean
+    /** Rooms nobody joined: they belong to no event by any reading. */
+    unattributed: number
+  }
+}
+
+/** One event's headcount, scores and rounds. Read-only, safe mid-show. */
+export async function fetchEventSummary(key: string): Promise<EventSummary> {
+  return request<EventSummary>(`/api/events/${encodeURIComponent(key)}/summary`)
+}
+
+export interface EventLeaderboardRow {
+  rank: number
+  nickname: string
+  total_score: number
+  hallucination: number
+  data: number
+  sabotage: number
+  ultimate: number
+}
+
+/** One event's own board, best first. */
+export async function fetchEventLeaderboard(
+  key: string,
+  limit = 10,
+): Promise<EventLeaderboardRow[]> {
+  const body = await request<{ players: EventLeaderboardRow[] }>(
+    `/api/events/${encodeURIComponent(key)}/leaderboard?limit=${limit}`,
+  )
+  return body.players
+}
+
 export async function loginPlayer(nickname: string, event: string): Promise<PlayerSession> {
   const body = await request<{
     token: string
@@ -362,6 +430,44 @@ export function roomRoster(code: string): Promise<RosterEntry[]> {
   return request<{ players: RosterEntry[] }>(`/api/rooms/${code}/players`).then(
     (body) => body.players,
   )
+}
+
+export interface RoomParticipantRow {
+  player_id: number
+  nickname: string
+  event: string
+  joined_at: string | null
+  total_score: number
+  /** Null when the player never scored, which is not the same as four zeroes. */
+  score: ScoreBreakdown | null
+}
+
+/** Everyone who ever joined a room, with their scores.
+ *
+ *  Not the same as `roster()`: that one answers "who is in this room now" and
+ *  empties out when a room is finished, while this one is the room's history. */
+export function listRoomParticipants(code: string): Promise<RoomParticipantRow[]> {
+  return request<{ players: RoomParticipantRow[] }>(
+    `/api/rooms/${encodeURIComponent(code)}/participants`,
+  ).then((body) => body.players)
+}
+
+export interface ConsoleSettings {
+  /** Which modules the next room will be built from, in the show's own order. */
+  modules: string[]
+}
+
+/** The console's own settings. Readable by any operator screen. */
+export function fetchSettings(): Promise<ConsoleSettings> {
+  return request<ConsoleSettings>('/api/settings')
+}
+
+/** Replace the settings. Full-scope only: this decides what the next room runs. */
+export function saveSettings(settings: ConsoleSettings): Promise<ConsoleSettings> {
+  return request<ConsoleSettings>('/api/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  })
 }
 
 export function listPlayers(params: { room?: string; event?: string } = {}): Promise<PlayerRow[]> {

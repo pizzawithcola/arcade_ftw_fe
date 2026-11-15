@@ -196,6 +196,16 @@
 }
 
 /* Starting a round must not require a code or a second screen. */
+/* What "new room" will build. The module set is chosen on another tab now, so
+   the button that acts on it has to name it. */
+.admin__next {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-dim);
+  white-space: nowrap;
+}
+
 .admin__new-round {
   padding: 0.38rem 0.8rem;
   border: 1px solid var(--c-brand-deep);
@@ -935,3 +945,213 @@
 .admin__cats li[data-category='ai-assistant'] { border-color: #4a6cff; color: #93a7ff; }
 .admin__cat[data-category='knowledge-base'],
 .admin__cats li[data-category='knowledge-base'] { border-color: #35c46a; color: #86e6a8; }
+
+/* ── Rooms: one line per room, expandable ─────────────────────────────────── */
+.admin__rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin__room {
+  /* A flex item's automatic minimum is its widest child, and the roster table
+     below is wider than the header row - without this the columns of the
+     expanded room stop lining up with the rows above it. */
+  min-width: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
+  overflow: hidden;
+}
+
+/* The live room is the one the screens are following, so it is worth picking
+   out of a page of ten at a glance. */
+.admin__room.is-current {
+  border-left: 3px solid var(--c-brand-deep);
+}
+
+.admin__room-head {
+  display: flex;
+  align-items: stretch;
+}
+
+.admin__room-toggle {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  /* The date column takes the slack, so the time sits next to the room code and
+     the count, status and delete stay pinned to the right edge as a group. */
+  grid-template-columns: 1.1rem minmax(5rem, max-content) 1fr max-content max-content;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  background: none;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  color: var(--c-text);
+  cursor: pointer;
+}
+
+.admin__room-toggle:hover {
+  background: color-mix(in srgb, var(--c-text) 6%, transparent);
+}
+
+.admin__room-chevron {
+  color: var(--c-text-muted);
+}
+
+.admin__room-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Orbitron', ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin__room-live {
+  padding: 0.05rem 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
+  border-radius: 999px;
+  font-family: system-ui, sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-brand);
+}
+
+.admin__room-when {
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin__room-players,
+.admin__room-status {
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.admin__room-status {
+  justify-self: start;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.admin__room-status.is-closed {
+  color: var(--c-text-dim);
+}
+
+.admin__room-status.is-open {
+  color: var(--c-text);
+  border-color: color-mix(in srgb, var(--c-brand-deep) 55%, transparent);
+}
+
+/* Sits outside the toggle so a delete can never be a step on the way to
+   expanding a room. */
+.admin__room-delete {
+  padding: 0 0.85rem;
+  border: 0;
+  border-left: 1px solid var(--c-border);
+  background: none;
+  font-size: 0.74rem;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+
+.admin__room-delete:hover:not(:disabled) {
+  color: var(--c-brand);
+}
+
+.admin__room-delete:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.admin__room-body {
+  min-width: 0;
+  padding: 0.2rem 0.7rem 0.7rem;
+  border-top: 1px solid var(--c-border);
+}
+
+.admin__room-body .admin__table-wrap {
+  max-width: 100%;
+}
+
+/* ── Rooms: pager ─────────────────────────────────────────────────────────── */
+.admin__pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.admin__pager button {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface-raised);
+  font-size: 0.76rem;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+
+.admin__pager button:hover:not(:disabled) {
+  color: var(--c-text);
+}
+
+.admin__pager button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.admin__pager-note {
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-dim);
+}
+
+/* ── Players: search over the whole roster ────────────────────────────────── */
+.admin__search {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.7rem;
+}
+
+.admin__search input {
+  flex: 0 1 22rem;
+  min-width: 10rem;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface-raised);
+  font-size: 0.82rem;
+  color: var(--c-text);
+}
+
+.admin__search input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--c-brand-deep) 70%, transparent);
+}
+
+.admin__search-count {
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-dim);
+}
+

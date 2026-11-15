@@ -54,6 +54,10 @@ export class Api {
     return (await this.raw(path, { ...opts, method: 'POST' })).payload
   }
 
+  async put(path, opts = {}) {
+    return (await this.raw(path, { ...opts, method: 'PUT' })).payload
+  }
+
   async delete(path, opts = {}) {
     await this.raw(path, { ...opts, method: 'DELETE', expect: opts.expect ?? 204 })
   }

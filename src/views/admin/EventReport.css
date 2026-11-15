@@ -1,0 +1,148 @@
+/* Event results: a read-only page, so it borrows the panel furniture from the
+   console and adds only what a report needs - cards, a chart, a wide table. */
+
+.report__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.report__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
+}
+
+.report__card-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.report__card-value {
+  /* The UI face, not Orbitron: that display face draws a slashed zero and a
+     squared seven, so "10.0" reads like a row of boxes at a glance. The wall's
+     clock keeps the same rule for the same reason. */
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.report__card-note {
+  font-size: 0.7rem;
+  color: var(--c-text-dim);
+}
+
+/* Games and the day chart sit side by side while there is room, and stack when
+   the console is narrow rather than squeezing the table. */
+.report__split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.report__block {
+  min-width: 0;
+  margin-bottom: 1rem;
+}
+
+.report__block h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.report__hint {
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--c-text-dim);
+}
+
+.report__table-wrap {
+  overflow-x: auto;
+}
+
+.report__total {
+  font-weight: 600;
+}
+
+.report__note {
+  margin: 0.2rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: var(--c-text-dim);
+}
+
+.report__note--error {
+  color: var(--c-warning);
+}
+
+.report__days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report__days li {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr 2rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.report__day-date {
+  color: var(--c-text-muted);
+}
+
+.report__day-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-text) 10%, transparent);
+}
+
+.report__day-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-brand) 75%, transparent);
+}
+
+.report__day-count {
+  text-align: right;
+  color: var(--c-text);
+}
+
+/* The headcount on each event button: enough to see which one has an audience
+   without switching to it. */
+.report__tab-count {
+  margin-left: 0.45rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-dim);
+}
+
+.admin__toggle button.is-active .report__tab-count {
+  color: var(--c-text-muted);
+}

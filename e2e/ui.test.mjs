@@ -888,7 +888,12 @@ describe('the console', () => {
         return {
           drawRows: draw?.querySelectorAll('tbody tr').length ?? 0,
           bankRows: bank?.querySelectorAll('tbody tr').length ?? 0,
-          head: document.querySelector('.admin__panel-head')?.innerText.replace(/\s+/g, ' ') ?? '',
+          // The settings page now opens with the module picker, so read the
+          // head of the panel this assertion is about rather than the first one.
+          head:
+            [...document.querySelectorAll('.admin__panel-head')]
+              .map((el) => el.innerText.replace(/\s+/g, ' '))
+              .find((text) => /ultimate quiz/i.test(text)) ?? '',
         }
       })
       await snap(page, 'admin-settings.png')
@@ -1031,6 +1036,257 @@ describe('the clocks in the room agree', () => {
     } finally {
       await ipad.context.close()
       await wall.context.close()
+    }
+  })
+})
+
+describe('the event report', () => {
+  test('draws one event at a time and never touches the show', async () => {
+    // A read-only page: it is in the console so an operator can look at the last
+    // event while this one is running. The test therefore also asserts the room
+    // is untouched - a report that moved the show would be worse than no report.
+    const before = await api.state(ROOM)
+    const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
+    try {
+      await page.getByRole('button', { name: /event results/i }).click()
+      await page.waitForTimeout(1500)
+
+      const tabs = await page.locator('.admin__toggle button').allInnerTexts()
+      assert.equal(tabs.length, 3, 'one button per event, from the backend list')
+      assert.ok(
+        tabs.some((label) => /fintech week/i.test(label)),
+        'the events the login screen offers are the ones in the report',
+      )
+
+      const cards = await page.locator('.report__card').count()
+      assert.equal(cards, 6, 'signed in, played, average, best, rounds, joins')
+
+      // Pick each event in turn: the numbers must come back for each one rather
+      // than the first event's report staying on screen.
+      const seen = new Set()
+      for (const tab of await page.locator('.admin__toggle button').all()) {
+        await tab.click()
+        await page.waitForTimeout(900)
+        const headline = await page.locator('.report__card').first().innerText()
+        const selected = await tab.getAttribute('aria-selected')
+        assert.equal(selected, 'true', 'the clicked event is the selected one')
+        seen.add(headline)
+        // Every card is a number, not a blank or an error.
+        for (const card of await page.locator('.report__card-value').allInnerTexts()) {
+          assert.match(card, /^[\d,.]+$/, `a card read "${card}"`)
+        }
+      }
+      assert.ok(seen.size >= 1, 'a report rendered for every event')
+
+      // The leaderboard is ordered, and no other event's player leaks in.
+      const totals = await page
+        .locator('.report__block table tbody tr td:nth-child(3)')
+        .allInnerTexts()
+      const numbers = totals.map((value) => Number(value.replace(/,/g, '')))
+      assert.deepEqual(numbers, [...numbers].sort((a, b) => b - a), 'the board is best first')
+    } finally {
+      await context.close()
+    }
+
+    const after = await api.state(ROOM)
+    assert.equal(after.phase, before.phase, 'the report changed the show')
+    assert.equal(after.index, before.index, 'the report moved the show')
+  })
+})
+
+/**
+ * Wait until a count reaches `want`, then return what it actually reached.
+ *
+ * Counting a table right after clicking asks "did the browser paint yet", which
+ * answers differently on a loaded machine. Waiting for the number is the same
+ * assertion without the race.
+ */
+async function waitForCount(page, read, want, timeoutMs = 8000) {
+  const started = Date.now()
+  let seen = 0
+  while (Date.now() - started < timeoutMs) {
+    seen = await read()
+    if (seen === want) return seen
+    await page.waitForTimeout(150)
+  }
+  return seen
+}
+
+describe('the data page', () => {
+  test('pages through every room and opens one to the people who played it', async () => {
+    const listed = await api.get('/api/rooms', { token: api.adminToken, expect: 200 })
+    const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
+    try {
+      await page.getByRole('button', { name: /arcade data/i }).click()
+      await page.waitForTimeout(1200)
+
+      // A page of ten, and the pager says how many there are in total.
+      const rows = await page.locator('.admin__room').count()
+      assert.equal(rows, Math.min(10, listed.rooms.length), 'one line per room, ten to a page')
+      if (listed.rooms.length > 10) {
+        const pager = await page.locator('.admin__pager').innerText()
+        assert.match(pager, /1–10 of \d+/, 'the pager starts on the first page')
+      }
+
+      // Open whichever room is on top and compare its roster with the API.
+      const first = page.locator('.admin__room').first()
+      const code = (await first.locator('.admin__room-code').innerText()).split('\n')[0].trim()
+      const expected = await api.get(`/api/rooms/${code}/participants`, {
+        token: api.adminToken,
+        expect: 200,
+      })
+      await first.locator('.admin__room-toggle').click()
+      // The roster is fetched on expand, so wait for it rather than for a fixed
+      // moment: a slow answer under a loaded suite is not a failure.
+      const drawn = await waitForCount(
+        page,
+        () => first.locator('.admin__room-body tbody tr').count(),
+        expected.count,
+      )
+      assert.equal(drawn, expected.count, `${code} drew ${drawn} of ${expected.count} players`)
+      // The history survives closing, which is the whole point of this table.
+      if (expected.count > 0) {
+        const cell = await first.locator('.admin__room-body tbody tr td').first().innerText()
+        assert.ok(cell.trim().length > 0, 'the roster rows carry names')
+      }
+
+      // Collapsing puts it away again.
+      await first.locator('.admin__room-toggle').click()
+      await page.waitForTimeout(300)
+      assert.equal(await first.locator('.admin__room-body').count(), 0)
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('searches the whole roster, not just the room in play', async () => {
+    const everyone = await api.get('/api/players', { token: api.adminToken, expect: 200 })
+    const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
+    try {
+      await page.getByRole('button', { name: /arcade data/i }).click()
+      await page.getByRole('tab', { name: /^players$/i }).click()
+      await page.waitForTimeout(1200)
+
+      // A page of twenty, not the whole roster in one scroll.
+      const perPage = 20
+      const drawn = await waitForCount(
+        page,
+        () => page.locator('.admin__table tbody tr').count(),
+        Math.min(perPage, everyone.players.length),
+      )
+      assert.equal(
+        drawn,
+        Math.min(perPage, everyone.players.length),
+        'one page holds twenty players',
+      )
+      if (everyone.players.length > perPage) {
+        const pager = await page.locator('.admin__pager').innerText()
+        assert.match(pager, new RegExp(`1–${perPage} of ${everyone.players.length}`))
+      }
+
+      // A player who is in no room at all still has to be findable, which is
+      // exactly what the current-room scope used to hide.
+      const elsewhere = everyone.players.find((player) => !player.room_code)
+      if (elsewhere) {
+        await page.getByLabel('Search players').fill(elsewhere.nickname)
+        await page.waitForTimeout(400)
+        const listed = await page.locator('.admin__table tbody tr td:first-child').allInnerTexts()
+        assert.ok(
+          listed.some((name) => name.trim() === elsewhere.nickname),
+          `${elsewhere.nickname} is in no room and was not findable`,
+        )
+      }
+
+      await page.getByLabel('Search players').fill(HOST)
+      await page.waitForTimeout(300)
+      const names = await page.locator('.admin__table tbody tr td:first-child').allInnerTexts()
+      assert.ok(names.length >= 1, 'the search found the player it was given')
+      assert.ok(
+        names.every((name) => name.toLowerCase().includes(HOST.toLowerCase())),
+        `the search returned a row that does not match: ${names.join(', ')}`,
+      )
+
+      await page.getByLabel('Search players').fill('nobody-by-this-name')
+      await page.waitForTimeout(300)
+      assert.equal(await page.locator('.admin__table tbody tr').count(), 0)
+    } finally {
+      await context.close()
+    }
+  })
+})
+
+describe('the module setting', () => {
+  test('lives on Game Setting, is stored on the server, and the console names it', async () => {
+    // The picker used to sit above the console's own "new room" button, and the
+    // set used to live in localStorage. It is a stored setting now, one tab
+    // away, so three things have to hold: it belongs to the server rather than
+    // to one browser, it survives a reload, and the button that builds the next
+    // room still says what it will build.
+    const original = (await api.get('/api/settings', { token: api.adminToken, expect: 200 })).modules
+    const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
+    try {
+      await page.getByRole('button', { name: /arcade console/i }).click()
+      await page.waitForTimeout(600)
+      assert.equal(await page.locator('.admin__modules').count(), 0, 'the console no longer picks')
+      // The label is uppercased by CSS, so `innerText` comes back shouting.
+      assert.match(
+        await page.locator('.admin__next').innerText(),
+        /next · \d+ games?/i,
+        'the console names the next room',
+      )
+
+      await page.getByRole('button', { name: /game setting/i }).click()
+      await page.waitForTimeout(600)
+      assert.equal(await page.locator('.admin__modules').count(), 1, 'the setting is here')
+
+      const battle = page.locator('.admin__module', { hasText: 'AI Cyber Battle' }).locator('input')
+      const wasChecked = await battle.isChecked()
+      await battle.setChecked(!wasChecked)
+      await page.waitForTimeout(700)
+      const chosen = (await page.locator('.admin__modules-summary').innerText()).trim()
+
+      // The API, not this browser, is now the record of the choice.
+      const stored = await api.get('/api/settings', { token: api.adminToken, expect: 200 })
+      assert.equal(
+        stored.modules.includes('sabotage'),
+        !wasChecked,
+        `the server stored ${stored.modules.join(',')}`,
+      )
+
+      // A reload rebuilds every component; the choice has to outlive that.
+      await page.reload()
+      await page.waitForTimeout(1500)
+      await page.getByRole('button', { name: /game setting/i }).click()
+      await page.waitForTimeout(700)
+      assert.equal(
+        (await page.locator('.admin__modules-summary').innerText()).trim(),
+        chosen,
+        'the chosen set was forgotten on reload',
+      )
+
+      // And a different browser sees the same value - the point of moving it
+      // off this machine.
+      const elsewhere = await stage(WALL, { path: '/admin', as: 'operator' })
+      try {
+        await elsewhere.page.getByRole('button', { name: /game setting/i }).click()
+        await elsewhere.page.waitForTimeout(700)
+        assert.equal(
+          (await elsewhere.page.locator('.admin__modules-summary').innerText()).trim(),
+          chosen,
+          'another browser was shown a different set',
+        )
+      } finally {
+        await elsewhere.context.close()
+      }
+    } finally {
+      await context.close()
+      // Restored through the API, so a failed assertion cannot leave the next
+      // test building a different show.
+      await api.put('/api/settings', {
+        token: api.adminToken,
+        body: { modules: original },
+        expect: 200,
+      })
     }
   })
 })
