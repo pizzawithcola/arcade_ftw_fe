@@ -1,0 +1,175 @@
+/* The same app, in daylight.
+ *
+ * Not a redesign: every element below is the one the games already draw - the
+ * notched bezel, the corner brackets, the title tab, the chevrons, the chamfered
+ * progress segments, the matrix, the meter bars. Only the values change.
+ *
+ * Two things cannot be recoloured by swapping tokens alone, because they are
+ * *effects* tuned for light-on-dark:
+ *   - glows. A red bloom on white reads as a blur, so the shadows are re-cut as
+ *     a soft drop shadow instead of a halo.
+ *   - dark type on a red fill. On black, `--c-text` is white and sits happily on
+ *     `--c-brand-deep`; on white it is ink and would read 2.6:1. Those three
+ *     rules are listed at the bottom and set to white explicitly.
+ *
+ * The mapping keeps the brand where it belongs: `--c-brand-deep` stays the
+ * working red (fills, bezel, tab, rails) and `--c-brand` becomes the deeper red
+ * used for hairlines and small marks, which is what reads on paper.
+ */
+
+.theme-light {
+  /* Brand */
+  --c-brand: #a5000d;        /* lines, marks, glow - deeper, so it reads on paper */
+  --c-brand-deep: #db0011;   /* fills and bezel: white type on it is 5.2:1 */
+  --c-brand-press: #b0000e;
+
+  /* State. Both had to darken: the dark-mode values were tuned to glow. */
+  --c-warning: #8a5a00;
+  --c-team-alt: #101010;
+  --c-win: #0f7a43;
+  --c-lose: #c3161c;
+
+  /* Sabotage's two jobs, darkened so they pass on paper. */
+  --c-attack: #8e0f8e;
+  --c-defend: #07707f;
+
+  /* Neutrals, inverted */
+  --c-black: #f5f3ef;         /* page canvas: warm paper, not white */
+  --c-surface: #ffffff;       /* panels */
+  --c-surface-raised: #ffffff;
+  --c-border: #e2ded8;
+  --c-text: #1a1a1a;
+  --c-text-muted: #5f5a55;
+  --c-text-dim: #918a83;
+
+  /* The Data Shadow post becomes a real feed card: white, with ink on it. */
+  --c-paper: #ffffff;
+  --c-paper-ink: #1a1a1a;
+  --c-paper-line: #e6e2dd;
+  --c-paper-dim: #6b6461;
+
+  /* The matrix: dark dots at low alpha, the same presence the dark theme had. */
+  --c-grid-line: rgba(26, 22, 20, 0.16);
+
+  background: var(--c-black);
+  color: var(--c-text);
+}
+
+/* Glow → shadow. Same shape, read in daylight. */
+.theme-light .hud__matrix {
+  opacity: 0.55;
+}
+
+.theme-light .hud__frame {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--c-brand) 40%, transparent),
+    0 10px 30px rgba(26, 22, 20, 0.1);
+}
+
+.theme-light .hud__inner {
+  /* The dark theme washes a red glow into the panel; on paper that reads as a
+     pink stain, so the panel is flat white and the bezel keeps the colour. */
+  background: var(--c-surface);
+}
+
+.theme-light .hud__corner {
+  filter: none;
+}
+
+.theme-light .hud__tab {
+  box-shadow: none;
+}
+
+.theme-light .hud__dot {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 22%, transparent);
+}
+
+.theme-light .hud__chevrons {
+  filter: none;
+}
+
+.theme-light .ldb {
+  --ldb-glow: none;
+}
+
+.theme-light .ldb__rail {
+  opacity: 0.8;
+}
+
+/* Type that sits *on* a red fill - and only that. The score of the leading row
+   is on paper, not on red, so it stays ink: pinning it white made the first place
+   disappear. */
+.theme-light .hud__tab,
+.theme-light .ldb__row.is-rank-1 .ldb__rank,
+.theme-light .quiz__timer.is-urgent {
+  color: #ffffff;
+}
+
+/* The leader is marked by the red hairline and the weight of the name, the way
+   the rest of this theme marks things - not by a red wash behind it. */
+.theme-light .ldb__row.is-rank-1 {
+  background: color-mix(in srgb, var(--c-brand) 7%, var(--c-surface));
+}
+
+.theme-light .ldb__row.is-rank-1 .ldb__score {
+  color: var(--c-ink, #1a1a1a);
+  text-shadow: none;
+}
+
+/* The washes that stand in for a lit screen. At 28% on paper they are a pink
+   smudge, so they come down to a tint that still says "this panel is live". */
+.theme-light .welcome__scan {
+  background:
+    radial-gradient(70% 55% at 50% 18%, rgba(165, 0, 13, 0.09), transparent 72%),
+    linear-gradient(180deg, rgba(165, 0, 13, 0.04), transparent 30%);
+}
+
+.theme-light .welcome__title {
+  text-shadow: 0 2px 0 rgba(26, 22, 20, 0.06);
+}
+
+/* The board panel carries the same vertical wash as the chassis; at 10% it is a
+   pink band above the first row. */
+.theme-light .ldb__frame {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--c-brand-deep) 4%, transparent), transparent 18%),
+    var(--c-surface);
+}
+
+.theme-light .hud__stage,
+.theme-light .quiz__stage {
+  filter: none;
+}
+
+/* The slider trough is painted #070707 for a black screen. On paper that is a
+   black bar lying across the question, so it becomes a groove with a hairline
+   edge - same control, same ticks, same red-to-green fill. */
+.theme-light .hallu__track {
+  background: color-mix(in srgb, var(--c-text) 8%, var(--c-surface));
+  border-color: var(--c-border);
+}
+
+.theme-light .hallu__ticks {
+  opacity: 0.35;
+}
+
+.theme-light .hallu__fill {
+  box-shadow: none;
+}
+
+.theme-light .hallu__notch {
+  background: var(--c-text);
+}
+
+/* The meter is a tint on paper, not a lit bar. */
+.theme-light .ldb__fill {
+  opacity: 0.16;
+}
+
+.theme-light .ldb__row.is-rank-1 .ldb__score {
+  text-shadow: none;
+}
+
+.theme-light .wcard {
+  background: var(--c-surface);
+}

@@ -1,0 +1,122 @@
+/* The frame furniture for the light preview.
+ *
+ * Everything inside a frame is the app's own markup - `.hud`, `.wcard`, `.ldb`
+ * and their children - rendered at 1200×750 and scaled to fit. So this file only
+ * has to draw the frame, the palette strip and the captions.
+ */
+
+.lt {
+  margin-top: 1.4rem;
+}
+
+.lt > h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.lt__note {
+  margin: 0 0 0.9rem;
+  max-width: 82ch;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--c-text-dim);
+}
+
+.lt__note strong {
+  color: var(--c-text-muted);
+  font-weight: 600;
+}
+
+.lt__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 1.2rem;
+  padding: 0.85rem;
+  border-radius: 4px;
+  background: #f5f3ef;
+  list-style: none;
+}
+
+.lt__swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 6.6rem;
+}
+
+.lt__chip {
+  height: 2.4rem;
+  border: 1px solid #e2ded8;
+}
+
+.lt__swatch-name {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5f5a55;
+}
+
+.lt__swatch-value {
+  font-family: ui-monospace, monospace;
+  font-size: 0.62rem;
+  color: #918a83;
+}
+
+/* ── Frames ───────────────────────────────────────────────────────────────── */
+.lt__frames {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  .lt__frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lt__figure {
+  margin: 0;
+}
+
+.lt__caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 0.6rem;
+  margin-top: 0.45rem;
+  font-size: 0.68rem;
+  color: var(--c-text-dim);
+}
+
+.lt__caption code {
+  font-family: ui-monospace, monospace;
+}
+
+/* 16:10 for a 1200×750 screen, so the scale is uniform on both axes. */
+.lt__frame {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: #f5f3ef;
+}
+
+/* The real screen, at desktop size, scaled down. `transform-origin: top left`
+   plus the measured scale keeps every element in the same relationship it has in
+   the app - this is a photograph of the page, not a drawing of one. */
+.lt__screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1200px;
+  height: 750px;
+  display: flex;
+  transform-origin: top left;
+}

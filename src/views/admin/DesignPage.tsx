@@ -1,4 +1,5 @@
 import { COLOR_GROUPS, FONT_TOKENS, contrastOnBlack, resolveColor } from '../../design/tokens'
+import LightPreview from './LightPreview'
 import './DesignPage.css'
 import './DesignBackground.css'
 
@@ -74,6 +75,8 @@ export default function DesignPage() {
           ))}
         </div>
       </div>
+
+      <LightPreview />
 
       <div className="design__backgrounds">
         <h3>Background</h3>
