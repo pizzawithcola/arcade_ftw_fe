@@ -191,7 +191,7 @@ describe('the rundown is the 13-node show the frontend draws', () => {
   test('the quiz is three questions and has no intro card', () => {
     const quiz = state.flow.find((node) => node.type === 'quiz')
     assert.equal(quiz.questions, 3)
-    assert.equal(quiz.seconds_each, 25)
+    assert.equal(quiz.seconds_each, 28)
     assert.equal(quiz.intro_sec ?? 0, 0)
     assert.equal(quiz.score, 'ultimate')
   })

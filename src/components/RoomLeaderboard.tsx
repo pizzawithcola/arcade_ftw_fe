@@ -28,13 +28,30 @@ export default function RoomLeaderboard({
   code,
   section,
   me,
+  refreshAfterMs,
 }: {
   code: string
   section?: string
   /** The player reading it, so the board can point at their own place. */
   me?: string
+  /**
+   * Draw the board once more after this long.
+   *
+   * The wall switches to the standings on the same tick the devices report
+   * their answer, so the first fetch can land before the points it is meant to
+   * show have been written. One redraw a couple of seconds later settles it;
+   * the boards that are a node of their own do not need this.
+   */
+  refreshAfterMs?: number
 }) {
   const [rows, setRows] = useState<LeaderboardEntry[]>([])
+  const [redraw, setRedraw] = useState(0)
+
+  useEffect(() => {
+    if (!refreshAfterMs) return
+    const timer = setTimeout(() => setRedraw(1), refreshAfterMs)
+    return () => clearTimeout(timer)
+  }, [refreshAfterMs])
 
   useEffect(() => {
     if (!code || !section) return
@@ -67,7 +84,7 @@ export default function RoomLeaderboard({
     return () => {
       live = false
     }
-  }, [code, section])
+  }, [code, section, redraw])
 
   // The final board plays itself in: last place lands first, then the pile
   // builds upwards until the top three arrive.

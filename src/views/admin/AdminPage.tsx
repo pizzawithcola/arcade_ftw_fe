@@ -42,10 +42,10 @@ const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
  */
 const MODULE_OPTIONS = [
   { key: 'welcome', label: 'Welcome', seconds: 10, scored: 0 },
-  { key: 'hallucination', label: 'Hallucination', seconds: 113, scored: 600 },
+  { key: 'hallucination', label: 'Hallucination', seconds: 95, scored: 600 },
   { key: 'data', label: 'Data Shadow', seconds: 83, scored: 800 },
   { key: 'sabotage', label: 'AI Cyber Battle', seconds: 203, scored: 800 },
-  { key: 'ultimate', label: 'Ultimate', seconds: 99, scored: 600 },
+  { key: 'ultimate', label: 'Ultimate', seconds: 108, scored: 600 },
   { key: 'total', label: 'Final board', seconds: 10, scored: 0 },
   { key: 'wrapup', label: 'Wrap up', seconds: 10, scored: 0 },
 ] as const

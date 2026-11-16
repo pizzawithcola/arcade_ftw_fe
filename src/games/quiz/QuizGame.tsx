@@ -11,12 +11,12 @@ import './QuizGame.css'
 
 type Picks = Record<string, string>
 
-/** After the answer is shown the round moves on by itself - five seconds, no
- *  button, because half the room is still reading when the next one lands. */
-const REVIEW_SECONDS = 5
+/** How long the answer stays up; used only until the node arrives with its own
+ *  figure. */
+const FALLBACK_REVIEW_SECONDS = 8
 
 /** One question's cycle, used only until the node arrives with its own figure. */
-const FALLBACK_SECONDS_EACH = 20 + REVIEW_SECONDS
+const FALLBACK_SECONDS_EACH = 20 + FALLBACK_REVIEW_SECONDS
 
 export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex: number }) {
   const [picks, setPicks] = useState<Picks>({})
@@ -40,6 +40,7 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   // read the same two fields. A disagreement would put the room a question
   // apart, so it is reported where a developer will see it.
   const node = useGameStore((state) => state.node)
+  const secondsEachMs = (node?.seconds_each ?? FALLBACK_SECONDS_EACH) * 1000
   const segments = useMemo(() => {
     const bonusQuestions = node?.bonus_questions ?? []
     const fromSlots = ULTIMATE_SLOTS.map((slot, at) => (slot.multiplier > 1 ? at + 1 : 0))
@@ -55,11 +56,11 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
     }
     return quizTimeline({
       count: node?.questions ?? questions.length,
-      secondsEachMs: (node?.seconds_each ?? FALLBACK_SECONDS_EACH) * 1000,
+      secondsEachMs,
       bonusIntroMs: (node?.bonus_intro_sec ?? 0) * 1000,
       bonusQuestions,
     })
-  }, [node?.bonus_questions, node?.bonus_intro_sec, node?.seconds_each, node?.questions, questions.length])
+  }, [node?.bonus_questions, node?.bonus_intro_sec, node?.questions, secondsEachMs, questions.length])
   const totalMs = useMemo(() => timelineLength(segments), [segments])
 
   // Frozen while the operator has the show paused, so a pause stops the
@@ -89,9 +90,13 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   const expired = timeLeftMs === 0
   const waiting = picked !== undefined && !expired
   const revealed = expired
+  // The review is whatever the node's cycle leaves after the answering window,
+  // so retiming the round never leaves the device counting a different number
+  // from the wall.
+  const reviewMs = Math.max(0, secondsEachMs - question.time_limit * 1000)
   const reviewLeft = Math.max(
     0,
-    Math.ceil((question.time_limit * 1000 + REVIEW_SECONDS * 1000 - inCycleMs) / 1000),
+    Math.ceil((question.time_limit * 1000 + reviewMs - inCycleMs) / 1000),
   )
   const total = useMemo(
     () =>

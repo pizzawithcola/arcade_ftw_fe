@@ -988,17 +988,18 @@ describe('a room built without a game', () => {
 
 describe('the clocks in the room agree', () => {
   test('the wall counts the window the iPads count, not the node', async () => {
-    // A node's clock is longer than the window the room can act in: five
-    // seconds of verdict follow each question, ten of reveal follow Data
-    // Shadow. The wall used to publish the node clock, so it read "0:25" while
-    // every iPad read "0:20" - the one number in the room nobody could agree on.
+    // A node's clock is longer than the window the room can act in: a review
+    // follows each question, ten seconds in Hallucination and eight in the quiz,
+    // and ten seconds of reveal follow Data Shadow. The wall used to publish the
+    // node clock, so it read "0:25" while every iPad read "0:20" - the one
+    // number in the room nobody could agree on.
     const ipad = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
     const wall = await stage(WALL, { path: `/display/${ROOM}` })
     // A background tab has its timers throttled, which would make this test
     // measure the harness rather than the clocks.
     await wall.page.bringToFront()
     const CASES = [
-      { node: 2, timer: '.hallu__timer', answer: 25, label: 'Hallucination' },
+      { node: 2, timer: '.hallu__timer', answer: 15, label: 'Hallucination' },
       { node: 5, timer: '.shadow__timer', answer: 50, label: 'Data Shadow' },
       { node: 10, timer: '.quiz__timer', answer: 20, label: 'Ultimate Quiz' },
     ]

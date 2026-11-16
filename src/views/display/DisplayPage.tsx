@@ -839,16 +839,19 @@ export default function DisplayPage() {
                 <BonusOnScreen index={question.index} multiplier={slotAt(question.index).multiplier} />
               ) : reviewing ? (
                 // The answer is closed: the room gets the standings of the round
-                // it is playing, for the five seconds the iPads spend on the
-                // verdict. The section is the node's own, so Hallucination and
-                // the Ultimate quiz draw their own boards rather than one board
-                // for both.
+                // it is playing, for as long as the iPads spend reading the
+                // review - ten seconds in Hallucination, eight in the quiz. The
+                // section is the node's own, so Hallucination and the Ultimate
+                // quiz draw their own boards rather than one board for both.
+                // Hallucination's section board follows straight on from this
+                // one, so the wall reads fifteen seconds of standings in a row.
                 <div className="display__liveboard">
                   <p className="display__liveboardhead">Standings</p>
                   <RoomLeaderboard
                     key={`live-${nodeIndex}-${question.index}`}
                     code={code}
                     section={node?.score ?? 'ultimate'}
+                    refreshAfterMs={2000}
                   />
                 </div>
               ) : (

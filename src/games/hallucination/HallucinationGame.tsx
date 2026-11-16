@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
+import { useGameStore } from '../../store/gameStore'
 import { HALLUCINATION_QUESTIONS } from './content'
 import {
   gainIfCorrect,
@@ -15,15 +16,11 @@ import './HallucinationGame.css'
 
 type Picks = Record<string, number>
 
-/** Each reply gets this long before the round moves on without an answer. */
-const SELECT_SECONDS = 25
+/** A whole question cycle, used only until the node arrives with its own figure. */
+const FALLBACK_SECONDS_EACH = 25
 
-/**
- * The verdict then holds for five seconds and moves on by itself: a reader who
- * looks up mid-sentence must never be able to hold the room on one question.
- */
-const REVIEW_SECONDS = 5
-const CYCLE_MS = (SELECT_SECONDS + REVIEW_SECONDS) * 1000
+/** The answering window inside that cycle, likewise. */
+const FALLBACK_ANSWER_SECONDS = 15
 
 export default function HallucinationGame({
   room,
@@ -39,14 +36,21 @@ export default function HallucinationGame({
   // questions too instead of letting them expire off-screen.
   const elapsed = useNodeElapsed()
 
+  // The cycle is the flow node's, not this screen's: the engine advances the
+  // node and the wall derives both the question and its clock from the same two
+  // fields, so a second copy here is a second way for the room to disagree.
+  const node = useGameStore((state) => state.node)
+  const cycleMs = (node?.seconds_each ?? FALLBACK_SECONDS_EACH) * 1000
+  const answerMs = (node?.answer_sec ?? FALLBACK_ANSWER_SECONDS) * 1000
+
   // Which question is on screen is read off the node clock rather than kept in
   // state: the big screen derives the same index from the same clock, so the
   // room can never be looking at one question while a tablet answers another.
   const index = Math.min(
     HALLUCINATION_QUESTIONS.length - 1,
-    Math.floor(elapsed / CYCLE_MS),
+    Math.floor(elapsed / cycleMs),
   )
-  const inCycleMs = elapsed - index * CYCLE_MS
+  const inCycleMs = elapsed - index * cycleMs
 
   const question = HALLUCINATION_QUESTIONS[index]
 
@@ -60,16 +64,18 @@ export default function HallucinationGame({
   const trust = picked ?? 0
   const lean = leanOf(trust)
 
-  const timeLeftMs = Math.max(0, SELECT_SECONDS * 1000 - inCycleMs)
+  const timeLeftMs = Math.max(0, answerMs - inCycleMs)
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
   // The reveal happens only when the question's clock runs out: an early answer
   // sits in a "waiting" state until everyone has had their time. A player who
   // never picks is simply scored zero when the clock hits zero.
   const expired = timeLeftMs === 0
   const revealed = expired
-  // The verdict owns the last five seconds of the cycle, then the next question
-  // takes over without anyone touching the screen.
-  const reviewLeft = Math.max(0, Math.ceil((CYCLE_MS - inCycleMs) / 1000))
+  // The review owns the rest of the cycle - ten seconds by default - and moves
+  // on by itself: a reader who looks up mid-sentence must never be able to hold
+  // the room on one question. It is also the stretch the wall spends on the
+  // standings, which is why it is long.
+  const reviewLeft = Math.max(0, Math.ceil((cycleMs - inCycleMs) / 1000))
 
   // The answer is committed when the clock runs out, not when the slider is
   // first touched: a player who changes their mind before the timer ends must
