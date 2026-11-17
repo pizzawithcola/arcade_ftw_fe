@@ -169,6 +169,20 @@
   --ldb-glow: none;
 }
 
+/* A pool of red behind the plate is how the board sits in a dark scene. On paper
+   it is a pink smear under the title, so the plate stands on its own hairline. */
+[data-theme='light'] .ldb::before {
+  background: none;
+}
+
+/* The leader was ringed in the brand red at 70%, which on paper draws a box
+   around one row and nothing around the others: a lighter ring plus the filled
+   rank plate says who is first, the way the rest of this theme marks things. */
+[data-theme='light'] .ldb__row.is-rank-1 {
+  border-color: color-mix(in srgb, var(--c-brand) 32%, transparent);
+  background: color-mix(in srgb, var(--c-brand) 7%, var(--c-surface));
+}
+
 [data-theme='light'] .ldb__rail {
   opacity: 0.8;
 }
@@ -180,17 +194,6 @@
 [data-theme='light'] .ldb__row.is-rank-1 .ldb__rank,
 [data-theme='light'] .quiz__timer.is-urgent {
   color: #ffffff;
-}
-
-/* The leader is marked by the red hairline and the weight of the name, the way
-   the rest of this theme marks things - not by a red wash behind it. */
-[data-theme='light'] .ldb__row.is-rank-1 {
-  background: color-mix(in srgb, var(--c-brand) 7%, var(--c-surface));
-}
-
-[data-theme='light'] .ldb__row.is-rank-1 .ldb__score {
-  color: var(--c-ink, #1a1a1a);
-  text-shadow: none;
 }
 
 /* The washes that stand in for a lit screen. At 28% on paper they are a pink
@@ -287,7 +290,6 @@
 [data-theme='light'] .ldb__row.is-rank-1 .ldb__score {
   text-shadow: none;
 }
-
 [data-theme='light'] .wcard {
   background: var(--c-surface);
 }
