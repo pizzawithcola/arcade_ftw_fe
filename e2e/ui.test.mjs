@@ -922,7 +922,9 @@ describe('a player mid-show', () => {
     try {
       await page.goto(`${BASE}/`)
       await page.getByLabel('Nickname').fill(HOST)
-      await page.getByLabel('Event').selectOption('hk_fintech_week')
+      // The event is pinned to the show's own festival and locked, so signing in
+      // is a nickname and nothing else.
+      assert.equal(await page.getByLabel('Event').isDisabled(), true, 'the event is locked')
       await page.getByRole('button', { name: /enter/i }).click()
       await page.waitForTimeout(2500)
       const room = await page.evaluate(() => ({

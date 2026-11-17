@@ -86,6 +86,19 @@
   background-size: 0.7rem;
 }
 
+/* A locked field: the value is fixed, so it keeps full contrast and loses the
+   arrow - it is a fact about the room, not a control that failed to load. The
+   `:disabled` below is the browser's own "unavailable" grey, which reads as a
+   field that never loaded. */
+.login__field select.is-locked,
+.login__field select.is-locked:disabled {
+  padding-right: 0.7rem;
+  background-image: none;
+  color: var(--c-text);
+  cursor: default;
+  opacity: 1;
+}
+
 /* The placeholder is not a real choice, so it should not read as one. */
 .login__field select.is-placeholder {
   color: var(--c-text-dim);
