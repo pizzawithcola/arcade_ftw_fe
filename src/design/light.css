@@ -140,7 +140,7 @@
 [data-theme='light'] .hud__frame {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--c-brand) 40%, transparent),
-    0 10px 30px rgba(26, 22, 20, 0.1);
+    0 10px 30px color-mix(in srgb, var(--c-shadow) 10%, transparent);
 }
 
 [data-theme='light'] .hud__inner {
@@ -193,19 +193,23 @@
 [data-theme='light'] .hud__tab,
 [data-theme='light'] .ldb__row.is-rank-1 .ldb__rank,
 [data-theme='light'] .quiz__timer.is-urgent {
-  color: #ffffff;
+  color: var(--c-on-brand);
 }
 
 /* The washes that stand in for a lit screen. At 28% on paper they are a pink
    smudge, so they come down to a tint that still says "this panel is live". */
 [data-theme='light'] .welcome__scan {
   background:
-    radial-gradient(70% 55% at 50% 18%, rgba(165, 0, 13, 0.09), transparent 72%),
-    linear-gradient(180deg, rgba(165, 0, 13, 0.04), transparent 30%);
+    radial-gradient(
+      70% 55% at 50% 18%,
+      color-mix(in srgb, var(--c-brand) 9%, transparent),
+      transparent 72%
+    ),
+    linear-gradient(180deg, color-mix(in srgb, var(--c-brand) 4%, transparent), transparent 30%);
 }
 
 [data-theme='light'] .welcome__title {
-  text-shadow: 0 2px 0 rgba(26, 22, 20, 0.06);
+  text-shadow: 0 2px 0 color-mix(in srgb, var(--c-shadow) 6%, transparent);
 }
 
 /* The board panel carries the same vertical wash as the chassis; at 10% it is a
