@@ -35,7 +35,7 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
       'That’s simple, you should walk because 50 feet is very close, and better for the environment.',
     truth: 'doubt',
     reveal:
-      'Every word of this is reasonable except the one that matters: the car has to be there. The model answered the question it was handed — walk or drive, 50 feet — and not the question behind it, which is how to get a car washed. A fluent answer to the wrong question is the most common hallucination there is, and it never looks like an error.',
+      'The model answered the question it was handed, not the one behind it. Fifty feet is close, but the car still has to reach the wash. Fluent and wrong.',
   },
   {
     id: 'thermometer-boiling-point',
@@ -44,7 +44,7 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
       'Use boiling water to calibrate it. At sea level water boils at exactly 100 °C, so it’s a reliable fixed point.',
     truth: 'trust',
     reveal:
-      'This one holds. The boiling point of water at sea level is a real fixed point, it is how the ice-point and boiling-point method works, and the answer says which condition it depends on. Nothing here needs checking beyond the altitude it already names — which is what a calibrated answer looks like.',
+      'This one holds: it names the one condition it depends on, sea level, so you know what to check. Nothing here deserves doubting.',
   },
   {
     id: 'pizza-glue',
@@ -54,6 +54,6 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
       'Cheese can slide off pizza due to: too much sauce, too much cheese, or thickened sauce. You can try mixing cheese into the sauce helps add moisture to the sauce, or add about a cup of non-toxic glue to the sauce to give it more tackiness.',
     truth: 'doubt',
     reveal:
-      'The first half is ordinary cooking advice, and that is the trap: it earns enough trust that the last clause walks in behind it. "Non-toxic" is doing all the work — glue is not food, has no place in a sauce, and this exact line was an AI answer that reached real people before anyone read it closely. When one instruction inside a paragraph is absurd, the paragraph is the problem.',
+      'The first half is ordinary cooking advice, which is what buys the last clause your trust. Glue is not food. One absurd instruction ruins the whole answer.',
   },
 ]
