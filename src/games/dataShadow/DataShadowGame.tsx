@@ -177,9 +177,6 @@ export default function DataShadowGame({
 
           <div className="hud__stage shadow__stage">
       <div className="shadow__main">
-        <p className="shadow__task">
-          Tap a paragraph that should never have been posted.
-        </p>
         {/* The light card is deliberate: it reads instantly as a social network,
             which is the context the player is being asked to judge in. */}
         <article className="post">

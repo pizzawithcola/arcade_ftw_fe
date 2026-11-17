@@ -9,7 +9,8 @@
    overflow rules and scroll the whole stage instead of just the post column. */
 .hud--game .hud__stage.shadow__stage {
   display: grid;
-  /* The task line sits right under the bar instead of a stage's worth below it. */
+  /* The post starts right under the bar: the rules card already said what to do,
+     and a line repeating it pushed the post down for nothing. */
   padding-top: 0;
   /* The report is a fixed rail; the post takes what is left and scrolls. The
      row has to be bounded, or the column grows to its content and the stage
@@ -110,14 +111,6 @@
 /* Sits in the chassis bar next to the screen's label: it is read once, at the
    start, so it must not cost the post any height. */
 /* Its own line above the post card, not part of the chassis bar. */
-.shadow__task {
-  margin: 0 0 0 0.35rem;
-  font-size: clamp(0.8rem, 0.3vw + 0.5vh, 0.95rem);
-  line-height: 1.35;
-  letter-spacing: 0.04em;
-  color: var(--c-text-muted);
-}
-
 .post {
   /* Natural height, never squeezed: the column scrolls, so a shorter screen
      loses nothing. Squeezing the card is what used to cut the pictures off. */

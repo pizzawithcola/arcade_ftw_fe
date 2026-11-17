@@ -71,8 +71,8 @@ const OPENINGS: GameOpening[] = [
     icon: '/game_icons/data_icon.PNG',
     rules: [
       'AI has generated content for your social media',
-      'Tap the paragraphs that should never have been posted',
-      'Correct answers get points, incorrect choices loses points',
+      'Tap the paragraphs and pictures that should never have been posted',
+      'Correct choices gain points, wrong ones lose points',
     ],
   },
   {
