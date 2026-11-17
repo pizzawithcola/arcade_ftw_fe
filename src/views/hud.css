@@ -898,11 +898,10 @@
    the same twelve seconds of three short lines, and at 84rem they floated in a
    field of empty bezel. */
 .hud--display.hud--briefx .hud__frame {
-  /* Half again the tablet's measure: the same three rules are read from five
-     metres, so the card takes most of the width and stays a card. At 46rem -
-     the tablet's own figure - the wall read at 38% of a 1920 screen, a slip of
-     paper in the middle of the stage. */
-  width: min(100%, 72rem);
+  /* The tablet's card, one to one: same 52rem measure, same type, same left
+     edge. The wall shows the card the players are holding, which is the point -
+     a wider or bigger version reads as a different design. */
+  width: min(100%, 52rem);
   height: auto;
   max-height: min(100%, 46rem);
 }
