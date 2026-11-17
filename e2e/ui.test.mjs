@@ -593,6 +593,9 @@ describe('the Ultimate round', () => {
       // to colour exactly one row green and, if A was wrong, exactly one red.
       await page.click('.quiz__option:first-child')
       await page.waitForSelector('.quiz__note', { timeout: 30_000 })
+      // The rows fade their border colour in; reading it on the same frame the
+      // note appears caught it mid-transition and reported a blended green.
+      await page.waitForTimeout(300)
 
       const review = await page.evaluate(() => {
         const colour = (selector) => {

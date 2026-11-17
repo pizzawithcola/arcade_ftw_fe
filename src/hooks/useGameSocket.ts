@@ -14,11 +14,16 @@ const RETRY_MS = 2000
 export function useGameSocket(room: string): void {
   const setConnection = useGameStore((state) => state.setConnection)
   const applyMessage = useGameStore((state) => state.applyMessage)
-  const resetForRoom = useGameStore((state) => state.resetForRoom)
+  const setRoom = useGameStore((state) => state.setRoom)
 
   useEffect(() => {
-    // A different room means none of the previous room's state applies.
-    resetForRoom()
+    // No room yet - the device is still asking which round is live. Connecting
+    // anyway would land on the server's default room, so the iPad showed one
+    // show's welcome while it waited for its own.
+    if (!room) return
+    // A different room means none of the previous room's state applies; the
+    // same room means this is a remount and the screen keeps what it had.
+    setRoom(room)
 
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws'
     const url = `${scheme}://${location.host}/api/ws?room=${encodeURIComponent(room)}`
@@ -57,5 +62,5 @@ export function useGameSocket(room: string): void {
       if (retry !== undefined) window.clearTimeout(retry)
       socket?.close()
     }
-  }, [room, setConnection, applyMessage, resetForRoom])
+  }, [room, setConnection, applyMessage, setRoom])
 }

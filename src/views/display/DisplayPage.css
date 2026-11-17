@@ -805,6 +805,9 @@
   position: relative;
   display: grid;
   place-items: center;
+  /* The strip is absolutely positioned inside, so the window has to carry its
+     own width: one digit plus the cabinet's padding. */
+  min-width: 1.9em;
   height: 1em;
   padding: 0 0.3em;
   overflow: hidden;
@@ -846,6 +849,14 @@
 }
 
 .display__reelstrip {
+  /* Pinned to the window's top edge, not centred in it: the strip is many cells
+     tall, and a centred one makes the inline `translateY(-(cells - 1) * 1em)`
+     land half a cell off - which showed the bottom of one digit and the top of
+     the next instead of the number. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   display: grid;
   grid-auto-rows: 1em;
   animation: display-bonus-spin 1.5s cubic-bezier(0.12, 0.8, 0.12, 1);

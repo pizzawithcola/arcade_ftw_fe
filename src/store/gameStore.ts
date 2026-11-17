@@ -190,8 +190,14 @@ interface GameState {
    * that was present when the round ended from one that arrived afterwards.
    */
   sawPlaying: boolean
-  /** Forget everything about the previous room before connecting to another. */
-  resetForRoom: () => void
+  /** Which room the state on screen belongs to, so a re-mount can tell. */
+  roomCode: string | null
+  /**
+   * Point the store at a room. Forgets the previous room's state, and does
+   * nothing at all when the code has not changed: a re-render, a strict-mode
+   * remount or a hot reload must not blank a paused show back to its welcome.
+   */
+  setRoom: (code: string) => void
   setConnection: (connection: Connection) => void
   applyMessage: (message: WsMessage) => void
 }
@@ -209,22 +215,27 @@ export const useGameStore = create<GameState>((set) => ({
   modules: [],
   totalSec: 0,
   sawPlaying: false,
+  roomCode: null,
 
   setConnection: (connection) => set({ connection }),
 
-  resetForRoom: () =>
-    set({
-      phase: 'waiting',
-      index: 0,
-      nodeCount: 0,
-      node: null,
-      endsAt: null,
-      heldMs: 0,
-      question: null,
-      sabotage: null,
-      modules: [],
-      totalSec: 0,
-      sawPlaying: false,
+  setRoom: (code) =>
+    set((state) => {
+      if (state.roomCode === code) return state
+      return {
+        roomCode: code,
+        phase: 'waiting' as const,
+        index: 0,
+        nodeCount: 0,
+        node: null,
+        endsAt: null,
+        heldMs: 0,
+        question: null,
+        sabotage: null,
+        modules: [],
+        totalSec: 0,
+        sawPlaying: false,
+      }
     }),
 
   applyMessage: (message) => {

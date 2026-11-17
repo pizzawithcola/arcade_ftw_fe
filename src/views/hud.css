@@ -891,6 +891,26 @@
   align-content: stretch;
 }
 
+/* The wall's rules card takes the tablet's measure instead of the full panel:
+   the same twelve seconds of three short lines, and at 84rem they floated in a
+   field of empty bezel. */
+.hud--display.hud--briefx .hud__frame {
+  width: min(100%, 46rem);
+  height: auto;
+  max-height: min(100%, 46rem);
+}
+
+/* The node's clock is centred in the bar, which fits at 84rem and collides with
+   the game's name at 46rem. The card is a rules reminder, not a countdown the
+   room acts on - the tablet's own rules card has no clock either. */
+.hud--display.hud--briefx .display__clock {
+  display: none;
+}
+
+.hud--display.hud--briefx .hud__event {
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+}
+
 /* The rules were pinned to the top of a panel that used to be as short as they
    are; in a full-height one they centre. */
 .hud--fill .opening {

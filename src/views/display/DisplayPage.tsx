@@ -750,6 +750,12 @@ export default function DisplayPage() {
 
   const remaining = endsAt !== null ? Math.max(0, endsAt - now) : heldMs
   const question = questionOnScreen(node, remaining) ?? broadcast
+  // An opening node is two frames: three seconds of name, then the rules. The
+  // rules are the tablet's card at projector scale - a dozen seconds of three
+  // short lines in a full-screen panel reads as a slide with two empty ends.
+  const briefHalf =
+    node?.type === 'opening' &&
+    Math.max(0, (node.duration_sec ?? 0) * 1000 - remaining) >= (node.title_sec ?? 0) * 1000
   const roundLeft = roundRemainingMs(node, remaining, question, sabotage)
   // While the room is answering, the wall shows the question; once the answers
   // close it shows the standings, for the same five seconds the iPads spend on
@@ -768,7 +774,9 @@ export default function DisplayPage() {
           note="Sign in on your iPad to join."
         />
       ) : (
-        <div className="hud hud--display hud--stage">
+        <div
+          className={`hud hud--display hud--stage${briefHalf ? ' hud--brief hud--briefx' : ''}`}
+        >
           <div className="hud__matrix" aria-hidden="true" />
           <div className="hud__frame">
             <div className="hud__inner">
