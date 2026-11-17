@@ -73,9 +73,7 @@ export default function HallucinationGame({
   const revealed = expired
   // The review owns the rest of the cycle - ten seconds by default - and moves
   // on by itself: a reader who looks up mid-sentence must never be able to hold
-  // the room on one question. It is also the stretch the wall spends on the
-  // standings, which is why it is long.
-  const reviewLeft = Math.max(0, Math.ceil((cycleMs - inCycleMs) / 1000))
+  // the room on one question.
 
   // The answer is committed when the clock runs out, not when the slider is
   // first touched: a player who changes their mind before the timer ends must
@@ -88,8 +86,6 @@ export default function HallucinationGame({
     reported.current.add(question.id)
     report(index, scoreFor(value, question.truth))
   }, [revealed, index, picks, question, report])
-
-  const isLast = index === HALLUCINATION_QUESTIONS.length - 1
 
   const points = picked === undefined ? 0 : scoreFor(picked, question.truth)
   const right = picked === undefined ? false : isCorrect(picked, question.truth)
@@ -112,7 +108,7 @@ export default function HallucinationGame({
 
           <div className="hud__bar">
             <span className="hud__chevrons" aria-hidden="true" />
-            <span className="hud__event">Ask the model</span>
+            <span className="hud__event">Can you trust it</span>
             <span className="hallu__count">
               {index + 1} / {HALLUCINATION_QUESTIONS.length}
             </span>
@@ -121,6 +117,9 @@ export default function HallucinationGame({
                 {secondsLeft}s
               </span>
             )}
+            {/* The bar closes with the mirrored chevrons every other game's bar
+                has: without it the counter sat alone against the frame. */}
+            <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
           </div>
 
           <div className="hud__stage hallu__stage">
@@ -148,6 +147,23 @@ export default function HallucinationGame({
                   <span className="chat__aistamp">generated · unverified</span>
                 </div>
                 <p className="chat__text chat__text--ai">{question.reply}</p>
+                {revealed && (
+                  <div
+                    className={`hallu__reveal ${right ? 'is-good' : 'is-bad'} is-${question.truth}`}
+                  >
+                    {/* The verdict is about the answer, not about whether the
+                        player got there in time. Only the word carries the
+                        colour: the sentence is a sentence, the word is a verdict. */}
+                    <span className="hallu__verdictkind">
+                      {question.truth === 'trust' ? 'You can ' : 'You should '}
+                      <b className="hallu__verdictword">
+                        {question.truth === 'trust' ? 'TRUST' : 'DOUBT'}
+                      </b>{' '}
+                      it
+                    </span>
+                    <p className="hallu__why">{question.reveal}</p>
+                  </div>
+                )}
                 <div className="chat__actions">
                   <button type="button" className="chat__action" title="Good answer">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -256,33 +272,16 @@ export default function HallucinationGame({
           </div>
         </div>
       ) : (
-        <div className={`hallu__reveal ${right ? 'is-good' : 'is-bad'}`}>
+        // One line under the answer: what this question is worth to the player.
+        // The countdown and the rest of the arithmetic are gone - the clock in
+        // the bar is already running, and the next question arrives on its own.
+        <div className={`hallu__reveal hallu__reveal--score ${right ? 'is-good' : 'is-bad'}`}>
           <div className="hallu__verdict">
             <span className="hallu__verdictkind">
-              {picked === undefined
-                ? "Time's up"
-                : question.truth === 'trust'
-                  ? 'This one held up'
-                  : 'This one was a hallucination'}
-            </span>
-            <span className="hallu__verdictpoints">
-              {points > 0 ? '+' : ''}
+              Your score for this round is: {points > 0 ? '+' : ''}
               {points}
             </span>
-            <span className="hallu__verdictpick">
-              {picked === undefined
-                ? 'you did not pick in time'
-                : lean === 'unsure'
-                  ? 'you called it not sure'
-                  : `you went ${lean} at ${gain}${
-                      right ? '' : ` — a wrong read costs ${loss}`
-                    }`}
-            </span>
           </div>
-          <p className="hallu__why">{question.reveal}</p>
-          <p className="hallu__autonext">
-            {isLast ? 'Final score' : 'Next question'} in {reviewLeft}s
-          </p>
         </div>
       )}
           </div>

@@ -905,7 +905,7 @@ describe('the console', () => {
       })
       await snap(page, 'admin-settings.png')
       assert.equal(settings.drawRows, 3, 'the draw table should have three slots')
-      assert.equal(settings.bankRows, 20, 'the bank table should have 20 questions')
+      assert.equal(settings.bankRows, 13, 'the bank table should have 13 questions')
       // The heading is uppercased by CSS, so `innerText` comes back shouting.
       assert.match(settings.head, /3 questions/i)
       assert.match(settings.head, /600/i)

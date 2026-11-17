@@ -45,7 +45,7 @@ const ACTIONS = ['start', 'pause', 'resume', 'finish', 'reset'] as const
 const MODULE_OPTIONS = [
   { key: 'welcome', label: 'Welcome', seconds: 10, scored: 0 },
   { key: 'hallucination', label: 'Hallucination', seconds: 95, scored: 600 },
-  { key: 'data', label: 'Data Shadow', seconds: 83, scored: 800 },
+  { key: 'data', label: 'Data Shadows', seconds: 83, scored: 800 },
   { key: 'sabotage', label: 'AI Cyber Battle', seconds: 203, scored: 800 },
   { key: 'ultimate', label: 'Ultimate', seconds: 108, scored: 600 },
   { key: 'total', label: 'Final board', seconds: 10, scored: 0 },
@@ -1388,10 +1388,9 @@ function SettingsView({
           <span className="admin__phase">{QUIZ_CATEGORIES.length} categories</span>
         </div>
         <p className="admin__table-note">
-          Twenty-five questions written against the four games: five each for Data Shadow
-          and Hallucination, ten across AI Cyber Battle&rsquo;s four rounds, and five on Hong Kong.
-          Only the first three groups feed the Ultimate round now; the Hong Kong set is kept
-          for another slot. Edited in
+          Thirteen questions written against the four games: five each for Hallucination
+          and Data Shadow, and three each for AI Cyber Battle&rsquo;s first two rounds. Every
+          group here is drawn from. Edited in
           <code> src/games/quiz/bank.ts</code>.
         </p>
         <ul className="admin__cats">

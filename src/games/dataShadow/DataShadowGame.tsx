@@ -154,7 +154,7 @@ export default function DataShadowGame({
           <div className="shadow__head">
             <div className="shadow__headleft">
               <span className="hud__chevrons" aria-hidden="true" />
-              <div className="hud__tab">Data Shadow</div>
+              <div className="hud__tab">Data Shadows</div>
             </div>
             {/* The clock owns the middle column: the name is a label, the number
                 is what the room judges itself against. */}

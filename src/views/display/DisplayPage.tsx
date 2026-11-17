@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchSession, isAuthError, listRooms, roomRoster, type Session } from '../../api'
 import { BLOCKS, IMAGES, POST_META } from '../../games/dataShadow/content'
+import { activeGames } from '../../games/openings'
 import { HALLUCINATION_QUESTIONS } from '../../games/hallucination/content'
 import { bankOptions } from '../../games/quiz/bank'
 import { BASE_POINTS, drawQuestions, pointsFor, slotAt } from '../../games/quiz/draw'
@@ -656,6 +657,15 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
 }
 
 export default function DisplayPage() {
+  // LOCAL TRIAL: the wall scales its type with the screen, 2% of the screen
+  // height. Not committed; see the measurement pass before this is kept.
+  useEffect(() => {
+    document.documentElement.dataset.wall = ''
+    return () => {
+      delete document.documentElement.dataset.wall
+    }
+  }, [])
+
   const { code: pinned } = useParams()
   const [session, setSession] = useState<Session | null>(null)
   const [checked, setChecked] = useState(false)
@@ -676,6 +686,7 @@ export default function DisplayPage() {
   const heldMs = useGameStore((state) => state.heldMs)
   const broadcast = useGameStore((state) => state.question)
   const sabotage = useGameStore((state) => state.sabotage)
+  const modules = useGameStore((state) => state.modules)
 
   useEffect(() => {
     void fetchSession().then((found) => {
@@ -740,7 +751,7 @@ export default function DisplayPage() {
     return (
       <main className="display display--idle">
         <header className="display__bar">
-          <span className="display__brand">Arcade Fintech Week</span>
+          <span className="display__brand">Arcade Fintech Festival</span>
         </header>
         <StandbyBoard />
         <p className="display__standbynote">Next round will be started soon.</p>
@@ -765,8 +776,31 @@ export default function DisplayPage() {
     question !== null &&
     (node?.type === 'quiz' || node?.game === 'hallucination') &&
     inQuestionMs(question) >= (node.answer_sec ?? 0) * 1000
+  // The toolbar the iPads carry, full width: which of the room's games is on
+  // screen and how many are behind it. A brief names its section, so a rules
+  // card already counts as being inside its game.
+  const stages = activeGames(modules).map((game) => game.module)
+  const stageNow = stages.indexOf(node?.section ?? node?.score ?? '')
+  const onStage = stageNow === -1 ? null : stageNow + 1
   return (
     <main className={`display display--${phase}`}>
+      {phase !== 'waiting' && stages.length > 1 && (
+        <nav
+          className="display__track"
+          aria-label="Game progress"
+          style={{ '--gstage-cols': stages.length } as CSSProperties}
+        >
+          {stages.map((stage, at) => (
+            <span
+              key={stage}
+              className={`display__seg ${
+                onStage === at + 1 ? 'is-now' : onStage !== null && at + 1 < onStage ? 'is-done' : ''
+              }`}
+              aria-current={onStage === at + 1 ? 'step' : undefined}
+            />
+          ))}
+        </nav>
+      )}
       {phase === 'waiting' ? (
         <LobbyPanel
           count={joined.length}
@@ -775,7 +809,10 @@ export default function DisplayPage() {
         />
       ) : (
         <div
-          className={`hud hud--display hud--stage${briefHalf ? ' hud--brief hud--briefx' : ''}`}
+          // The welcome splits the stage in half, so the stage has to hand it a
+          // full-height row: centred, `.welcome` was only as tall as its own
+          // content and the two halves collapsed into one block in the middle.
+          className={`hud hud--display hud--stage${node?.type === 'intro' ? ' hud--fill' : ''}${briefHalf ? ' hud--brief hud--briefx' : ''}`}
         >
           <div className="hud__matrix" aria-hidden="true" />
           <div className="hud__frame">
@@ -785,7 +822,7 @@ export default function DisplayPage() {
               <span className="hud__corner hud__corner--bl" aria-hidden="true" />
               <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-              <div className="hud__tab">Arcade Fintech Week</div>
+              <div className="hud__tab">Arcade Fintech Festival</div>
 
               <div className="hud__bar">
                 <span className="hud__chevrons" aria-hidden="true" />

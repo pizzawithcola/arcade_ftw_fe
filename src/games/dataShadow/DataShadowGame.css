@@ -246,15 +246,17 @@
   -webkit-box-decoration-break: clone;
 }
 
-/* A highlighter, not a selection: this is what the player has already flagged,
-   so it has to read as "mine" rather than as a transient browser selection. */
+/* A yellow highlighter, not a selection: this is what the player has already
+   flagged, so it has to read as "mine" rather than as a transient browser
+   selection. Yellow belongs to working, so nothing about the verdict is being
+   given away while the round is still open. */
 .post__mark.is-flagged {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--c-brand) 0%, transparent) 12%,
-    color-mix(in srgb, var(--c-brand) 34%, transparent) 12%,
-    color-mix(in srgb, var(--c-brand) 34%, transparent) 92%,
-    color-mix(in srgb, var(--c-brand) 0%, transparent) 92%
+    color-mix(in srgb, var(--c-warning) 0%, transparent) 12%,
+    color-mix(in srgb, var(--c-warning) 40%, transparent) 12%,
+    color-mix(in srgb, var(--c-warning) 40%, transparent) 92%,
+    color-mix(in srgb, var(--c-warning) 0%, transparent) 92%
   );
   box-shadow: none;
 }
@@ -262,18 +264,20 @@
 /* The sweep under the finger: the same highlighter, brighter, so the range the
    player is drawing is not confused with the ranges already in the report. */
 .post__mark.is-sweeping {
-  background: color-mix(in srgb, var(--c-brand) 58%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  background: color-mix(in srgb, var(--c-warning) 62%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-warning) 85%, transparent);
 }
 
+/* Once the round is closed the highlighter becomes a verdict: green is the line
+   the player caught, red is a line that got away. */
 .post__mark.is-hit {
-  background: color-mix(in srgb, var(--c-brand) 30%, transparent);
-  box-shadow: inset 0 -2px 0 var(--c-brand);
+  background: color-mix(in srgb, var(--c-win) 26%, transparent);
+  box-shadow: inset 0 -2px 0 var(--c-win);
 }
 
 .post__mark.is-missed {
-  background: color-mix(in srgb, var(--c-warning) 34%, transparent);
-  box-shadow: inset 0 -2px 0 var(--c-warning);
+  background: color-mix(in srgb, var(--c-brand) 30%, transparent);
+  box-shadow: inset 0 -2px 0 var(--c-brand);
 }
 
 .post__foot {

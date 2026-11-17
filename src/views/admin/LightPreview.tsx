@@ -52,7 +52,7 @@ const BOARD = [
 
 const CARDS = [
   { num: '01', name: 'AI Hallucination', icon: '/game_icons/hallucination_icon.PNG' },
-  { num: '02', name: 'Data Shadow', icon: '/game_icons/data_icon.PNG' },
+  { num: '02', name: 'Data Shadows', icon: '/game_icons/data_icon.PNG' },
   { num: '03', name: 'Ultimate Showdown', icon: '/game_icons/ultimate_icon.PNG' },
 ]
 
@@ -150,7 +150,7 @@ export default function LightPreview() {
                   <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
                 </div>
                 <div className="hud__stage quiz__stage">
-                  <p className="quiz__from">Phishing and Data Shadow</p>
+                  <p className="quiz__from">Phishing and Data Shadows</p>
                   <p className="quiz__question">
                     An AI answer cites a court ruling, with a case name and a year. What does that
                     prove?
@@ -186,7 +186,7 @@ export default function LightPreview() {
                 <div className="hud__tab">Hallucination</div>
                 <div className="hud__bar">
                   <span className="hud__chevrons" aria-hidden="true" />
-                  <span className="hud__event">Ask the model</span>
+                  <span className="hud__event">Can you trust it</span>
                   <span className="hud__status">
                     <span className="hud__dot" aria-hidden="true" />3 / 3
                   </span>
@@ -252,7 +252,7 @@ export default function LightPreview() {
           <div className="welcome welcome--wall">
             <span className="welcome__scan" aria-hidden="true" />
             <div className="welcome__head">
-              <p className="welcome__eyebrow">HK Fintech Week</p>
+              <p className="welcome__eyebrow">HK Fintech Festival</p>
               <h1 className="welcome__title" data-text="AI CYBER ARCADE">
                 AI Cyber Arcade
               </h1>

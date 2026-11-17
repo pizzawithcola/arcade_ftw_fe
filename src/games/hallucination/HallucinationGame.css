@@ -516,7 +516,10 @@
 .hallu__reveal {
   display: grid;
   gap: 0.45rem;
-  padding-top: clamp(0.3rem, 1vh, 0.6rem);
+  /* Half a rem above and below the rule: 8px on the tablet, and the same share
+     of the screen on the wall. */
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--c-border);
 }
 
@@ -689,4 +692,37 @@
   .hallu__ghost {
     opacity: 0.5;
   }
+}
+
+/* Only the word carries the colour: green is what the room should have trusted,
+   amber is what it should have doubted - the same two colours as the TRUST OR
+   DOUBT scale on the wall. The sentence around it stays in body ink. */
+.hallu__verdictword {
+  font-weight: 800;
+}
+
+.hallu__reveal.is-trust .hallu__verdictword {
+  color: var(--c-win);
+}
+
+.hallu__reveal.is-doubt .hallu__verdictword {
+  color: var(--c-warning);
+}
+
+/* The review reads at the size of the answer it is reviewing. */
+.hallu__why {
+  font-size: 1.02rem;
+}
+
+.hallu__reveal--score .hallu__verdictkind {
+  font-size: 1.25rem;
+}
+
+/* The counter is what takes the free space in this bar, so the mirrored
+   chevrons ride against it instead of claiming a second slice of the gap - the
+   two auto margins split the bar down the middle and left 1 / 3 stranded. */
+/* The clock sits between the two in the DOM, so this has to be a general
+   sibling selector rather than an adjacent one. */
+.hallu__count ~ .hud__chevrons--flip {
+  margin-left: 0;
 }

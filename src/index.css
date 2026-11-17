@@ -11,6 +11,17 @@ body,
 /* One canvas for the whole app: black, with the 40px rule grid carried over
    from the previous arcade's homepage. Every view paints on top of it, and
    red is reserved for actions, rails and live state. */
+/* LOCAL TRIAL: 2.5% of the screen height.
+ *
+ * 16:9 makes the height 0.5625 of the width, so 2.5% of the height is 1.40625vw:
+ * 1600 -> 22.5px, 1920 -> 27px, 2560 -> 36px, 4K -> 54px. Every width, type
+ * size and gap on /display is rem, so this one number scales them together.
+ * The tablet route never sets the flag.
+ */
+html[data-wall] {
+  font-size: clamp(16px, 1.406vw, 70px);
+}
+
 body {
   margin: 0;
   background-color: var(--c-black);

@@ -176,6 +176,22 @@
   transform: scaleX(-1);
 }
 
+/* Air under the trapezoid on the rules card: the bar beneath it starts straight
+   off the tab's bottom edge otherwise. */
+.hud--brief .hud__tab {
+  margin-bottom: 1rem;
+}
+
+/* The rules card names the game in the middle of its bar: on the left it read as
+   a caption for the leading chevrons rather than as the title of the card. The
+   chevrons stay pinned to the two ends, so the name is taken out of the flow. */
+.hud--brief .hud__event {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
 .hud__stage {
   position: relative;
   display: grid;
@@ -722,9 +738,20 @@
 .hud__frame::before,
 .hud__frame::after {
   position: absolute;
-  top: 50%;
+  /* Centred by the box, not by a transform. `top: 50%` + `translateY(-50%)` on a
+     vertical-rl pseudo with `rotate: 180deg` did not centre: the label sat low
+     enough that its first characters fell outside the card's clip-path, which is
+     why "sys · ready" read as "ready". Pinning both edges and letting the auto
+     margins do the work cannot drift. */
+  top: 0;
+  bottom: 0;
+  height: fit-content;
+  /* Physical margins on purpose: `margin-block` follows the writing mode, and
+     for vertical text the block axis is horizontal - it centred the label
+     sideways and left it hanging off the top edge. */
+  margin-top: auto;
+  margin-bottom: auto;
   z-index: 3;
-  transform: translateY(-50%);
   writing-mode: vertical-rl;
   font-size: 0.52rem;
   letter-spacing: 0.34em;
@@ -823,7 +850,9 @@
 
 .brief__rules {
   margin: 0;
-  padding: 0;
+  /* The block as a whole: 16px above and on the left, 32px below, so the three
+     points sit inside the card instead of hard against its edges. */
+  padding: 1rem 0 2rem 1rem;
   list-style: none;
   display: grid;
   /* Fifty per cent more air than before: three points on one screen read as a

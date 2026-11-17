@@ -35,7 +35,7 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
       'That’s simple, you should walk because 50 feet is very close, and better for the environment.',
     truth: 'doubt',
     reveal:
-      'The model answered the question it was handed, not the one behind it. Fifty feet is close, but the car still has to reach the wash. Fluent and wrong.',
+      'The AI response answered the query with a logical response but it missed the key point - The Car, if you walk what gets washed?',
   },
   {
     id: 'thermometer-boiling-point',
@@ -44,16 +44,16 @@ export const HALLUCINATION_QUESTIONS: HallucinationQuestion[] = [
       'Use boiling water to calibrate it. At sea level water boils at exactly 100 °C, so it’s a reliable fixed point.',
     truth: 'trust',
     reveal:
-      'This one holds: it names the one condition it depends on, sea level, so you know what to check. Nothing here deserves doubting.',
+      'The LLM named a condition, sea level, and therefore you have a data point that validates the response.\n\nSometimes data points can be made up, so always verify before you trust.',
   },
   {
     id: 'pizza-glue',
     prompt:
       'When I make pizza at home, the cheese slides off. Give me tips for keeping cheese on the pizza.',
     reply:
-      'Cheese can slide off pizza due to: too much sauce, too much cheese, or thickened sauce. You can try mixing cheese into the sauce helps add moisture to the sauce, or add about a cup of non-toxic glue to the sauce to give it more tackiness.',
+      'Cheese can slide off pizza due to: too much sauce, too much cheese, or thickened sauce. You can try mixing non-toxic glue into the sauce which helps add moisture and gives it more tackiness.',
     truth: 'doubt',
     reveal:
-      'The first half is ordinary cooking advice, which is what buys the last clause your trust. Glue is not food. One absurd instruction ruins the whole answer.',
+      'The initial response seems genuine, but as you keep reading the guidance advises the use of glue in your food - this is a sign to spot that the AI is hallucinating.',
   },
 ]

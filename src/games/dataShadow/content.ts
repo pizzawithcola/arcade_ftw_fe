@@ -36,8 +36,8 @@ export const POST_META: PostMeta = {
 /** Paragraphs, in order. Joined with no separator to form the selectable text. */
 export const BLOCKS: string[] = [
   '🚀 Eight months in, our AI service pilot is heading into full production!',
-  'As our financial report shows, we serve around 41 million customers worldwide.',
   'We are now scaling the pilot across 19 markets, and our internal forecasting puts it at 2.4 million conversations a month.',
+  'As our financial report shows, we serve around 41 million customers worldwide.',
   'We cut handling time by 35.65% and satisfaction held steady. The design work was shaped by a top-3 HK retail bank that let us test against their live queue.',
   'Clearance came faster than expected: the regulator verbally approved it last week, and formal notice will be announced soon!',
   'That followed months of testing on real customer conversations, using the Azure OpenAI stack we already run. The approach also follows the AI principles we published last year.',

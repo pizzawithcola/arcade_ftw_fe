@@ -30,7 +30,7 @@ import './EventReport.css'
 
 const GAMES: { key: string; label: string }[] = [
   { key: 'hallucination', label: 'Hallucination' },
-  { key: 'data', label: 'Data Shadow' },
+  { key: 'data', label: 'Data Shadows' },
   { key: 'sabotage', label: 'AI Cyber Battle' },
   { key: 'ultimate', label: 'Ultimate' },
 ]

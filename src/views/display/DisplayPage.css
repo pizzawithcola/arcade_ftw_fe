@@ -1,6 +1,7 @@
 /* Display View: read from five metres away, nothing to click. */
 
 .display {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -46,7 +47,7 @@
 
 .display__lobbyTitle {
   margin: 0;
-  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-size: 6.5rem;
   line-height: 1;
   letter-spacing: -0.02em;
   /* A hint of depth instead of a flat white headline. */
@@ -61,13 +62,13 @@
   align-items: center;
   gap: 0.6rem;
   margin: 0;
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  font-size: 1.4rem;
   letter-spacing: 0.02em;
   color: var(--c-text-muted);
 }
 
 .display__lobbyCount strong {
-  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  font-size: 2.8rem;
   font-variant-numeric: tabular-nums;
   color: var(--c-text);
 }
@@ -121,7 +122,7 @@
   border: 1px solid var(--c-surface-raised);
   border-radius: 999px;
   background: var(--c-surface);
-  font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+  font-size: 1.25rem;
   color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
@@ -142,13 +143,13 @@
 
 .display__lobbyEmpty {
   margin: auto 0;
-  font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+  font-size: 1.7rem;
   color: var(--c-text-dim);
 }
 
 .display__lobbyNote {
   margin: 0;
-  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  font-size: 1rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-text-dim);
@@ -191,7 +192,9 @@
   border-radius: 999px;
   font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(0.95rem, 1.6vw, 1.5rem);
+  /* 0.89rem is 24px on a 1080p wall. At 1.5rem the countdown competed with the
+     node name beside it, and every screen carries it in the same bar. */
+  font-size: 0.89rem;
   font-weight: 600;
   text-align: center;
   color: var(--c-text);
@@ -207,27 +210,27 @@
 /* The stage bar carries the section name, so it needs room to breathe. */
 .display__kicker {
   margin: 0;
-  font-size: clamp(0.8rem, 1.4vw, 1.05rem);
+  font-size: 1.05rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--c-text-dim);
 }
 
 .hud--stage .hud__event {
-  font-size: clamp(0.95rem, 2vw, 1.35rem);
+  font-size: 1.35rem;
 }
 
 .hud--stage .hud__tab {
-  font-size: clamp(0.7rem, 1.4vw, 0.95rem);
+  font-size: 0.95rem;
 }
 
 .hud--stage .hud__status {
-  font-size: clamp(0.66rem, 1.2vw, 0.82rem);
+  font-size: 0.82rem;
 }
 
 .display__look {
   margin: 0;
-  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-size: 1.05rem;
   color: var(--c-text-muted);
 }
 
@@ -247,7 +250,7 @@
    Red, because it is the one thing on the screen worth remembering. */
 .display__bet {
   margin: 0.2rem 0 0;
-  font-size: clamp(1.05rem, 2.2vw, 1.7rem);
+  font-size: 1.7rem;
   font-weight: 600;
   color: var(--c-brand);
   text-wrap: balance;
@@ -289,7 +292,7 @@
      text on a projector. A quarter more again on review - the copy still read
      as a single slab from the back row. */
   margin: 0 0 clamp(0.75rem, 1.63vh, 1.25rem);
-  font-size: clamp(0.82rem, 1.05vw, 1rem);
+  font-size: 1rem;
   line-height: 1.55;
 }
 
@@ -345,25 +348,25 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #0a66c2, #004182);
   color: #fff;
-  font-size: clamp(0.8rem, 1.3vw, 1rem);
+  font-size: 1rem;
   font-weight: 700;
 }
 
 .display__posthead strong {
   display: block;
-  font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+  font-size: 1.05rem;
 }
 
 .display__posthead em {
   display: block;
-  font-size: clamp(0.7rem, 1vw, 0.85rem);
+  font-size: 0.85rem;
   font-style: normal;
   color: var(--c-paper-dim);
 }
 
 .display__post p {
   margin: 0 0 0.6rem;
-  font-size: clamp(0.85rem, 1.25vw, 1.1rem);
+  font-size: 1.1rem;
   line-height: 1.6;
 }
 
@@ -392,13 +395,13 @@
 
 .display__prompt {
   margin: 0;
-  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  font-size: 1.4rem;
   color: var(--c-text-muted);
 }
 
 .display__reply {
   margin: 0;
-  font-size: clamp(1.3rem, 2.6vw, 2.3rem);
+  font-size: 2.3rem;
   line-height: 1.35;
   color: var(--c-text);
 }
@@ -419,7 +422,7 @@
 
 .display__briefLead {
   margin: 0;
-  font-size: clamp(1.15rem, 2.1vw, 1.7rem);
+  font-size: 1.7rem;
   line-height: 1.5;
   color: var(--c-text);
 }
@@ -435,7 +438,7 @@
 .display__briefRules li {
   position: relative;
   padding-left: 1.4rem;
-  font-size: clamp(1rem, 1.7vw, 1.4rem);
+  font-size: 1.4rem;
   line-height: 1.45;
   color: var(--c-text-muted);
 }
@@ -488,7 +491,7 @@
   gap: clamp(0.8rem, 2vw, 1.8rem);
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(2.2rem, 5.2vw, 4.4rem);
+  font-size: 4.4rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -523,7 +526,12 @@
 
 .display__options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* One option per row on the wall. Two across only fitted the four answers
+     when the room was reading a projector from close up: from the back row the
+     eye loses the pairing, and a long answer wrapped to three lines and dragged
+     its neighbour to the same height with it. */
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   /* Every option takes the height of the tallest, so a two-line answer and a
      one-line answer wear the same box; the text centres inside it. */
   grid-auto-rows: 1fr;
@@ -554,13 +562,13 @@
   border: 1px solid var(--c-brand-deep);
   border-radius: 5px;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.75rem, 1.1vw, 0.95rem);
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--c-text);
 }
 
 .display__optiontext {
-  font-size: clamp(0.95rem, 1.35vw, 1.25rem);
+  font-size: 1.25rem;
   line-height: 1.4;
   color: var(--c-text);
 }
@@ -577,7 +585,7 @@
 .display__liveboardhead {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(1rem, 1.8vw, 1.5rem);
+  font-size: 1.5rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--c-text);
@@ -601,13 +609,32 @@
   text-align: left;
 }
 
+/* Both bubbles stop at 85% of the conversation block: at full width the two
+   panels read as the frame itself rather than as a transcript, and the reply
+   ran to the edge of the bezel with nothing to separate it from the border. */
 .hud--stage .chat__bubble {
-  width: min(100%, 62rem);
+  width: 85%;
+  max-width: 100%;
   text-align: left;
 }
 
+/* The user row is a bubble hugging the right edge with its avatar beside it. A
+   two-column grid gave the bubble 85% of the first column instead of 85% of the
+   block, so the row is laid out as a row and the pair is pushed right. */
+.hud--stage .chat__row--user {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.hud--stage .chat__row--user .chat__bubble {
+  width: 85%;
+}
+
 .hud--stage .chat__answer {
-  width: min(100%, 68rem);
+  width: 85%;
+  max-width: 100%;
 }
 
 .hud--stage .chat__bubble {
@@ -619,26 +646,26 @@
 }
 
 .hud--stage .chat__who {
-  font-size: clamp(0.64rem, 1.05vw, 0.82rem);
+  font-size: 0.82rem;
   letter-spacing: 0.24em;
 }
 
 .hud--stage .chat__text {
-  font-size: clamp(0.92rem, 1.45vw, 1.22rem);
+  font-size: 0.96rem;
   line-height: 1.6;
 }
 
 .hud--stage .chat__text--ai {
-  font-size: clamp(1rem, 1.7vw, 1.4rem);
+  font-size: 1.06rem;
   line-height: 1.55;
 }
 
 .hud--stage .chat__ainame {
-  font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+  font-size: 0.95rem;
 }
 
 .hud--stage .chat__aistamp {
-  font-size: clamp(0.62rem, 1vw, 0.78rem);
+  font-size: 0.78rem;
 }
 
 .hud--stage .chat__avatar {
@@ -700,7 +727,7 @@
   border: 1px solid var(--c-border);
   border-radius: 6px;
   background: var(--c-surface-raised);
-  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-size: 1rem;
   color: var(--c-text-muted);
 }
 
@@ -794,7 +821,7 @@
   position: relative;
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.8rem, 1.4vw, 1.1rem);
+  font-size: 1.1rem;
   letter-spacing: 0.5em;
   text-indent: 0.5em;
   text-transform: uppercase;
@@ -821,7 +848,7 @@
     inset 0 0 40px color-mix(in srgb, var(--c-brand-deep) 50%, transparent),
     0 0 0 2px color-mix(in srgb, var(--c-brand-deep) 55%, transparent);
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(5rem, 20vh, 13rem);
+  font-size: 13rem;
   font-weight: 700;
   line-height: 1;
   color: var(--c-text);
@@ -898,7 +925,7 @@
 .display__bonusworth {
   position: relative;
   margin: 0;
-  font-size: clamp(1rem, 1.8vw, 1.5rem);
+  font-size: 1.5rem;
   letter-spacing: 0.05em;
   color: var(--c-text-muted);
 }
@@ -945,7 +972,7 @@
 .battle__eyebrow {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.66rem, 1.1vw, 0.86rem);
+  font-size: 0.86rem;
   letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--c-text-muted);
@@ -954,7 +981,7 @@
 .battle__headline {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(1.4rem, 3.2vw, 2.4rem);
+  font-size: 2.4rem;
   letter-spacing: 0.05em;
   color: var(--c-text);
 }
@@ -996,7 +1023,7 @@
 .battle__bigmoney {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(3rem, 9vw, 6rem);
+  font-size: 6rem;
   font-weight: 700;
   line-height: 1;
   color: var(--c-text);
@@ -1069,7 +1096,7 @@
 
 .battle__teamspent {
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.68rem, 1.1vw, 0.82rem);
+  font-size: 0.82rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--team, var(--c-text-muted));
@@ -1077,7 +1104,7 @@
 
 .battle__teamname {
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.95rem, 1.7vw, 1.3rem);
+  font-size: 1.3rem;
   letter-spacing: 0.16em;
   color: var(--team, var(--c-text));
 }
@@ -1090,7 +1117,7 @@
 
 .battle__teammoney {
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+  font-size: 1.7rem;
   font-weight: 700;
   color: var(--c-text);
 }
@@ -1142,7 +1169,7 @@
 
 .battle__brief p {
   margin: 0;
-  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  font-size: 1.15rem;
   line-height: 1.4;
   color: var(--c-text);
 }
@@ -1158,7 +1185,7 @@
 .battle__outcome {
   margin: 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(2rem, 5.2vw, 4rem);
+  font-size: 4rem;
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -1293,7 +1320,7 @@
   margin: 0.35rem 0 0;
   padding: 0;
   list-style: none;
-  font-size: clamp(0.8rem, 1.3vw, 1rem);
+  font-size: 1rem;
   color: var(--c-text);
 }
 
@@ -1339,7 +1366,7 @@
 
 .battle__score b {
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-size: 3.6rem;
   line-height: 1;
   color: var(--c-text);
 }
@@ -1420,7 +1447,7 @@
 
 .battle__lanename {
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.8rem, 1.25vw, 1.05rem);
+  font-size: 1.05rem;
   letter-spacing: 0.16em;
   color: var(--c-text-muted);
 }
@@ -1600,7 +1627,7 @@
 .standby .ldb__rank,
 .standby .ldb__name,
 .standby .ldb__score {
-  font-size: clamp(1rem, 1.15vw, 1.5rem);
+  font-size: 1.5rem;
 }
 
 /* The rank plate and the score are the two numbers anyone compares, so they keep
@@ -1615,7 +1642,7 @@
 .display__standbynote {
   margin: clamp(0.6rem, 2vh, 1.4rem) 0 0;
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: clamp(0.95rem, 1.5vw, 1.5rem);
+  font-size: 1.5rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   text-align: center;
@@ -1648,4 +1675,152 @@
 
 .standby__legendcol span:last-child {
   text-align: right;
+}
+
+/* ─── the wall at 2.5% of the screen height ───────────────────────────────────
+   Type on this wall is sized in rem off a root font that is 2.5% of the screen
+   height, so a screen grows with the projector rather than with the viewport.
+   Two things cannot follow that ratio, because what limits them is not
+   proportion:
+
+   - the node name shares the top bar with the clock, and "Data Shadow
+     standings" is the longest one in the show. At 1.35rem it ran through the
+     clock, so it stops at the width it had before the wall scaled.
+   - the Data Shadow post is seven paragraphs of prose read from the back of the
+     room. At 1rem on a 1080p wall the last two fell off the panel, so it is
+     pinned to a readable band rather than to the ratio. */
+.hud--display .hud__event {
+  font-size: 0.9rem;
+}
+
+.hud--display .display__post p {
+  font-size: 0.8rem;
+  line-height: 1.28;
+  /* 1.2rem of a 2.5%-of-height root is 3% of the screen height: the gaps
+     between paragraphs are part of the composition, not a leftover. */
+  margin: 0 0 1.2rem;
+}
+
+/* The card stops short of the panel: at full width it read as a bar laid across
+   the screen rather than as a post, and the pictures beside the copy were a
+   third of its height. 52rem keeps it inside the panel's own proportion and
+   gives the two attachments room to be seen from the back row. */
+/* The card carries the panel's own proportion rather than the frame's: the bar
+   and the "Answer on your iPad" line take height off the panel, so matching
+   1666/910 would have made the card 60px taller than the space left over.
+   55rem by 707 is 2.10, which is what the panel actually gives. */
+.hud--display .display__post--split {
+  width: min(55rem, 100%);
+  padding: 0.25rem 1.2rem;
+}
+
+
+/* The taller card needs the panel's own padding back, and the post needs no
+   margin of its own: the two together were pushing the "Answer on your iPad"
+   line past the bottom edge. */
+/* The post is the one screen sized from its own content, so the panel keeps no
+   padding of its own here: the card's padding is the margin the room sees. */
+.hud--display .hud__stage:has(.display__post) {
+  padding-block: 0;
+}
+
+.hud--display .display__post {
+  margin-top: 0;
+}
+
+.hud--display .display__post--split .display__postshot {
+  width: clamp(9rem, 30vh, 22rem);
+}
+
+/* The two answers under the conversation sit in the space the chat leaves, not
+   in a band under it: vertically centred there they read as the question being
+   asked of the room, which is what they are. */
+.hud--display .hud__stage:has(> .display__conversation) {
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.hud--display .display__conversation {
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  /* 4rem is 10% of a 1080p screen height, and stays 10% at any size: the
+     transcript sat hard under the bar and read as if it had been clipped. */
+  padding-top: 4rem;
+}
+
+.hud--display .display__choice {
+  align-self: center;
+}
+
+/* Both columns start at the top of the card: centred, the copy floated in a band
+   of empty card with the pictures flush against the edges above and below it,
+   which read as the text having been mislaid. */
+.hud--display .display__post--split {
+  align-items: start;
+}
+
+/* The last paragraph was carrying its own trailing gap inside the padding, so
+   the copy column ended short of the pictures. */
+.hud--display .display__post p:last-child {
+  margin-bottom: 0;
+}
+
+/* Two squares that together are as tall as the copy beside them, so neither
+   column has air at the bottom. */
+.hud--display .display__post--split .display__postshot {
+  width: clamp(9rem, 30vh, 22rem);
+}
+/* A little air under the byline: 0.9rem read as a caption glued to the copy.
+   1.7rem is that 0.9 plus 2% of the screen height. */
+.hud--display .display__posthead {
+  margin-bottom: 1.7rem;
+}
+
+/* Four answers down one column need tighter rows than two across did: the panel
+   is the same height, so the space comes out of the padding and the gaps rather
+   than out of the type. */
+.hud--display .display__quiz {
+  gap: 0.7rem;
+}
+
+.hud--display .display__options {
+  gap: 0.45rem;
+}
+
+.hud--display .display__option {
+  padding-block: 0.32rem;
+}
+
+/* ─── the wall's progress track ───────────────────────────────────────────────
+   The same row of slanted segments the iPads carry, across the full width of the
+   screen: there is no name or logout on this screen to leave room for, and the
+   room reads it from five metres away, so it wants length rather than margin. */
+.display__track {
+  /* Pinned over the frame's top margin rather than stacked above it: the panel
+     is sized as a share of the screen, and a row in the flow would have taken
+     its height out of every screen we have already fitted to the panel. */
+  position: absolute;
+  top: 1.2rem;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--gstage-cols, 4), minmax(0, 1fr));
+  gap: 0.5rem;
+  z-index: 5;
+}
+
+.display__seg {
+  height: 0.5rem;
+  background: color-mix(in srgb, var(--c-text) 22%, transparent);
+  clip-path: polygon(0.7rem 0, 100% 0, calc(100% - 0.7rem) 100%, 0 100%);
+  transition: background 0.2s ease;
+}
+
+.display__seg.is-done {
+  background: color-mix(in srgb, var(--c-brand) 62%, transparent);
+}
+
+.display__seg.is-now {
+  background: var(--c-brand);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--c-glow) 85%, transparent));
 }

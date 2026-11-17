@@ -67,7 +67,7 @@ const OPENINGS: GameOpening[] = [
   {
     key: 'data_shadow',
     module: 'data',
-    name: 'Data Shadow',
+    name: 'Data Shadows',
     icon: '/game_icons/data_icon.PNG',
     rules: [
       'AI has generated content for your social media',

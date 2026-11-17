@@ -365,7 +365,7 @@ export default function ThemePreview() {
                   <div className="hud__tab">Hallucination</div>
                   <div className="hud__bar">
                     <span className="hud__chevrons" aria-hidden="true" />
-                    <span className="hud__event">Ask the model</span>
+                    <span className="hud__event">Can you trust it</span>
                     <span className="hallu__count">1 / 2</span>
                     <span className="hallu__timer">28s</span>
                   </div>
@@ -461,7 +461,7 @@ export default function ThemePreview() {
             </div>
           </Section>
 
-          <Section title="Data Shadow · readable post">
+          <Section title="Data Shadows · readable post">
             <p className="admin__hint">
               Dark like the rest of the app, but the post itself stays plain: no glow, no display
               face, no red inside the card. It has to read as an ordinary social post.
@@ -476,7 +476,7 @@ export default function ThemePreview() {
                   <span className="hud__corner hud__corner--br" aria-hidden="true" />
                   <div className="shadow__head">
                     <span className="hud__chevrons" aria-hidden="true" />
-                    <div className="hud__tab">Data Shadow</div>
+                    <div className="hud__tab">Data Shadows</div>
                     <div className="shadow__headright">
                       <span className="shadow__timer">32s</span>
                       <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
@@ -555,7 +555,7 @@ export default function ThemePreview() {
             </div>
           </Section>
 
-          <Section title="Data Shadow · on the wall">
+          <Section title="Data Shadows · on the wall">
             <p className="admin__hint">
               The wall uses the same dark card and puts it straight under the bar, so a long post
               is never pushed out of the panel.
@@ -571,7 +571,7 @@ export default function ThemePreview() {
                   <div className="hud__tab">Arcade Fintech Festival</div>
                   <div className="hud__bar">
                     <span className="hud__chevrons" aria-hidden="true" />
-                    <span className="hud__event">Data Shadow</span>
+                    <span className="hud__event">Data Shadows</span>
                     <span className="hud__status">
                       <span className="hud__dot" aria-hidden="true" />
                       live
