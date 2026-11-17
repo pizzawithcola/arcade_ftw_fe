@@ -94,6 +94,17 @@
 }
 
 /* Glow → shadow. Same shape, read in daylight. */
+/* The wall's one page-level bloom: a red wash from the top edge. On black it is
+   a glow behind the panel; on paper it is a pink cloud over a third of the
+   screen, so it drops to a hint. */
+[data-theme='light'] .display {
+  background: radial-gradient(
+    circle at 50% 0%,
+    color-mix(in srgb, var(--c-brand-deep) 5%, transparent) 0%,
+    transparent 46%
+  );
+}
+
 [data-theme='light'] .hud__matrix {
   /* The dot matrix is off (its token is transparent); what is left is the
      panel's own structure. */
