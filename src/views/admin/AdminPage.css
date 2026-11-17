@@ -479,7 +479,10 @@
   /* The iframe below is laid out at 1920×1080 and scaled to fit, so the box has
      to clip the unscaled frame rather than let it spill over the console. */
   overflow: hidden;
-  box-shadow: 0 0 0 1px var(--c-border), 0 12px 30px color-mix(in srgb, var(--c-shadow) 60%, transparent);
+  /* A hairline, no drop shadow: on a console the size of a laptop screen a
+     30px blur read as a floating pane, and the preview should sit on the page
+     like the panel it is. */
+  box-shadow: 0 0 0 1px var(--c-border);
 }
 
 .admin__tv iframe {
