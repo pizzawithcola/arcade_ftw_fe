@@ -23,6 +23,14 @@
  * `explain` is written for every entry: the reveal shows it after a question
  * closes, so a question dropped in without one would show an empty panel at the
  * exact moment people are reading.
+ *
+ * `explain` has a reading budget as well. The review is eight seconds, and the
+ * eye spends the first of them finding the answer and the last looking up, so
+ * the text gets about five: one sentence, 15-25 words, plain words, the rule
+ * first and the action second. Anything longer is a paragraph nobody finishes,
+ * and a second sentence is where the mechanism goes - the room has just played
+ * that game, so it does not need teaching twice. No cross-references to the
+ * Sabotage deck either: naming the card is a note to us, not to them.
  */
 
 export type QuizCategory =
@@ -77,7 +85,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'B',
     time_limit: 20,
     explain:
-      'The quality of the draft is not the issue. The moment the text is pasted, a customer’s name and complaint sit in a system the company does not control, and nobody can say where that copy lives or who can read it.',
+      'Paste a customer’s complaint into a public tool and that copy is beyond the company’s control.',
   },
   {
     id: 'ds-personal-line',
@@ -90,7 +98,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'D',
     time_limit: 20,
     explain:
-      'A name plus a claim reference identifies one person and describes their business. The other three are counts and timings: they say something about the work, and nothing about anybody. This is the same line you would have dragged across in Data Shadow.',
+      'A name plus a claim reference points at one person; counts and timings point at nobody.',
   },
 
   // ─── Hallucination: how an answer fails, and how you catch it ────────────
@@ -105,7 +113,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'B',
     time_limit: 20,
     explain:
-      'A hallucination is not a refusal or a speed problem. It is output that is fluent, confident and wrong, which is exactly why it is dangerous: nothing in the wording tells you which answer you are holding. It is the trap in the first Hallucination question.',
+      'A hallucination sounds like a real answer: fluent, confident and wrong, so the wording never warns you.',
   },
   {
     id: 'hal-citation-proves-nothing',
@@ -118,7 +126,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'A',
     time_limit: 20,
     explain:
-      'A model generates a citation as easily as a sentence, and the details make it feel checked when it has not been. A citation becomes evidence the moment you open it and confirm the case, the parties and the year are real. This is the fake case from the Hallucination round, and it holds up to nothing.',
+      'A model invents citations as easily as sentences, so a citation only counts once you open it and check the case.',
   },
   {
     id: 'hal-calibrated-range',
@@ -131,7 +139,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'B',
     time_limit: 20,
     explain:
-      'An approximation is what a well-calibrated answer looks like: it says how sure the model is instead of inventing one exact figure. It tells you how far to trust the number and what to check first, which a single confident figure never does. This is the second Hallucination question, the one that rewards a hedge.',
+      'A good answer admits what it does not know; an approximation tells you how far to trust the number.',
   },
   {
     id: 'hal-policy-in-draft',
@@ -144,7 +152,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'C',
     time_limit: 20,
     explain:
-      'Asking the same model to confirm its own sentence proves nothing: a wrong answer and its correction are generated the same way. The policy lives on the intranet, and one sentence from there settles it.',
+      'The model that wrote the sentence will happily confirm it; the policy lives on the intranet.',
   },
   {
     id: 'hal-clearest-sign',
@@ -157,7 +165,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'A',
     time_limit: 20,
     explain:
-      'Precision plus an unfamiliar source is the combination worth stopping for: it looks verified and gives you nothing to verify it against. Length, tone and speed are not evidence either way. Agreement is not evidence either, which is the harder half of the lesson.',
+      'Be suspicious of precise answers from sources you cannot check; detail and length are not proof.',
   },
 
   // ─── Sabotage round 1: phishing email ────────────────────────────────────
@@ -172,7 +180,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'B',
     time_limit: 20,
     explain:
-      'Urgency is the oldest lever in the deck: it trades your judgement for a clock. This is the cheapest card in the round 1 deck for a reason, and the defence against it costs almost nothing: nothing real is decided by a countdown.',
+      'Urgency in an email is there to stop you thinking, and nothing real is decided by a countdown.',
   },
   {
     id: 'ph-display-name',
@@ -185,7 +193,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'D',
     time_limit: 20,
     explain:
-      'A display name is free text and a logo is an image anybody can copy. The domain is the part the sender cannot invent, so it is the only part worth reading - and here it is close to the real name without being it. In the round 1 deck this is one card on each side: a fake sender name, and a check on the real one.',
+      'Anyone can fake a display name and a logo, so check the domain: here it looks right but is not.',
   },
   {
     id: 'ph-enable-macros',
@@ -198,7 +206,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'A',
     time_limit: 20,
     explain:
-      'An invoice is a number and a date; it has no reason to run code. Asking the sender keeps you in the channel the attacker controls, and moving the file to another laptop spreads the problem. This is the malicious attachment card from round 1: an invoice that installs software when opened.',
+      'An invoice has no reason to run code: never enable macros, and never ask the sender if it is safe.',
   },
 
   // ─── Sabotage round 2: CEO impersonation ─────────────────────────────────
@@ -213,7 +221,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'D',
     time_limit: 20,
     explain:
-      'Face and voice are now the cheapest part of an attack to fake, so the call proves nothing. Calling back on a number you already hold takes the conversation out of the attacker’s hands. In round 2 the deepfake video is the most expensive attack card, and callback verification is the card that beats it.',
+      'Face and voice are cheap to fake, so hang up and call back on a number you already have.',
   },
   {
     id: 'ci-do-not-escalate',
@@ -226,7 +234,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'B',
     time_limit: 20,
     explain:
-      'Confidentiality is a reason to keep the circle small, never a reason to skip approval. The moment a request needs a control bypassed to protect it, the request is the problem. It is one of the five cards in the round 2 attack deck, and the cheapest one after the lookalike website.',
+      'Confidential means fewer people, never no approval: a request that must skip a check is the attack.',
   },
   {
     id: 'ci-second-approver',
@@ -239,7 +247,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'D',
     time_limit: 20,
     explain:
-      'The control is not the phone call, it is an approver who is not the person who took it: one person alone can be talked into anything. An urgent request still travels the normal path, and what urgency changes is how fast the approval happens, not whether it does. Payment approval is the most expensive defence card in round 2 for that reason.',
+      'What protects you is a second approver, not the call itself: urgency changes how fast, never whether.',
   },
   {
     id: 'as-hidden-instruction',
@@ -252,7 +260,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'A',
     time_limit: 20,
     explain:
-      'The assistant reads the text of a document, including the parts a person skimming the page never sees. Anything written in a file counts as instruction to a model, which is why the file is scanned before it is read. This is the hidden AI script card from round 3, white text the assistant sees and the reviewer does not.',
+      'An assistant reads white text a person never sees, so scan files before it reads them.',
   },
   {
     id: 'as-read-but-not-act',
@@ -265,7 +273,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'D',
     time_limit: 20,
     explain:
-      'A limit written into the system cannot be talked out of, and a person on the last step catches what the system does not. Asking a model to be careful is a sentence, not a control. Read-only access is the most expensive defence card in round 3, and this is the reason.',
+      'Telling a model to be careful is just words; only read-only access actually stops it sending anything.',
   },
 
   // ─── Sabotage round 4: poisoning the knowledge base ──────────────────────
@@ -280,7 +288,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'B',
     time_limit: 20,
     explain:
-      'The assistant can only quote what it has been fed, and an automatic sync will happily pull in an old page that is still online. The fix is at the source: what it may read, and who signs it off. Round 4 has a card for each half: an outdated file upload, and a list of approved sources.',
+      'It repeats whatever it was fed, and an auto-sync will load an old page, so control what it may read.',
   },
   {
     id: 'kb-defensible-answer',
@@ -293,7 +301,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'C',
     time_limit: 20,
     explain:
-      'A defensible answer is one you can walk back to its owner: this page, signed off by this team, on this date. Tone and length are presentation, and a model checking its own output is the same model twice. Verifying the source is the most expensive defence card in round 4.',
+      'Defensible means you can name the page, the team and the date behind an answer; tone proves nothing.',
   },
     // ─── Hong Kong: three questions about this city's AI story ───────────────
   {
@@ -307,7 +315,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'C',
     time_limit: 20,
     explain:
-      'Cyberport, on the Pok Fu Lam waterfront, is where the AI Supercomputing Centre sits. The Science Park is the other government-backed campus, but it is up in Pak Shek Kok, and InnoCentre is a Kowloon Tong building rather than a hub of its own.',
+      'Cyberport in Pok Fu Lam is home to the AI Supercomputing Centre, not the Science Park.',
   },
   {
     id: 'hk-vital-board-seat',
@@ -320,7 +328,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'A',
     time_limit: 20,
     explain:
-      'VITAL was given a board seat - with a vote - by Deep Knowledge Ventures, a firm backing longevity and deep-tech companies. It was a stunt as much as a decision, but it is the moment "the model is in the room" stopped being a thought experiment in this region.',
+      'Deep Knowledge Ventures put a model called VITAL on its board, with a vote, in 2014.',
   },
   {
     id: 'hk-lucky-eight',
@@ -333,7 +341,7 @@ export const QUESTION_BANK: BankQuestion[] = [
     correct_option: 'D',
     time_limit: 20,
     explain:
-      'Eight sounds like "prosper" and flat numbers full of eights sell at a premium, while four sounds like "death" and is avoided. Any model trained on local prices learns this without being told, which is why a good pricing model here is also a model of local belief.',
+      'Eight sounds like prosper, so flats full of eights sell for more; a model trained on local prices learns this.',
   },
 ]
 
