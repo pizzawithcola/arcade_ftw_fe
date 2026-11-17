@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { fetchTheme } from './api'
+import { applyTheme } from './theme'
 import LeaderboardPage from './pages/LeaderboardPage'
 import StatusPage from './pages/StatusPage'
 import ThemePreview from './views/admin/ThemePreview'
@@ -16,6 +19,15 @@ import PlayPage from './views/user/PlayPage'
  *   /admin         the operator console
  */
 function App() {
+  // The wall and the iPads hear about a change over their room socket; a screen
+  // without one - the login page, the public board, the console - has no socket
+  // to hear it on, so it asks once at boot. Both paths end in the same attribute.
+  useEffect(() => {
+    void fetchTheme()
+      .then(({ theme }) => applyTheme(theme))
+      .catch(() => undefined)
+  }, [])
+
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />

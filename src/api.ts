@@ -461,6 +461,12 @@ export interface ConsoleSettings {
   theme: 'dark' | 'light'
 }
 
+/** Which theme every screen should wear. Public: the login page has no token,
+ *  and the public board has no room socket to hear it on. */
+export function fetchTheme(): Promise<{ theme: 'dark' | 'light' }> {
+  return request<{ theme: 'dark' | 'light' }>('/api/theme')
+}
+
 /** The console's own settings. Readable by any operator screen. */
 export function fetchSettings(): Promise<ConsoleSettings> {
   return request<ConsoleSettings>('/api/settings')
