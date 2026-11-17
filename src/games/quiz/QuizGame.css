@@ -34,7 +34,9 @@
   border-radius: 999px;
   font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(0.95rem, 2.2vw, 1.2rem);
+  /* The wall's clock size, on the iPad as well: the countdown was the loudest
+     thing on a screen the player is looking at from 40cm. */
+  font-size: 0.89rem;
   font-weight: 600;
   text-align: center;
   color: var(--c-text);
@@ -57,12 +59,11 @@
 
 .quiz__options {
   display: grid;
-  /* Each row is as tall as its own option. Equal rows looked tidy before the
-     answer, but the moment the explanation opened under the right one every
-     box grew with it, so the card jumped and three quiet options took the
-     space of one. */
-  grid-auto-rows: auto;
-  align-items: start;
+  /* Every option wears the tallest one's box and its text centres in it: four
+     answers of four different lengths read as one control. Safe again now that
+     the explanation lives outside the grid. */
+  grid-auto-rows: 1fr;
+  align-items: stretch;
   gap: clamp(0.35rem, 1vh, 0.55rem);
   width: 100%;
 }
@@ -131,9 +132,7 @@
 }
 
 .quiz__slot > .quiz__option {
-  /* Content height, not the row's: the note below belongs to the option it
-     explains and must not push the others. */
-  height: auto;
+  height: 100%;
 }
 
 .quiz__option {
@@ -186,19 +185,16 @@
   color: var(--c-lose);
 }
 
-/* The opened note: same colour family as the answer above it, joined to it by a
-   missing border so the two read as one block. */
+/* The opened note: same colour family as the answer above it, in its own box
+   under the four options. */
 .quiz__note {
+  /* Under the list, not inside the answer: see the comment in the component. */
+  margin-top: clamp(0.35rem, 1vh, 0.55rem);
   border: 1px solid color-mix(in srgb, var(--c-win) 55%, transparent);
-  border-top: none;
-  border-radius: 0 0 7px 7px;
+  border-radius: 7px;
   background: color-mix(in srgb, var(--c-win) 8%, var(--c-surface));
   padding: clamp(0.45rem, 1.2vh, 0.7rem) clamp(0.7rem, 1.5vw, 1rem);
   animation: quiz-note-open 0.32s ease-out both;
-}
-
-.quiz__slot.is-open .quiz__option {
-  border-radius: 7px 7px 0 0;
 }
 
 @keyframes quiz-note-open {

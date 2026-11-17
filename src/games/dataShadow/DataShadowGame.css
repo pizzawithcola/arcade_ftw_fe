@@ -640,7 +640,9 @@
    pictures used to leave empty on the right. */
 .post__gallery {
   display: grid;
-  padding: clamp(1rem, 2.6vh, 1.6rem) 1rem 0.7rem;
+  /* Half the air above the pictures: the post plus its attachments only just
+     fits the panel, and the tail of the row was being clipped. */
+  padding: clamp(0.5rem, 1.3vh, 0.8rem) 1rem 0.7rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   /* Proportional, not a fixed px gap: the pictures keep the same size-to-gap
      ratio whether the card is an iPad wide or a desktop wide. Tighter than the
@@ -827,7 +829,9 @@
        reason - the pictures are the question, the labels are decoration. */
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 9%;
-    padding: 0.9rem 1rem 0.2rem;
+    /* Half the air above the pictures, here too: this is the size the iPad in
+       the room actually runs at, and it is where the row was being clipped. */
+    padding: 0.45rem 1rem 0.2rem;
   }
 
   .post__shotcap {
@@ -837,4 +841,17 @@
   .post__foot {
     display: none;
   }
+}
+
+/* The tab on this screen is a title, not a badge: the post below it is the only
+   thing that looks like a card, and a red trapezoid above it read as a button
+   the player was meant to press. */
+.hud--game.shadow .hud__tab {
+  background: none;
+  clip-path: none;
+  box-shadow: none;
+  padding: 0;
+  color: var(--c-text);
+  font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+  letter-spacing: 0.14em;
 }

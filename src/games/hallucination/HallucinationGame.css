@@ -8,6 +8,9 @@
 
 .hallu__stage {
   gap: clamp(0.5rem, 1.6vh, 1rem);
+  /* Half of the chassis padding: the transcript and the scale under it are two
+     blocks that only just fit, and the gap was the cheapest 9px on the screen. */
+  padding-top: clamp(0.3rem, 1.1vh, 0.7rem);
 }
 
 /* Header readings: count, clock, running score. */
@@ -32,7 +35,9 @@
   border-radius: 999px;
   font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(0.95rem, 2.2vw, 1.2rem);
+  /* The wall's clock size: the countdown was the largest thing in this bar on a
+     screen the player holds at arm's length. */
+  font-size: 0.89rem;
   font-weight: 600;
   text-align: center;
   color: var(--c-text);

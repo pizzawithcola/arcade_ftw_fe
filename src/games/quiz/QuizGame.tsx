@@ -124,7 +124,7 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
             <span className="hud__corner hud__corner--tr" aria-hidden="true" />
             <span className="hud__corner hud__corner--bl" aria-hidden="true" />
             <span className="hud__corner hud__corner--br" aria-hidden="true" />
-            <div className="hud__tab">Quiz</div>
+            <div className="hud__tab">Ultimate Showdown</div>
             <div className="hud__bar">
               <span className="hud__chevrons" aria-hidden="true" />
               <span className="hud__event">Round complete</span>
@@ -168,7 +168,7 @@ return (
         <span className="hud__corner hud__corner--bl" aria-hidden="true" />
         <span className="hud__corner hud__corner--br" aria-hidden="true" />
 
-        <div className="hud__tab">Quiz</div>
+        <div className="hud__tab">Ultimate Showdown</div>
 
         <div className="hud__bar">
           <span className="hud__chevrons" aria-hidden="true" />
@@ -251,15 +251,20 @@ return (
                       </span>
                     )}
                   </button>
-                  {isAnswer && (
-                    <div className="quiz__note">
-                      <p className="quiz__explain">{question.explain}</p>
-                    </div>
-                  )}
                 </div>
               )
             })}
           </div>
+
+          {/* The explanation sits under the four options rather than inside the
+              one that was right: inside, opening it made every row grow with
+              it, and the three options that were never answered took the space
+              of the one that was. */}
+          {revealed && (
+            <div className="quiz__note">
+              <p className="quiz__explain">{question.explain}</p>
+            </div>
+          )}
 
           {revealed && (
             <div className="quiz__reveal">

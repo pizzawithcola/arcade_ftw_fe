@@ -610,8 +610,10 @@ describe('the Ultimate round', () => {
         return {
           open: open.length,
           openLetter: open[0]?.querySelector('.quiz__letter')?.textContent ?? null,
-          note: open[0]?.querySelector('.quiz__note .quiz__explain')?.textContent ?? '',
-          noteInsideSlot: Boolean(open[0]?.querySelector('.quiz__note')),
+          note: document.querySelector('.quiz__note .quiz__explain')?.textContent ?? '',
+          // The note sits under the four options, not inside the answered one:
+          // inside, opening it made every row grow with it.
+          noteInsideSlot: Boolean(document.querySelector('.quiz__slot .quiz__note')),
           answers: document.querySelectorAll('.quiz__option.is-answer').length,
           answerColour: colour('.quiz__option.is-answer'),
           wrongCount: document.querySelectorAll('.quiz__option.is-wrong').length,
@@ -628,7 +630,7 @@ describe('the Ultimate round', () => {
       assert.equal(review.answerColour, 'rgb(53, 208, 127)', `the answer is green: ${review.answerColour}`)
       assert.equal(review.tick?.trim(), '✓')
       assert.ok(review.note.length > 40, 'the explanation opened with the answer')
-      assert.equal(review.noteInsideSlot, true, 'the note lives inside the answer it explains')
+      assert.equal(review.noteInsideSlot, false, 'the note sits under the options, not in one')
       assert.equal(review.bottomLine, null, 'nothing says "the answer was" any more')
       assert.match(review.autonext, /Next question|Final score/)
       if (review.wrongCount > 0) {

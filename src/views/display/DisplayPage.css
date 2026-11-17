@@ -1808,10 +1808,15 @@
 .hud--display .display__options {
   width: 80%;
   gap: 1rem;
+  /* Equal rows, text centred in each: four answers of four different lengths
+     read as one control, the way the iPads draw them. */
+  grid-auto-rows: 1fr;
+  align-items: stretch;
 }
 
 .hud--display .display__option {
   padding-block: 0.32rem;
+  align-items: center;
 }
 
 .hud--display .display__optiontext {
