@@ -78,14 +78,14 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--c-brand);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--c-brand) 70%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-glow) 70%, transparent);
   animation: wait-lamp 2.4s ease-in-out infinite;
 }
 
 @keyframes wait-lamp {
   50% {
     opacity: 0.25;
-    box-shadow: 0 0 4px color-mix(in srgb, var(--c-brand) 30%, transparent);
+    box-shadow: 0 0 4px color-mix(in srgb, var(--c-glow) 30%, transparent);
   }
 }
 
@@ -165,7 +165,7 @@
 
 .game__seg.is-now {
   background: var(--c-brand);
-  filter: drop-shadow(0 0 8px rgba(219, 0, 17, 0.85));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c-glow) 85%, transparent));
 }
 
 /* Name and the way out, together on the right. */

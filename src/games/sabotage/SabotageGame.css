@@ -754,7 +754,7 @@
    for a defence that held, and plain white for the side that just lost. */
 .sab__reveal.is-my-win .sab__verdict {
   color: var(--c-brand);
-  text-shadow: 0 0 30px color-mix(in srgb, var(--c-brand) 50%, transparent);
+  text-shadow: 0 0 30px color-mix(in srgb, var(--c-glow) 50%, transparent);
 }
 
 .sab__reveal.is-my-loss .sab__verdict {
@@ -1095,14 +1095,14 @@
   padding: 0.12rem 0.42rem 0.12rem 0.3rem;
   border: 1px solid color-mix(in srgb, var(--c-brand) 55%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, #000 55%, var(--c-brand-deep));
+  background: color-mix(in srgb, var(--c-shadow) 55%, var(--c-glow-deep));
   font-family: 'Orbitron', ui-monospace, monospace;
   font-size: clamp(0.72rem, 1.5vw, 0.95rem);
   font-weight: 700;
   line-height: 1;
   color: var(--c-text);
   pointer-events: none;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--c-brand) 30%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-glow) 30%, transparent);
 }
 
 .sab__peopleicon {

@@ -45,7 +45,7 @@
   font-weight: 700;
   line-height: 1.35;
   color: var(--c-brand);
-  text-shadow: 0 0 26px color-mix(in srgb, var(--c-brand) 45%, transparent);
+  text-shadow: 0 0 26px color-mix(in srgb, var(--c-glow) 45%, transparent);
 }
 
 .wrapup__caret {

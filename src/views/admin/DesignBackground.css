@@ -112,7 +112,7 @@
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
   font-size: 0.72rem;
   font-weight: 600;
 }

@@ -74,7 +74,7 @@
   width: 1.25rem;
   height: 1.25rem;
   border: 2px solid var(--c-brand);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-brand) 90%, transparent));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-glow) 90%, transparent));
   --inset-x: clamp(1rem, 2.6vw, 1.9rem);
   --inset-y: clamp(0.85rem, 2.2vh, 1.35rem);
 }
@@ -89,14 +89,14 @@
   justify-self: center;
   padding: 0.3rem 2.2rem 0.35rem;
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
   font-family: 'Orbitron', var(--font-ui, ui-monospace), monospace;
   font-size: clamp(0.62rem, 1.1vw, 0.78rem);
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   clip-path: polygon(1rem 0, calc(100% - 1rem) 0, 100% 100%, 0 100%);
-  box-shadow: 0 0 26px color-mix(in srgb, var(--c-brand) 70%, transparent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--c-glow) 70%, transparent);
 }
 
 .hud__bar {
@@ -141,7 +141,7 @@
   height: 6px;
   border-radius: 50%;
   background: var(--c-brand);
-  box-shadow: 0 0 8px var(--c-brand);
+  box-shadow: 0 0 8px var(--c-glow);
   animation: hud-pulse 1.6s ease-in-out infinite;
 }
 
@@ -165,7 +165,7 @@
     var(--c-brand) 0 6px,
     transparent 6px 12px
   );
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c-brand) 80%, transparent));
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c-glow) 80%, transparent));
 }
 
 /* Held to the right edge whether or not the bar carries a status chip or a
@@ -207,7 +207,7 @@
   inset: 0;
   border-top-color: var(--c-brand);
   border-bottom-color: var(--c-brand);
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c-brand) 70%, transparent));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c-glow) 70%, transparent));
   opacity: 0.95;
   animation: hud-spin 18s linear infinite;
 }
@@ -216,7 +216,7 @@
   inset: 12%;
   border-left-color: var(--c-brand);
   border-right-color: var(--c-brand);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-brand) 60%, transparent));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-glow) 60%, transparent));
   animation: hud-spin 12s linear infinite reverse;
 }
 
@@ -224,7 +224,7 @@
   inset: 24%;
   border-color: color-mix(in srgb, var(--c-brand) 35%, transparent);
   background: radial-gradient(circle, color-mix(in srgb, var(--c-brand) 22%, transparent), transparent 68%);
-  box-shadow: 0 0 34px color-mix(in srgb, var(--c-brand) 35%, transparent) inset;
+  box-shadow: 0 0 34px color-mix(in srgb, var(--c-glow) 35%, transparent) inset;
 }
 
 @keyframes hud-spin {
@@ -250,7 +250,7 @@
   aspect-ratio: 1;
   border: 2px solid var(--c-text);
   border-radius: 50%;
-  box-shadow: 0 0 18px rgba(244, 244, 246, 0.7), 0 0 40px color-mix(in srgb, var(--c-brand) 35%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-halo) 70%, transparent), 0 0 40px color-mix(in srgb, var(--c-glow) 35%, transparent);
 }
 
 .hud__avatar-body {
@@ -259,7 +259,7 @@
   border: 2px solid var(--c-text);
   border-bottom: 0;
   border-radius: 999px 999px 0 0;
-  box-shadow: 0 0 18px rgba(244, 244, 246, 0.55), 0 0 40px color-mix(in srgb, var(--c-brand) 30%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-halo) 55%, transparent), 0 0 40px color-mix(in srgb, var(--c-glow) 30%, transparent);
 }
 
 .hud__label {
@@ -280,7 +280,7 @@
   line-height: 1.05;
   letter-spacing: 0.04em;
   color: var(--c-text);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--c-brand) 85%, transparent), 0 0 48px color-mix(in srgb, var(--c-brand) 45%, transparent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--c-glow) 85%, transparent), 0 0 48px color-mix(in srgb, var(--c-glow) 45%, transparent);
   max-width: 22ch;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -368,7 +368,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   color: var(--c-text);
-  text-shadow: 0 0 20px color-mix(in srgb, var(--c-brand) 80%, transparent), 0 0 54px color-mix(in srgb, var(--c-brand) 40%, transparent);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--c-glow) 80%, transparent), 0 0 54px color-mix(in srgb, var(--c-glow) 40%, transparent);
 }
 
 .hud--display .hud__label {
@@ -421,7 +421,7 @@
   pointer-events: none;
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(0, 0, 0, 0.35) 0 1px,
+    color-mix(in srgb, var(--c-shadow) 35%, transparent) 0 1px,
     transparent 1px 3px
   );
   opacity: 0.5;
@@ -596,19 +596,19 @@
   100% {
     text-shadow:
       1px 0 color-mix(in srgb, var(--c-brand) 55%, transparent),
-      -1px 0 rgba(244, 244, 246, 0.35),
+      -1px 0 color-mix(in srgb, var(--c-halo) 35%, transparent),
       0 0 18px color-mix(in srgb, var(--c-brand) 85%, transparent),
       0 0 48px color-mix(in srgb, var(--c-brand) 45%, transparent);
   }
   20% {
     text-shadow:
       -3px 0 color-mix(in srgb, var(--c-brand) 90%, transparent),
-      3px 0 rgba(244, 244, 246, 0.6),
+      3px 0 color-mix(in srgb, var(--c-halo) 60%, transparent),
       0 0 26px color-mix(in srgb, var(--c-brand) 100%, transparent);
   }
   40% {
     text-shadow:
-      2px 0 rgba(244, 244, 246, 0.7),
+      2px 0 color-mix(in srgb, var(--c-halo) 70%, transparent),
       -2px 0 color-mix(in srgb, var(--c-brand) 90%, transparent),
       0 0 14px color-mix(in srgb, var(--c-brand) 70%, transparent);
   }
@@ -627,8 +627,8 @@
   bottom: 50%;
   width: min(62rem, 92%);
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--c-brand), #fff, var(--c-brand), transparent);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--c-brand) 90%, transparent);
+  background: linear-gradient(90deg, transparent, var(--c-brand), var(--c-spark), var(--c-brand), transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--c-glow) 90%, transparent);
   pointer-events: none;
   animation: hud-boot-line 620ms ease-out both;
 }

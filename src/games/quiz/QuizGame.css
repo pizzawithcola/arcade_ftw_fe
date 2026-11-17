@@ -266,7 +266,7 @@
   font-weight: 800;
   line-height: 1;
   color: var(--c-text);
-  text-shadow: 0 0 22px rgba(219, 0, 17, 0.6), 0 0 52px rgba(219, 0, 17, 0.3);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--c-glow) 60%, transparent), 0 0 52px color-mix(in srgb, var(--c-glow) 30%, transparent);
 }
 
 .quiz__review {
@@ -388,7 +388,7 @@
   height: 5px;
   border-radius: 50%;
   background: var(--c-brand-deep);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--c-glow) 80%, transparent);
   animation: quiz-bonus-bulb 0.9s steps(1, end) infinite;
   animation-delay: calc(var(--bulb, 0) * 60ms);
 }
@@ -402,7 +402,7 @@
   55%,
   100% {
     background: var(--c-brand-deep);
-    box-shadow: 0 0 6px color-mix(in srgb, var(--c-brand) 60%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--c-glow) 60%, transparent);
   }
 }
 
@@ -431,7 +431,7 @@
   border-radius: 10px;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--c-black) 92%, transparent),
+    color-mix(in srgb, var(--c-shadow) 92%, transparent),
     color-mix(in srgb, var(--c-surface-raised) 92%, transparent)
   );
   box-shadow:
@@ -545,7 +545,7 @@
   background: linear-gradient(90deg, var(--c-brand-deep), var(--c-brand));
   transform-origin: left center;
   animation: quiz-bonus-meter linear both;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-glow) 80%, transparent);
 }
 
 @keyframes quiz-bonus-land {

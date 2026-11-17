@@ -78,19 +78,19 @@
   height: 0.55rem;
   border-radius: 50%;
   background: var(--c-brand-deep);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-brand-deep) 60%, transparent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-glow-deep) 60%, transparent);
   animation: display-pulse 2.4s ease-out infinite;
 }
 
 @keyframes display-pulse {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-brand-deep) 50%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-glow-deep) 50%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 0.9rem color-mix(in srgb, var(--c-brand-deep) 0%, transparent);
+    box-shadow: 0 0 0 0.9rem color-mix(in srgb, var(--c-glow-deep) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-brand-deep) 0%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-glow-deep) 0%, transparent);
   }
 }
 
@@ -672,7 +672,7 @@
   overflow: hidden;
   border: 1px solid var(--c-paper-line);
   border-radius: 6px;
-  background: var(--c-black, #000);
+  background: var(--c-well);
 }
 
 .display__postshot img {
@@ -772,7 +772,7 @@
   height: 8px;
   border-radius: 50%;
   background: var(--c-brand-deep);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c-glow) 80%, transparent);
   animation: display-bonus-bulb 0.9s steps(1, end) infinite;
   animation-delay: calc(var(--bulb, 0) * 55ms);
 }
@@ -786,7 +786,7 @@
   55%,
   100% {
     background: var(--c-brand-deep);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--c-brand) 60%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--c-glow) 60%, transparent);
   }
 }
 
@@ -811,7 +811,7 @@
   border-radius: 14px;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--c-black) 92%, transparent),
+    color-mix(in srgb, var(--c-shadow) 92%, transparent),
     color-mix(in srgb, var(--c-surface-raised) 92%, transparent)
   );
   box-shadow:
@@ -970,7 +970,7 @@
   border-color: var(--c-brand);
   background: color-mix(in srgb, var(--c-brand-deep) 32%, transparent);
   color: var(--c-text);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--c-brand) 35%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-glow) 35%, transparent);
 }
 
 .battle__railstep.is-done {
@@ -989,7 +989,7 @@
   font-weight: 700;
   line-height: 1;
   color: var(--c-text);
-  text-shadow: 0 0 40px color-mix(in srgb, var(--c-brand) 45%, transparent);
+  text-shadow: 0 0 40px color-mix(in srgb, var(--c-glow) 45%, transparent);
 }
 
 .battle__facts {
@@ -1152,7 +1152,7 @@
   line-height: 1.05;
   letter-spacing: 0.02em;
   color: var(--c-text);
-  text-shadow: 0 0 34px color-mix(in srgb, var(--c-brand) 45%, transparent);
+  text-shadow: 0 0 34px color-mix(in srgb, var(--c-glow) 45%, transparent);
 }
 
 /* The colour of the job that won the round, not of the side that won it. */
@@ -1207,7 +1207,7 @@
 .battle__dimbar {
   display: flex;
   height: 8px;
-  background: color-mix(in srgb, var(--c-black) 70%, transparent);
+  background: color-mix(in srgb, var(--c-shadow) 70%, transparent);
 }
 
 .battle__dimbar.is-atk {
@@ -1404,7 +1404,7 @@
   padding: 0.28rem 0.5rem 0.28rem 0;
   border: 1px solid color-mix(in srgb, var(--c-border) 70%, transparent);
   border-radius: 3px;
-  background: color-mix(in srgb, #000 22%, transparent);
+  background: color-mix(in srgb, var(--c-shadow) 22%, transparent);
 }
 
 .battle__lanename {

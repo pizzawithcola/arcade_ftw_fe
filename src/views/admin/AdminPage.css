@@ -213,7 +213,7 @@
   border: 1px solid var(--c-brand-deep);
   border-radius: 6px;
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -475,11 +475,11 @@
   aspect-ratio: 16 / 9;
   border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: var(--c-black);
+  background: var(--c-well);
   /* The iframe below is laid out at 1920×1080 and scaled to fit, so the box has
      to clip the unscaled frame rather than let it spill over the console. */
   overflow: hidden;
-  box-shadow: 0 0 0 1px var(--c-border), 0 12px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 0 1px var(--c-border), 0 12px 30px color-mix(in srgb, var(--c-shadow) 60%, transparent);
 }
 
 .admin__tv iframe {
@@ -560,7 +560,7 @@
   padding: 0.5rem 0.6rem 0.6rem;
   border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: var(--c-black);
+  background: var(--c-well);
 }
 
 .admin__jumpgroup-title {
@@ -588,7 +588,7 @@
 .admin__jumps button.is-current {
   border-color: var(--c-brand-deep);
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
 }
 
 .admin__error {
@@ -710,7 +710,7 @@
   border: 1px solid var(--c-brand-deep);
   border-radius: 6px;
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
   font: inherit;
   font-size: 0.78rem;
   font-weight: 600;
@@ -797,7 +797,7 @@
 .admin__editor-actions button[type='submit'] {
   border-color: var(--c-brand-deep);
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
   font-weight: 600;
 }
 
@@ -936,17 +936,17 @@
 /* One hue per category, keyed off the data attribute so adding a category is a
    one-line change here rather than a matching CSS class in the component. */
 .admin__cat[data-category='data-shadow'],
-.admin__cats li[data-category='data-shadow'] { border-color: #16c6e2; color: #7fe0ee; }
+.admin__cats li[data-category='data-shadow'] { border-color: var(--c-cat-data); color: var(--c-cat-data-ink); }
 .admin__cat[data-category='hallucination'],
-.admin__cats li[data-category='hallucination'] { border-color: #a259ff; color: #c79bff; }
+.admin__cats li[data-category='hallucination'] { border-color: var(--c-cat-hallucination); color: var(--c-cat-hallucination-ink); }
 .admin__cat[data-category='phishing-email'],
-.admin__cats li[data-category='phishing-email'] { border-color: var(--c-brand); color: #ff8a92; }
+.admin__cats li[data-category='phishing-email'] { border-color: var(--c-cat-phishing); color: var(--c-cat-phishing-ink); }
 .admin__cat[data-category='ceo-impersonation'],
-.admin__cats li[data-category='ceo-impersonation'] { border-color: #f0a028; color: #ffc46b; }
+.admin__cats li[data-category='ceo-impersonation'] { border-color: var(--c-cat-ceo); color: var(--c-cat-ceo-ink); }
 .admin__cat[data-category='ai-assistant'],
-.admin__cats li[data-category='ai-assistant'] { border-color: #4a6cff; color: #93a7ff; }
+.admin__cats li[data-category='ai-assistant'] { border-color: var(--c-cat-assistant); color: var(--c-cat-assistant-ink); }
 .admin__cat[data-category='knowledge-base'],
-.admin__cats li[data-category='knowledge-base'] { border-color: #35c46a; color: #86e6a8; }
+.admin__cats li[data-category='knowledge-base'] { border-color: var(--c-cat-knowledge); color: var(--c-cat-knowledge-ink); }
 
 /* ── Rooms: one line per room, expandable ─────────────────────────────────── */
 .admin__rooms {

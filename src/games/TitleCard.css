@@ -26,7 +26,7 @@
   background: linear-gradient(
     100deg,
     transparent 38%,
-    rgba(175, 0, 14, 0.35) 50%,
+    color-mix(in srgb, var(--c-glow-deep) 35%, transparent) 50%,
     transparent 62%
   );
   background-size: 260% 100%;
@@ -72,7 +72,7 @@
   text-align: center;
   text-wrap: balance;
   color: var(--c-text);
-  text-shadow: 0 0 1.6rem rgba(175, 0, 14, 0.55);
+  text-shadow: 0 0 1.6rem color-mix(in srgb, var(--c-glow-deep) 55%, transparent);
   /* Snaps in once rather than easing: a title card should feel like a cut. */
   animation: tcard-slam 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }

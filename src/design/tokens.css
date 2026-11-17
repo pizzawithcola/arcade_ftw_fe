@@ -48,6 +48,47 @@
   --c-paper-line: #262a33;
   --c-paper-dim: #9ba1ad;
 
+  /* Roles the rules mix with their own alpha.
+   *
+   * Each of these is a *colour*, not a colour-with-alpha: the rule that uses it
+   * writes `color-mix(in srgb, var(--c-glow) 70%, transparent)` and keeps its
+   * own weight. That is what lets light mode switch a bloom off by making the
+   * token itself transparent, instead of editing seventy shadows by hand.
+   *
+   * `--c-shadow` is a shadow, `--c-well` is a recess. They were the same black
+   * until now, which is why panels, inputs and grooves drifted apart. */
+  --c-on-brand: #f4f4f6;     /* type and marks on a brand-red fill */
+  --c-shadow: #000000;       /* every drop shadow, inset shade and scanline */
+  --c-scrim: #000000;        /* the dim behind a lifted overlay */
+  --c-well: #000000;         /* recess: inputs, grooves, badges, screens */
+  --c-glow: #db0011;         /* the bloom around a live element */
+  --c-glow-deep: #af000e;    /* the deeper wash behind a title */
+  --c-halo: #f4f4f6;         /* the white bloom that makes a small mark read */
+  --c-spark: #ffffff;        /* the hot core of a lit line */
+
+  /* The Hallucination slider's two leans. Not the win/lose pair: doubt is amber
+     because it is a warning, trust is green because it is a position, and both
+     need a pale twin for the fill behind the handle. */
+  --c-doubt: #f2a900;
+  --c-doubt-pale: #ffe27a;
+  --c-trust: #12b35c;
+  --c-trust-pale: #a8f5c8;
+
+  /* Question-bank categories, one hue each, and a lighter ink for the label.
+     They are badges in the console's table, never part of the stage. */
+  --c-cat-data: #16c6e2;
+  --c-cat-data-ink: #7fe0ee;
+  --c-cat-hallucination: #a259ff;
+  --c-cat-hallucination-ink: #c79bff;
+  --c-cat-phishing: var(--c-brand);
+  --c-cat-phishing-ink: #ff8a92;
+  --c-cat-ceo: #f0a028;
+  --c-cat-ceo-ink: #ffc46b;
+  --c-cat-assistant: #4a6cff;
+  --c-cat-assistant-ink: #93a7ff;
+  --c-cat-knowledge: #35c46a;
+  --c-cat-knowledge-ink: #86e6a8;
+
   /* The stage grid, 40px cells. */
   --c-grid-line: rgba(43, 43, 49, 0.9);
   --grid-cell: 40px;

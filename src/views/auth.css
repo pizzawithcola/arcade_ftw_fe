@@ -63,7 +63,7 @@
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--c-border);
   border-radius: 6px;
-  background: var(--c-black);
+  background: var(--c-well);
   color: var(--c-text);
   font: inherit;
 }
@@ -106,7 +106,7 @@
   border: none;
   border-radius: 6px;
   background: var(--c-brand-deep);
-  color: var(--c-text);
+  color: var(--c-on-brand);
   font: inherit;
   font-weight: 600;
   cursor: pointer;

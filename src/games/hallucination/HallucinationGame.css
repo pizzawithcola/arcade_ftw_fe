@@ -82,7 +82,7 @@
   border: 1px solid var(--c-brand-deep);
   border-radius: 50%;
   background: color-mix(in srgb, var(--c-brand-deep) 12%, transparent);
-  box-shadow: 0 0 14px rgba(219, 0, 17, 0.28);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--c-glow) 28%, transparent);
 }
 
 .chat__avatar-head {
@@ -152,7 +152,7 @@
   height: 0.6rem;
   border-radius: 2px;
   background: var(--c-brand-deep);
-  box-shadow: 0 0 10px rgba(219, 0, 17, 0.7);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--c-glow) 70%, transparent);
   rotate: 45deg;
 }
 
@@ -261,8 +261,8 @@
 }
 
 .hallu__slider.is-doubt {
-  --lean: #f2a900;
-  --lean-pale: #ffe27a;
+  --lean: var(--c-doubt);
+  --lean-pale: var(--c-doubt-pale);
   --lean-deep: color-mix(
     in srgb,
     var(--lean) calc(30% + 70% * var(--intensity, 1)),
@@ -271,8 +271,8 @@
 }
 
 .hallu__slider.is-trust {
-  --lean: #12b35c;
-  --lean-pale: #a8f5c8;
+  --lean: var(--c-trust);
+  --lean-pale: var(--c-trust-pale);
   --lean-deep: color-mix(
     in srgb,
     var(--lean) calc(30% + 70% * var(--intensity, 1)),
@@ -367,7 +367,7 @@
   height: 18px;
   border: 1px solid var(--c-border);
   border-radius: 999px;
-  background: #070707;
+  background: var(--c-well);
   overflow: hidden;
 }
 
@@ -498,7 +498,7 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--c-text);
-  text-shadow: 0 0 20px color-mix(in srgb, var(--c-brand) 45%, transparent);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--c-glow) 45%, transparent);
 }
 
 .hallu__slider.is-unsure .hallu__gain {
