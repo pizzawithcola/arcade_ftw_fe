@@ -165,39 +165,3 @@
   color: var(--c-text);
 }
 
-/* The three doors under the card: Leaderboard for the audience, Display and
-   Admin for staff. One row, equal thirds, wearing the same border, surface and
-   small caps as the fields above them.
-
-   `minmax(0, 1fr)` rather than `1fr`: a grid track defaults to at least its
-   content width, and "Leaderboard" is wide enough to push the row past the
-   card's edge on a narrow screen. */
-.login__doors {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.login__doors a {
-  padding: 0.65rem 0.35rem;
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  background: var(--c-surface);
-  color: var(--c-text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: center;
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: border-color 120ms ease, color 120ms ease;
-}
-
-.login__doors a:hover,
-.login__doors a:focus-visible {
-  border-color: var(--c-brand-deep);
-  color: var(--c-text);
-}

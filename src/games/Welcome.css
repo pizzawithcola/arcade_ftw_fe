@@ -25,14 +25,21 @@
      neighbours did not, which reads as a different size of card. */
   --wcard-name: clamp(0.95rem, 1.22vw, 1.28rem);
   --welcome-title: clamp(2.4rem, 4.6vw, 4.6rem);
-  /* The wall splits in half: the name and its promise ride the top half, the
-     four games the bottom. On a 1080p screen the single centred stack left a
-     band of dead space under the cards, which read as an unfinished screen. */
+  /* The wall splits in half as well. */
   grid-template-rows: 1fr 1fr;
   align-items: center;
 }
 
-.welcome--display .wcard__name {
+/* The same split on the iPad: the name and its promise ride the top half, the
+   cards the bottom. One centred stack left a band of dead space under the cards
+   on the wall, and the tablet showed the same hole. */
+.welcome {
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+  align-content: stretch;
+}
+
+.wcard__name {
   text-align: center;
 }
 

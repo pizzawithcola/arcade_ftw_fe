@@ -9,6 +9,10 @@
   width: 100%;
   height: 100%;
   padding: clamp(1rem, 3vh, 2rem) 0;
+  /* The countdown used to hold the bottom of the card. Without it the name sits
+     a touch above the geometric centre, which is where a title reads as the
+     middle of a screen rather than as something that fell to the bottom. */
+  transform: translateY(-2.5rem);
   overflow: hidden;
   /* 42px on the tablet, the same as the welcome screen's title. */
   --tcard-title: min(42px, 11vw);
@@ -101,16 +105,6 @@
   );
   transform-origin: center;
   animation: tcard-rule 0.6s 0.15s cubic-bezier(0.2, 0.9, 0.3, 1) both;
-}
-
-/* The countdown sits under the rule, in the UI face: Orbitron's zero is slashed,
-   which reads as a number rather than a clock. */
-.tcard__count {
-  margin: 0;
-  font-family: ui-monospace, monospace;
-  font-size: clamp(0.62rem, 1.5vh, 0.76rem);
-  letter-spacing: 0.2em;
-  color: var(--c-text-dim);
 }
 
 @keyframes tcard-scan {

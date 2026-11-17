@@ -362,7 +362,6 @@ function QuestionOnScreen({
 
   const question = drawQuestions(seed)[index]
   if (!question) return null
-  const slot = slotAt(index)
   return (
     <article className="display__quiz">
       <p className="display__prompt">{question.text}</p>
@@ -374,9 +373,6 @@ function QuestionOnScreen({
           </li>
         ))}
       </ol>
-      <p className="display__look">
-        {slot.multiplier > 1 ? `BONUS ×${slot.multiplier} · ` : ''}Answer on your iPad.
-      </p>
     </article>
   )
 }
@@ -906,27 +902,39 @@ export default function DisplayPage() {
                   seed={`${code}:${nodeIndex}`}
                 />
               )}
-              <p className="display__kicker">
-                question {question.index + 1} / {question.count}
-              </p>
             </>
           )}
 
-          {phase === 'playing' &&
-            !question &&
-            !['leaderboard', 'opening', 'intro', 'outro'].includes(node?.type ?? '') &&
-            // In the battle only the picking phase is answered on the iPad; under
-            // the draw, the rules and the result it was a line of noise.
-            (node?.game !== 'sabotage' || sabotage?.phase === 'select') && (
-            <p className="display__look">Answer on your iPad →</p>
-          )}
           {/* The outro says its own goodbye; this line only covers a show that
               was ended from the console mid-node. */}
-          {phase === 'finished' && node?.type !== 'outro' && (
-            <p className="display__look">That's the show. Thank you for playing.</p>
-          )}
               </div>
             </div>
+          </div>
+
+          {/* Under the panel, not in it: both lines are instructions for the
+              room's hands, and inside the frame they took height off the screen
+              they were describing. */}
+          <div className="display__below">
+            {question && (
+              <p className="display__kicker">
+                question {question.index + 1} / {question.count}
+              </p>
+            )}
+            {/* While a question is open the room answers on its iPads; once the
+                answers close the wall is showing standings, and the line would
+                be telling them to do something they cannot do any more. */}
+            {phase === 'playing' &&
+              ((question && !reviewing) ||
+                (!question &&
+                  !['leaderboard', 'opening', 'intro', 'outro'].includes(node?.type ?? '') &&
+                  // In the battle only the picking phase is answered on the iPad;
+                  // under the draw, the rules and the result it was a line of noise.
+                  (node?.game !== 'sabotage' || sabotage?.phase === 'select'))) && (
+                <p className="display__look">Answer on your iPad →</p>
+              )}
+            {phase === 'finished' && node?.type !== 'outro' && (
+              <p className="display__look">That's the show. Thank you for playing.</p>
+            )}
           </div>
         </div>
       )}

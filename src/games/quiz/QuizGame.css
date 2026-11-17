@@ -57,10 +57,12 @@
 
 .quiz__options {
   display: grid;
-  /* Every option takes the height of the tallest one: `1fr` rows all resolve to
-     the same size in an auto-height grid, so a one-line answer and a three-line
-     answer wear the same box. The text inside centres on that box. */
-  grid-auto-rows: 1fr;
+  /* Each row is as tall as its own option. Equal rows looked tidy before the
+     answer, but the moment the explanation opened under the right one every
+     box grew with it, so the card jumped and three quiet options took the
+     space of one. */
+  grid-auto-rows: auto;
+  align-items: start;
   gap: clamp(0.35rem, 1vh, 0.55rem);
   width: 100%;
 }
@@ -129,7 +131,9 @@
 }
 
 .quiz__slot > .quiz__option {
-  height: 100%;
+  /* Content height, not the row's: the note below belongs to the option it
+     explains and must not push the others. */
+  height: auto;
 }
 
 .quiz__option {
@@ -597,4 +601,14 @@
   .quiz__reelstrip span.is-landed {
     animation: none;
   }
+}
+
+/* The question and the four options are the whole screen, so they get a margin
+   of their own above and below rather than sitting flush in the stage. */
+.quiz__stage .quiz__question {
+  margin-top: 1rem;
+}
+
+.quiz__stage .quiz__options {
+  margin-bottom: 1rem;
 }

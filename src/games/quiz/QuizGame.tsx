@@ -195,7 +195,8 @@ return (
             />
           ) : (
             <>
-          <p className="quiz__from">{slotAt(index).label}</p>
+          {/* No topic line: the round is the topic, and the player has just
+              played it. */}
           <p className="quiz__question">{question.text}</p>
           <div className="quiz__options">
             {bankOptions(question).map((option) => {
@@ -259,8 +260,6 @@ return (
               )
             })}
           </div>
-
-          {waiting && <p className="quiz__waiting">Waiting for others to answer…</p>}
 
           {revealed && (
             <div className="quiz__reveal">

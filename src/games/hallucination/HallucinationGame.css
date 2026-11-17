@@ -714,8 +714,30 @@
   font-size: 1.02rem;
 }
 
+.hallu__reveal--score {
+  /* Air above and below the one line that survives the review: it is the last
+     thing the player reads before the next question, and it was sitting on the
+     card's bottom edge. */
+  margin: 1rem 0;
+  padding-bottom: 1rem;
+}
+
 .hallu__reveal--score .hallu__verdictkind {
   font-size: 1.25rem;
+}
+
+/* The number carries the outcome: green for points won, red for points lost. */
+.hallu__scorenum {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hallu__scorenum.is-gain {
+  color: var(--c-win);
+}
+
+.hallu__scorenum.is-loss {
+  color: var(--c-brand);
 }
 
 /* The counter is what takes the free space in this bar, so the mirrored

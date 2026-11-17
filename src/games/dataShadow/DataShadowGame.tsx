@@ -185,9 +185,6 @@ export default function DataShadowGame({
             <span className="post__who">
               <span className="post__name">{POST_META.author}</span>
               <span className="post__headline">{POST_META.headline}</span>
-              <span className="post__time">
-                {POST_META.ago} · <span className="post__globe">🌐</span>
-              </span>
             </span>
           </header>
 
@@ -285,23 +282,24 @@ export default function DataShadowGame({
             {result.missed.length + result.missedImages.length > 0 ? (
               <>
                 <p className="shadow__revealtitle">What you let through</p>
+                {/* The answer, not the lesson: which lines were leaks and which
+                    flags were wrong, with no explanation under each. The report
+                    rail already marks every flag, so this only has to fill in
+                    what the player never flagged at all. */}
                 <ul className="shadow__missed">
                   {result.missed.map((leak) => (
                     <li key={leak.id}>
                       <span className="shadow__missedtext">“{leak.text}”</span>
-                      <span className="shadow__why">{leak.why}</span>
                     </li>
                   ))}
                   {result.missedImages.map((image) => (
                     <li key={image.id}>
                       <span className="shadow__missedtext">[{image.label}]</span>
-                      <span className="shadow__why">{image.why}</span>
                     </li>
                   ))}
                   {result.rejectedImages.map((image) => (
                     <li key={image.id}>
-                      <span className="shadow__missedtext is-safe">[{image.label}] — safe</span>
-                      <span className="shadow__why">{image.why}</span>
+                      <span className="shadow__missedtext is-safe">[{image.label}] — not a leak</span>
                     </li>
                   ))}
                 </ul>

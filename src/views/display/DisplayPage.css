@@ -1710,8 +1710,14 @@
    1666/910 would have made the card 60px taller than the space left over.
    55rem by 707 is 2.10, which is what the panel actually gives. */
 .hud--display .display__post--split {
-  width: min(55rem, 100%);
-  padding: 0.25rem 1.2rem;
+  /* Wider by the 3rem the copy lost to its own padding and the smaller
+     pictures: the card is still the panel's proportion, the lines just wrap
+     twice instead of three times. */
+  width: min(58rem, 100%);
+  /* 16px of air above the byline and to the left of the copy, so the text stops
+     hugging the card's edge. The right side keeps its own padding: that is the
+     gap the pictures sit in. */
+  padding: 0.6rem 1.2rem 0.6rem 0.6rem;
 }
 
 
@@ -1729,7 +1735,15 @@
 }
 
 .hud--display .display__post--split .display__postshot {
-  width: clamp(9rem, 30vh, 22rem);
+  /* Smaller than the first pass: two squares at 30vh filled the card top to
+     bottom and left no air between them or around them. */
+  width: clamp(8rem, 26vh, 20rem);
+}
+
+/* Centred on the copy beside them: flush to the top, the pair left all of the
+   card's spare height under it, which is what read as "crowded at the top". */
+.hud--display .display__post--split .display__postshots {
+  align-self: center;
 }
 
 /* The two answers under the conversation sit in the space the chat leaves, not
@@ -1768,7 +1782,15 @@
 /* Two squares that together are as tall as the copy beside them, so neither
    column has air at the bottom. */
 .hud--display .display__post--split .display__postshot {
-  width: clamp(9rem, 30vh, 22rem);
+  /* Smaller than the first pass: two squares at 30vh filled the card top to
+     bottom and left no air between them or around them. */
+  width: clamp(8rem, 26vh, 20rem);
+}
+
+/* Centred on the copy beside them: flush to the top, the pair left all of the
+   card's spare height under it, which is what read as "crowded at the top". */
+.hud--display .display__post--split .display__postshots {
+  align-self: center;
 }
 /* A little air under the byline: 0.9rem read as a caption glued to the copy.
    1.7rem is that 0.9 plus 2% of the screen height. */
@@ -1776,19 +1798,28 @@
   margin-bottom: 1.7rem;
 }
 
-/* Four answers down one column need tighter rows than two across did: the panel
-   is the same height, so the space comes out of the padding and the gaps rather
-   than out of the type. */
+/* One option per row made the boxes long: a single answer ran the width of the
+   panel. They stop at 80% of it, the type steps down with them, and the gap
+   between rows is the 16px of air the room asked for. */
 .hud--display .display__quiz {
   gap: 0.7rem;
 }
 
 .hud--display .display__options {
-  gap: 0.45rem;
+  width: 80%;
+  gap: 1rem;
 }
 
 .hud--display .display__option {
   padding-block: 0.32rem;
+}
+
+.hud--display .display__optiontext {
+  font-size: 1.05rem;
+}
+
+.hud--display .display__optionletter {
+  font-size: 0.8rem;
 }
 
 /* ─── the wall's progress track ───────────────────────────────────────────────
@@ -1823,4 +1854,29 @@
 .display__seg.is-now {
   background: var(--c-brand);
   filter: drop-shadow(0 0 10px color-mix(in srgb, var(--c-glow) 85%, transparent));
+}
+
+/* ─── the lines under the panel ───────────────────────────────────────────────
+   "Answer on your iPad" and the question counter sit below the frame now: they
+   are instructions for the hands in the room, and inside the panel they were
+   taking height from the screen they described. */
+.display__below {
+  /* Pinned under the panel rather than stacked after it: the panel is sized as
+     a share of the screen, and a row in the grid would have taken its height
+     out of the screen it is describing. The frame's own bottom margin is where
+     these two lines live. */
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.9rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  z-index: 5;
+}
+
+.hud--display .display__below .display__kicker,
+.hud--display .display__below .display__look {
+  font-size: 0.8rem;
+  margin: 0;
 }

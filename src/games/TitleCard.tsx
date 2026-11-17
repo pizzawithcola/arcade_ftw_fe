@@ -7,7 +7,8 @@
  *
  * Nothing else goes on it. Three seconds is long enough to read a title and not
  * long enough to read a sentence under one, so a line of copy here was only
- * ever half-read.
+ * ever half-read - and a countdown is worse than copy: the title is the moment,
+ * and a clock under it says "wait" instead.
  *
  * The name is the only red type on the card, and it is far past display size:
  * red at body size fails contrast on black.
@@ -17,13 +18,11 @@ import './TitleCard.css'
 export default function TitleCard({
   title,
   kicker,
-  countdown,
   size = 'device',
 }: {
   title: string
   /** Small line above the name: which round, or what is next. */
   kicker: string
-  countdown: number
   size?: 'device' | 'display'
 }) {
   return (
@@ -37,7 +36,6 @@ export default function TitleCard({
         {title}
       </p>
       <span className="tcard__rule" aria-hidden="true" />
-      <p className="tcard__count">{countdown}s</p>
     </div>
   )
 }

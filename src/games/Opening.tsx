@@ -47,7 +47,6 @@ export default function Opening({
       <TitleCard
         title={entry.name}
         kicker={at ? `game ${at} of ${total}` : 'next up'}
-        countdown={Math.max(0, Math.ceil((titleMs - elapsedMs) / 1000))}
         size={size}
       />
     )

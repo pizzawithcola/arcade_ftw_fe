@@ -143,7 +143,7 @@ function BetweenShows({
               <span className="wait__brand">AI Cyber Arcade</span>
               <span className="wait__hi">{headline}</span>
             </h1>
-            <p className="wait__note">{note}</p>
+            {note && <p className="wait__note">{note}</p>}
             <SignOut onSignOut={onSignOut} />
           </div>
         </div>
@@ -226,10 +226,6 @@ function NodeStage({
             <div className="hud__bar">
               <span className="hud__chevrons" aria-hidden="true" />
               <span className="hud__event">That’s the show</span>
-              <span className="hud__status">
-                <span className="hud__dot" aria-hidden="true" />
-                complete
-              </span>
               <span className="hud__chevrons hud__chevrons--flip" aria-hidden="true" />
             </div>
             <div className="hud__stage">
@@ -569,7 +565,7 @@ export default function PlayPage() {
         <BetweenShows
           eventName={eventName}
           headline="Thanks for playing"
-          note="That's a wrap — signing you out…"
+          note=""
           onSignOut={signOut}
         />
       ) : phase === 'finished' ? (

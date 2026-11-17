@@ -278,8 +278,11 @@ export default function HallucinationGame({
         <div className={`hallu__reveal hallu__reveal--score ${right ? 'is-good' : 'is-bad'}`}>
           <div className="hallu__verdict">
             <span className="hallu__verdictkind">
-              Your score for this round is: {points > 0 ? '+' : ''}
-              {points}
+              Your score for this round is:{' '}
+              <b className={`hallu__scorenum ${points > 0 ? 'is-gain' : points < 0 ? 'is-loss' : ''}`}>
+                {points > 0 ? '+' : ''}
+                {points}
+              </b>
             </span>
           </div>
         </div>

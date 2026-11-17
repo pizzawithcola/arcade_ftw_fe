@@ -15,7 +15,10 @@
   /* The report is a fixed rail; the post takes what is left and scrolls. The
      row has to be bounded, or the column grows to its content and the stage
      simply clips the tail of the post instead of scrolling it. */
-  grid-template-columns: minmax(0, 1fr) clamp(15rem, 30vw, 23rem);
+  /* A tenth narrower than it was: the post is the question and the report is
+     the answer pad, so the copy gets the extra room and the rail still fits the
+     item rows it holds. */
+  grid-template-columns: minmax(0, 1fr) clamp(13.5rem, 27vw, 20.7rem);
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   gap: 0.85rem;
@@ -565,12 +568,6 @@
   font-size: 0.86rem;
 }
 
-.shadow__why {
-  color: var(--c-text-muted);
-  font-size: 0.82rem;
-  line-height: 1.6;
-}
-
 .shadow__footnote {
   margin: 0.8rem 0 0;
   font-size: 0.8rem;
@@ -646,8 +643,9 @@
   padding: clamp(1rem, 2.6vh, 1.6rem) 1rem 0.7rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   /* Proportional, not a fixed px gap: the pictures keep the same size-to-gap
-     ratio whether the card is an iPad wide or a desktop wide. */
-  gap: 4.8%;
+     ratio whether the card is an iPad wide or a desktop wide. Tighter than the
+     first pass - the pair read as two separate attachments. */
+  gap: 3%;
 }
 
 .post__shot {

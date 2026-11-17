@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchEvents, fetchSession, loginPlayer, type EventOption } from '../../api'
 import '../auth.css'
 
@@ -138,13 +138,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* The three doors, outside the form so pressing one can never submit a
-            half-filled sign-in. Leaderboard is public; the other two are staff. */}
-        <nav className="login__doors" aria-label="Other pages">
-          <Link to="/leaderboard">Leaderboard</Link>
-          <Link to="/display">Display</Link>
-          <Link to="/admin">Admin</Link>
-        </nav>
+        {/* No doors under the card any more: a player's thumb reaches that strip
+            on the way to Enter, and /display and /admin are typed by staff who
+            know the address. The leaderboard keeps its own link on the wall. */}
       </div>
     </main>
   )

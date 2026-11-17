@@ -139,7 +139,9 @@
 .ldb__live {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  /* Centred over the board: sitting at the right edge it read as a status for
+     the last row rather than a heading for the list. */
+  justify-content: center;
   gap: 0.5rem;
   margin: 0 0 0.5rem;
   font-family: 'Orbitron', ui-monospace, monospace;

@@ -204,7 +204,10 @@ describe('an opening hands over from its name to its rules', () => {
       }))
       assert.match(title.tab, /up next/i)
       assert.ok(title.name.length > 0, 'the name card has no name')
-      assert.equal(title.extra, 3, 'the name card should be kicker, title and count only')
+      // Kicker and title only: the countdown under the rule is gone, because a
+      // clock on the name card tells the room to wait through the one moment
+      // that is about the game starting.
+      assert.equal(title.extra, 2, 'the name card should be kicker and title only')
 
       await page.waitForTimeout(3200)
       const rules = await page.evaluate(() => ({
@@ -722,11 +725,15 @@ describe('the Ultimate round', () => {
       const first = await page.evaluate(() => ({
         count: document.querySelector('.quiz__count')?.innerText.replace(/\s+/g, ' ') ?? '',
         bonus: document.querySelector('.quiz__bonus')?.textContent ?? null,
-        from: document.querySelector('.quiz__from')?.textContent ?? '',
       }))
       assert.equal(first.count, '1 / 3')
       assert.equal(first.bonus, null, 'question one is not a bonus')
-      assert.ok(first.from.length > 0, 'question one does not say where it came from')
+      // The round is the topic: the screen no longer names the pool it drew from.
+      assert.equal(
+        await page.evaluate(() => !!document.querySelector('.quiz__from')),
+        false,
+        'the quiz still names its question pool',
+      )
 
       // Waiting through the real cycles is the only honest way to reach a bonus:
       // the cards cannot be seeked to, and faking the clock would test nothing.
