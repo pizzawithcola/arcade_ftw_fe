@@ -474,7 +474,7 @@
   min-height: 12rem;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--c-border);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--c-well);
   /* The iframe below is laid out at 1920×1080 and scaled to fit, so the box has
      to clip the unscaled frame rather than let it spill over the console. */

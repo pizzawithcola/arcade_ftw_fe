@@ -44,7 +44,7 @@
   --c-border: #e2ded8;
   --c-text: #1a1a1a;
   --c-text-muted: #5f5a55;
-  --c-text-dim: #918a83;
+  --c-text-dim: #7b756e;
 
   /* The Data Shadow post becomes a real feed card: white, with ink on it. */
   --c-paper: #ffffff;
@@ -95,7 +95,46 @@
 
 /* Glow → shadow. Same shape, read in daylight. */
 [data-theme='light'] .hud__matrix {
-  opacity: 0.55;
+  /* The dot matrix is off (its token is transparent); what is left is the
+     panel's own structure. */
+  opacity: 0;
+}
+
+/* Scanlines are a property of glass. On paper a 1-in-3px dark rule reads as a
+   lined notebook, so it drops to a texture you have to look for. */
+[data-theme='light'] .hud__inner::before {
+  opacity: 0.14;
+}
+
+/* The sweep is a moving red band: on paper it reads as a smudge crossing the
+   page, so it keeps a fifth of its weight. */
+[data-theme='light'] .hud__inner::after {
+  opacity: 0.5;
+}
+
+/* The receding floor: brand red at 38% is a pink mesh on a white page. */
+[data-theme='light'] .hud__stage::before {
+  opacity: 0.45;
+}
+
+/* The line the panel boots out of is a lit hairline on black. On paper it is a
+   hard red rule that runs wider than the panel and crosses the page, so it is
+   gone rather than dimmed. */
+[data-theme='light'] .hud::after {
+  display: none;
+}
+
+/* The two words on the wall are lit signs in the dark theme; on paper the halo
+   is a smudge behind the letters. */
+[data-theme='light'] .display__choicetrust,
+[data-theme='light'] .display__choicedoubt {
+  text-shadow: none;
+}
+
+/* The slider's attention sheen keeps its shape at a third of the weight: on
+   paper a red band sweeping across is a stain. */
+[data-theme='light'] .hallu__slider::after {
+  opacity: 0.35;
 }
 
 [data-theme='light'] .hud__frame {
@@ -167,11 +206,15 @@
 }
 
 /* The board panel carries the same vertical wash as the chassis; at 10% it is a
-   pink band above the first row. */
+   pink band above the first row. Its 60px inner shade is a lit-screen vignette,
+   which on paper turns the whole plate grey. */
 [data-theme='light'] .ldb__frame {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--c-brand-deep) 4%, transparent), transparent 18%),
     var(--c-surface);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--c-brand) 22%, transparent),
+    0 1px 3px color-mix(in srgb, var(--c-shadow) 10%, transparent);
 }
 
 [data-theme='light'] .hud__stage,
@@ -183,12 +226,49 @@
    black bar lying across the question, so it becomes a groove with a hairline
    edge - same control, same ticks, same red-to-green fill. */
 [data-theme='light'] .hallu__track {
-  background: color-mix(in srgb, var(--c-text) 8%, var(--c-surface));
+  background: color-mix(in srgb, var(--c-text) 7%, var(--c-surface));
   border-color: var(--c-border);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--c-shadow) 12%, transparent);
+}
+
+/* The handle carries the lean as a ring, not as a lamp: `--c-text` is ink here,
+   so the dark theme's white pill would come out as a solid black block.
+
+   Two rules, not one selector list: a browser drops the whole list when any
+   selector is unknown, and `::-moz-range-thumb` is unknown to WebKit. */
+[data-theme='light'] .hallu__range::-webkit-slider-thumb {
+  background: var(--c-surface);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-shadow) 20%, transparent);
+}
+
+[data-theme='light'] .hallu__range::-moz-range-thumb {
+  background: var(--c-surface);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-shadow) 20%, transparent);
+}
+
+[data-theme='light'] .hallu__range:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--c-surface),
+    0 0 0 5px var(--c-text),
+    0 2px 8px color-mix(in srgb, var(--c-shadow) 24%, transparent);
+}
+
+/* The hint handle sits behind the real one until the first touch. Its halo is
+   ink on ink, which on paper is a grey smudge. */
+[data-theme='light'] .hallu__ghost {
+  border-color: color-mix(in srgb, var(--c-text) 30%, transparent);
+  background: color-mix(in srgb, var(--c-text) 5%, transparent);
+  box-shadow: none;
+}
+
+/* A glow behind a label is invisible on paper and leaves a shadow of itself. */
+[data-theme='light'] .hallu__slider.is-doubt .hallu__label:first-child.is-on,
+[data-theme='light'] .hallu__slider.is-trust .hallu__label:last-child.is-on {
+  text-shadow: none;
 }
 
 [data-theme='light'] .hallu__ticks {
-  opacity: 0.35;
+  opacity: 0.55;
 }
 
 [data-theme='light'] .hallu__fill {
