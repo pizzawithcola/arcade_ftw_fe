@@ -656,18 +656,6 @@ function BattleBoard({ sabotage }: { sabotage: SabotageState }) {
 }
 
 export default function DisplayPage() {
-  // The wall is a projector: flag the document so the stylesheet can scale the
-  // whole design with the viewport instead of capping it in rem. Every width,
-  // type size and gap in this route is rem, so one root size scales them all
-  // together and a 4K wall is the 1920 layout at 2x rather than a postage stamp
-  // in the middle of a huge screen. The tablet route never sets this.
-  useEffect(() => {
-    document.documentElement.dataset.wall = ''
-    return () => {
-      delete document.documentElement.dataset.wall
-    }
-  }, [])
-
   const { code: pinned } = useParams()
   const [session, setSession] = useState<Session | null>(null)
   const [checked, setChecked] = useState(false)
