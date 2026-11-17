@@ -491,6 +491,26 @@ export function listPlayers(params: { room?: string; event?: string } = {}): Pro
   )
 }
 
+/** Retime a room that has not started. The operator ticks a game off and the
+ *  room in front of them gets shorter; a played room refuses with 409. */
+export function setRoomModules(code: string, modules: string[]): Promise<RoomSnapshot> {
+  return request<
+    Omit<RoomSnapshot, 'createdAt' | 'closedAt' | 'clients' | 'players'> & {
+      created_at: string
+      closed_at: string | null
+    }
+  >(`/api/rooms/${encodeURIComponent(code)}/modules`, {
+    method: 'POST',
+    body: JSON.stringify({ modules }),
+  }).then((room) => ({
+    ...room,
+    clients: 0,
+    players: 0,
+    createdAt: room.created_at,
+    closedAt: room.closed_at,
+  }))
+}
+
 export function listRooms(): Promise<RoomList> {
   return request<{
     current: string | null

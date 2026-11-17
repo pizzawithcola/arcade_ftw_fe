@@ -3,6 +3,7 @@ import {
   addPlayer,
   clearToken,
   createRoom,
+  setRoomModules,
   deletePlayer,
   deleteRoom,
   fetchEvents,
@@ -198,12 +199,14 @@ export default function AdminPage() {
   const [current, setCurrent] = useState<string>('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  // Which modules the *next* room is built from. A room's set is fixed once it
-  // exists, so this is a plan for the next one, never an edit of the current.
-  // Which modules the *next* room is built from. Kept on the server, so the
+  // Which modules the show runs. Kept on the server, so the
   // venue laptop and this one agree and a refreshed browser does not quietly
   // restore the full show; `modules` is the local copy the checkboxes draw.
   const [modules, setModules] = useState<string[]>(ALL_MODULES)
+  // The room in front of the operator, so the picker can retime it while it is
+  // still waiting. Read through a ref: the callback below must not be rebuilt on
+  // every poll, or a run of checkbox clicks would race itself.
+  const liveRoom = useRef<RoomSnapshot | null>(null)
 
   useEffect(() => {
     void fetchSession().then((found) => {
@@ -231,22 +234,6 @@ export default function AdminPage() {
     }
   }, [session])
 
-  const onModules = useCallback(
-    (next: string[]) => {
-      // Optimistic: a checkbox that waits for a round trip feels broken. A
-      // failed save re-reads the server, so the boxes stop showing a set that
-      // was never stored.
-      setModules(next)
-      void saveSettings({ modules: next }).catch((caught: unknown) => {
-        setError(caught instanceof Error ? caught.message : String(caught))
-        void fetchSettings()
-          .then((loaded) => setModules(loaded.modules))
-          .catch(() => undefined)
-      })
-    },
-    [],
-  )
-
   const load = useCallback(
     () =>
       listRooms()
@@ -254,6 +241,7 @@ export default function AdminPage() {
           setRooms(loaded.rooms)
           // The operator always works on the newest still-open room.
           setCurrent(loaded.current ?? '')
+          liveRoom.current = loaded.rooms.find((item) => item.code === loaded.current) ?? null
           setError('')
         })
         .catch((caught: unknown) => {
@@ -266,6 +254,32 @@ export default function AdminPage() {
           setError(caught instanceof Error ? caught.message : String(caught))
         }),
     [],
+  )
+
+  const onModules = useCallback(
+    (next: string[]) => {
+      // Optimistic: a checkbox that waits for a round trip feels broken. A
+      // failed save re-reads the server, so the boxes stop showing a set that
+      // was never stored.
+      setModules(next)
+      // A room that has not started is still a plan, so the picker retimes it
+      // rather than only describing the next one. A played room refuses with
+      // 409: its node indices are part of every score key, so the show it ran
+      // has to stay the show it ran.
+      const open = liveRoom.current
+      const retime =
+        open && open.state?.phase === 'waiting' ? setRoomModules(open.code, next) : null
+      void Promise.all([saveSettings({ modules: next }), retime])
+        .then(() => load())
+        .catch((caught: unknown) => {
+          setError(caught instanceof Error ? caught.message : String(caught))
+          void fetchSettings()
+            .then((loaded) => setModules(loaded.modules))
+            .catch(() => undefined)
+          void load()
+        })
+    },
+    [load],
   )
 
   useEffect(() => {
@@ -528,12 +542,14 @@ function ScreenPreview({ code, screen }: { code: string; screen: PreviewScreen }
 }
 
 /**
- * The module checkboxes for the next room.
+ * The module checkboxes.
  *
  * Ticking a game off shortens the show: the server builds the room's flow from
  * this set, so a game that is not ticked has no nodes at all rather than nodes
- * the engine skips. The estimate beside the boxes is the raw sum of the modules'
- * own lengths; the room's `total_sec` replaces it once the room exists.
+ * the engine skips. A room that has not started is retimed on the spot; a room
+ * that has played keeps its flow, and the set becomes the plan for the next one.
+ * The estimate beside the boxes is the raw sum of the modules' own lengths; the
+ * room's `total_sec` replaces it once the room exists.
  */
 function ModulePicker({
   modules,
@@ -556,7 +572,7 @@ function ModulePicker({
   return (
     <div className="admin__modules">
       <div className="admin__modules-head">
-        <span className="admin__modules-title">Modules for the next room</span>
+        <span className="admin__modules-title">Modules</span>
         <span className="admin__modules-summary">{moduleSummary(modules)}</span>
       </div>
       <div className="admin__modules-list">
@@ -1304,8 +1320,8 @@ function SettingsView({
   const counts = bankCounts()
   return (
     <>
-      {/* A room's node set is fixed when it is built, so this is a setting for
-          the next room rather than an edit of the show in front of the room. */}
+      {/* A waiting room is retimed in place; a started one keeps the flow it is
+          playing, because its node indices are part of every score key. */}
       <section className="admin__panel admin__panel--wide">
         <div className="admin__panel-head">
           <h2>Modules</h2>
