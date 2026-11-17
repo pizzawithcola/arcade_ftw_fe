@@ -11,6 +11,23 @@ body,
 /* One canvas for the whole app: black, with the 40px rule grid carried over
    from the previous arcade's homepage. Every view paints on top of it, and
    red is reserved for actions, rails and live state. */
+/* The wall scales its whole design with the screen.
+ *
+ * Everything on `/display` is sized in rem, so the root font size is the one
+ * lever that moves widths, type, gaps and hairlines together. 1920x1080 is the
+ * reference - `0.8333vw` is exactly 16px there, so the 1920 wall is unchanged -
+ * and a 4K wall becomes the same layout at twice the size. The floor keeps a
+ * small projector at the design size rather than shrinking it; the ceiling stops
+ * an absurdly wide screen from turning the show into three words per line.
+ *
+ * Content columns keep their own rem measures (`54rem` for a conversation,
+ * `46rem` for a board) precisely because those measures scale too: the line
+ * length in characters, which is what makes text readable, does not change.
+ */
+html[data-wall] {
+  font-size: clamp(16px, 0.8333vw, 44px);
+}
+
 body {
   margin: 0;
   background-color: var(--c-black);
