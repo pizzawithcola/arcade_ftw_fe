@@ -1157,3 +1157,36 @@
   color: var(--c-text-dim);
 }
 
+
+/* The theme switch, next to sign out: a room-wide control, not a page setting. */
+.admin__theme {
+  display: flex;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+/* The sign out button's own `margin-left: auto` would split the free space with
+   the switch and leave a gap between them. */
+.admin__theme + button {
+  margin-left: 0.4rem;
+}
+
+.admin__theme button {
+  margin-left: 0;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-text-dim);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin__theme button.is-active {
+  border-color: var(--c-brand-deep);
+  background: var(--c-brand-deep);
+  color: var(--c-on-brand);
+}

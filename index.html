@@ -13,6 +13,18 @@
       href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Kumar+One+Outline&family=Monoton&family=Orbitron:wght@400..900&family=Audiowide&family=Electrolize&display=swap"
       rel="stylesheet"
     />
+    <!-- Before anything paints: adopt the theme this screen wore last, so a
+         light room does not flash a dark frame while the socket connects. The
+         server corrects it a moment later if an operator switched meanwhile. -->
+    <script>
+      try {
+        if (localStorage.getItem('arcade_ftw_theme') === 'light') {
+          document.documentElement.dataset.theme = 'light'
+        }
+      } catch (error) {
+        /* a blocked store is not worth a broken boot */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

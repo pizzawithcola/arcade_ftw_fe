@@ -457,6 +457,8 @@ export interface ConsoleSettings {
   modules: string[]
   /** Which event every shared board ranks; null means all of them at once. */
   active_event: string | null
+  /** Which theme every screen wears. Dark is the show's own look. */
+  theme: 'dark' | 'light'
 }
 
 /** The console's own settings. Readable by any operator screen. */
@@ -464,8 +466,8 @@ export function fetchSettings(): Promise<ConsoleSettings> {
   return request<ConsoleSettings>('/api/settings')
 }
 
-/** Change one or both settings. Full-scope only: these decide what the room runs
- *  and which event the boards rank. */
+/** Change one or more settings. Full-scope only: these decide what the room
+ *  runs, which event the boards rank and which theme every screen wears. */
 export function saveSettings(settings: Partial<ConsoleSettings>): Promise<ConsoleSettings> {
   return request<ConsoleSettings>('/api/settings', {
     method: 'PUT',

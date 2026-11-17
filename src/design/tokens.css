@@ -9,6 +9,11 @@
  *   - Warn-amber is the only non-red signal, and it means "connection trouble".
  */
 :root {
+  /* Form controls, scrollbars and the caret follow the theme. Declared here so
+     the light block, which loads after this file, can flip it on the same
+     element and win. */
+  color-scheme: dark;
+
   /* Brand */
   --c-brand: #db0011;        /* brand marks on light surfaces only */
   --c-brand-deep: #af000e;   /* every dark-mode fill, rail and wash */

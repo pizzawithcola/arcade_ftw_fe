@@ -25,6 +25,7 @@ import {
 import { OPENING_LABEL } from '../../games/openings'
 import { bankCounts, bankOptions, QUIZ_CATEGORIES, QUESTION_BANK } from '../../games/quiz/bank'
 import { BASE_POINTS, perfectScore, ULTIMATE_SLOTS } from '../../games/quiz/draw'
+import { applyTheme, readStoredTheme, type Theme } from '../../theme'
 import StaffLogin from '../StaffLogin'
 import DesignPage from './DesignPage'
 import EventReport from './EventReport'
@@ -398,6 +399,7 @@ export default function AdminPage() {
     <main className="admin" ref={shell}>
       <header className="admin__bar">
         <h1>Arcade Fintech Festival · Operator</h1>
+        <ThemeSwitch />
         <button
           type="button"
           onClick={() => {
@@ -1238,6 +1240,60 @@ function PlayersTable({
  * live in the frontend (`games/quiz/`), so this is a view of the source rather
  * than of a database - which is exactly why it can show the answer key.
  */
+/**
+ * The room's theme, for every screen at once.
+ *
+ * It sits in the top bar rather than on a settings page because it changes what
+ * the audience is looking at: the operator reaches for it mid-show, the same way
+ * they reach for the room controls.
+ */
+function ThemeSwitch() {
+  const [theme, setTheme] = useState<Theme>(readStoredTheme)
+
+  useEffect(() => {
+    void fetchSettings()
+      .then((loaded) => setTheme(loaded.theme))
+      .catch(() => undefined)
+  }, [])
+
+  const choose = (next: Theme) => {
+    // Optimistic: the wall answers over the socket, but this console should not
+    // wait for the round trip to look right.
+    setTheme(next)
+    applyTheme(next)
+    void saveSettings({ theme: next })
+      .then((saved) => {
+        setTheme(saved.theme)
+        applyTheme(saved.theme)
+      })
+      .catch(() => {
+        // A refused save leaves the screens as they were; read the truth back.
+        void fetchSettings()
+          .then((loaded) => {
+            setTheme(loaded.theme)
+            applyTheme(loaded.theme)
+          })
+          .catch(() => undefined)
+      })
+  }
+
+  return (
+    <div className="admin__theme" role="group" aria-label="Theme for every screen">
+      {(['dark', 'light'] as Theme[]).map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={theme === option}
+          className={theme === option ? 'is-active' : ''}
+          onClick={() => choose(option)}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function SettingsView({
   modules,
   onModules,

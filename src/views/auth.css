@@ -76,8 +76,8 @@
 
 .login__field select {
   /* The native arrow renders dark-on-dark against this card, so draw our own.
-     color-scheme keeps the popup list dark on macOS. */
-  color-scheme: dark;
+     color-scheme keeps the popup list in the theme's colours on macOS. */
+  color-scheme: inherit;
   appearance: none;
   padding-right: 2rem;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%23a0a0a8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");

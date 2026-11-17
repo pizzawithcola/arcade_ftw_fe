@@ -5,7 +5,7 @@
  * brackets, title tab and chevrons; `.wcard` for the welcome line-up; `.ldb` for
  * the board - rendered at 1200×750 and scaled to fit the frame. The only thing
  * that changes is `src/design/light.css`, which remaps the palette under
- * `.theme-light`.
+ * `[data-theme='light']` in `design/light.css`.
  *
  * That is the point of doing it this way: if the recolor is right here, the light
  * mode is a class on the root and a token block, not a second design.
@@ -94,7 +94,7 @@ function Frame({
   return (
     <figure className="lt__figure">
       <div className="lt__frame" ref={frame}>
-        <div className="lt__screen theme-light" style={{ transform: `scale(${scale})` }}>
+        <div className="lt__screen" data-theme="light" style={{ transform: `scale(${scale})` }}>
           {children}
         </div>
       </div>

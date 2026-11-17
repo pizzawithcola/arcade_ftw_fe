@@ -1,6 +1,5 @@
-:root {
-  color-scheme: dark;
-}
+/* `color-scheme` is the theme's business (design/tokens.css and light.css), not
+   this page's: a `:root` rule here would outrank them and pin every screen. */
 
 .status {
   max-width: 720px;

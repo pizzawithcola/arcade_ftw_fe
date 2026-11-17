@@ -18,7 +18,6 @@ body {
     repeating-linear-gradient(0deg, var(--c-grid-line) 0 1px, transparent 1px var(--grid-cell)),
     repeating-linear-gradient(90deg, var(--c-grid-line) 0 1px, transparent 1px var(--grid-cell));
   color: var(--c-text);
-  color-scheme: dark;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { applyTheme, type Theme } from '../theme'
 
 export type Phase = 'waiting' | 'playing' | 'paused' | 'finished'
 export type Connection = 'connecting' | 'open' | 'closed'
@@ -227,6 +228,12 @@ export const useGameStore = create<GameState>((set) => ({
     }),
 
   applyMessage: (message) => {
+    if (message.type === 'theme') {
+      // Not room state: the server decides, and every screen on the site follows.
+      const { theme } = message.payload as { theme: Theme }
+      applyTheme(theme)
+      return
+    }
     if (message.type === 'sabotage') {
       const sabotage = message.payload as SabotageState
       set({

@@ -15,9 +15,13 @@
  * The mapping keeps the brand where it belongs: `--c-brand-deep` stays the
  * working red (fills, bezel, tab, rails) and `--c-brand` becomes the deeper red
  * used for hairlines and small marks, which is what reads on paper.
+ *
+ * The scope is the attribute the server flips (`document.documentElement
+ * .dataset.theme`), so the same block paints a real screen and the frames on the
+ * console's Design page, which set the attribute on their own wrapper.
  */
 
-.theme-light {
+[data-theme='light'] {
   /* Brand */
   --c-brand: #a5000d;        /* lines, marks, glow - deeper, so it reads on paper */
   --c-brand-deep: #db0011;   /* fills and bezel: white type on it is 5.2:1 */
@@ -48,128 +52,162 @@
   --c-paper-line: #e6e2dd;
   --c-paper-dim: #6b6461;
 
-  /* The matrix: dark dots at low alpha, the same presence the dark theme had. */
-  --c-grid-line: rgba(26, 22, 20, 0.16);
+  /* A grid on paper reads as squared paper, so the page grid is off and the
+     panels carry the structure instead. */
+  --c-grid-line: transparent;
+
+  /* Roles, switched the other way: a bloom becomes nothing, a shadow becomes a
+     breath of ink, and a recess becomes a shade darker than the panel it sits
+     in. Anything painted on the brand red is white, at 5.2:1. */
+  --c-on-brand: #ffffff;
+  --c-shadow: #1a1614;
+  --c-scrim: #ffffff;
+  --c-well: #eae6e1;
+  --c-glow: transparent;
+  --c-glow-deep: transparent;
+  --c-halo: transparent;
+  --c-spark: #ffffff;
+
+  /* The slider's leans, darkened: both hues were picked to glow on black. */
+  --c-doubt: #8a5a00;
+  --c-doubt-pale: #f6e2b0;
+  --c-trust: #0f7a43;
+  --c-trust-pale: #b7e8cd;
+
+  /* Category badges: same hues, inks dark enough to read on paper. */
+  --c-cat-data: #0b7f92;
+  --c-cat-data-ink: #0b6b7a;
+  --c-cat-hallucination: #6a2fb0;
+  --c-cat-hallucination-ink: #5b289a;
+  --c-cat-phishing: var(--c-brand);
+  --c-cat-phishing-ink: #a5000d;
+  --c-cat-ceo: #9a5f00;
+  --c-cat-ceo-ink: #8a5500;
+  --c-cat-assistant: #2b46c9;
+  --c-cat-assistant-ink: #2439a8;
+  --c-cat-knowledge: #1a7a42;
+  --c-cat-knowledge-ink: #166535;
 
   background: var(--c-black);
   color: var(--c-text);
+  color-scheme: light;
 }
 
 /* Glow → shadow. Same shape, read in daylight. */
-.theme-light .hud__matrix {
+[data-theme='light'] .hud__matrix {
   opacity: 0.55;
 }
 
-.theme-light .hud__frame {
+[data-theme='light'] .hud__frame {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--c-brand) 40%, transparent),
     0 10px 30px rgba(26, 22, 20, 0.1);
 }
 
-.theme-light .hud__inner {
+[data-theme='light'] .hud__inner {
   /* The dark theme washes a red glow into the panel; on paper that reads as a
      pink stain, so the panel is flat white and the bezel keeps the colour. */
   background: var(--c-surface);
 }
 
-.theme-light .hud__corner {
+[data-theme='light'] .hud__corner {
   filter: none;
 }
 
-.theme-light .hud__tab {
+[data-theme='light'] .hud__tab {
   box-shadow: none;
 }
 
-.theme-light .hud__dot {
+[data-theme='light'] .hud__dot {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 22%, transparent);
 }
 
-.theme-light .hud__chevrons {
+[data-theme='light'] .hud__chevrons {
   filter: none;
 }
 
-.theme-light .ldb {
+[data-theme='light'] .ldb {
   --ldb-glow: none;
 }
 
-.theme-light .ldb__rail {
+[data-theme='light'] .ldb__rail {
   opacity: 0.8;
 }
 
 /* Type that sits *on* a red fill - and only that. The score of the leading row
    is on paper, not on red, so it stays ink: pinning it white made the first place
    disappear. */
-.theme-light .hud__tab,
-.theme-light .ldb__row.is-rank-1 .ldb__rank,
-.theme-light .quiz__timer.is-urgent {
+[data-theme='light'] .hud__tab,
+[data-theme='light'] .ldb__row.is-rank-1 .ldb__rank,
+[data-theme='light'] .quiz__timer.is-urgent {
   color: #ffffff;
 }
 
 /* The leader is marked by the red hairline and the weight of the name, the way
    the rest of this theme marks things - not by a red wash behind it. */
-.theme-light .ldb__row.is-rank-1 {
+[data-theme='light'] .ldb__row.is-rank-1 {
   background: color-mix(in srgb, var(--c-brand) 7%, var(--c-surface));
 }
 
-.theme-light .ldb__row.is-rank-1 .ldb__score {
+[data-theme='light'] .ldb__row.is-rank-1 .ldb__score {
   color: var(--c-ink, #1a1a1a);
   text-shadow: none;
 }
 
 /* The washes that stand in for a lit screen. At 28% on paper they are a pink
    smudge, so they come down to a tint that still says "this panel is live". */
-.theme-light .welcome__scan {
+[data-theme='light'] .welcome__scan {
   background:
     radial-gradient(70% 55% at 50% 18%, rgba(165, 0, 13, 0.09), transparent 72%),
     linear-gradient(180deg, rgba(165, 0, 13, 0.04), transparent 30%);
 }
 
-.theme-light .welcome__title {
+[data-theme='light'] .welcome__title {
   text-shadow: 0 2px 0 rgba(26, 22, 20, 0.06);
 }
 
 /* The board panel carries the same vertical wash as the chassis; at 10% it is a
    pink band above the first row. */
-.theme-light .ldb__frame {
+[data-theme='light'] .ldb__frame {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--c-brand-deep) 4%, transparent), transparent 18%),
     var(--c-surface);
 }
 
-.theme-light .hud__stage,
-.theme-light .quiz__stage {
+[data-theme='light'] .hud__stage,
+[data-theme='light'] .quiz__stage {
   filter: none;
 }
 
 /* The slider trough is painted #070707 for a black screen. On paper that is a
    black bar lying across the question, so it becomes a groove with a hairline
    edge - same control, same ticks, same red-to-green fill. */
-.theme-light .hallu__track {
+[data-theme='light'] .hallu__track {
   background: color-mix(in srgb, var(--c-text) 8%, var(--c-surface));
   border-color: var(--c-border);
 }
 
-.theme-light .hallu__ticks {
+[data-theme='light'] .hallu__ticks {
   opacity: 0.35;
 }
 
-.theme-light .hallu__fill {
+[data-theme='light'] .hallu__fill {
   box-shadow: none;
 }
 
-.theme-light .hallu__notch {
+[data-theme='light'] .hallu__notch {
   background: var(--c-text);
 }
 
 /* The meter is a tint on paper, not a lit bar. */
-.theme-light .ldb__fill {
+[data-theme='light'] .ldb__fill {
   opacity: 0.16;
 }
 
-.theme-light .ldb__row.is-rank-1 .ldb__score {
+[data-theme='light'] .ldb__row.is-rank-1 .ldb__score {
   text-shadow: none;
 }
 
-.theme-light .wcard {
+[data-theme='light'] .wcard {
   background: var(--c-surface);
 }
