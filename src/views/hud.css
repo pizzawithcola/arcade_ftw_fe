@@ -918,30 +918,27 @@
   font-size: clamp(0.8rem, 1.5vw, 1rem);
 }
 
-/* The rules themselves grow with the card: at the tablet's size they were three
-   small lines in the corner of a wide panel. `1.6vw` is the same clamp the
-   tablet uses, so the wall and the iPad still break the lines in the same
-   places - only bigger. */
-.hud--display.hud--briefx .brief__rules li {
-  grid-template-columns: 2.1rem minmax(0, 1fr);
-  gap: 0.9rem;
-  font-size: clamp(1.15rem, 2.1vw, 1.9rem);
-  line-height: 1.5;
-  color: var(--c-text);
-}
-
-.hud--display.hud--briefx .brief__rules li::before {
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: 7px;
-  font-size: 0.95rem;
-}
+/* The rules keep the tablet's type exactly: same size, same muted colour, same
+   number plate. Only the card around them is wider, so the wall reads as the same
+   card held further away - not as a second design.
+   `.brief__rules li` is `clamp(0.85rem, 1.6vw, 1rem)`, which tops out at 1rem on
+   every projector resolution, so there is nothing to override. */
 
 /* Centred in the card rather than pinned to its top: the card is only as tall as
    the rules, so `start` left a band of empty bezel under the last one. */
 .hud--display.hud--briefx .hud__stage--brief {
   align-content: center;
-  overflow: hidden;
+}
+
+/* The wall's points line up the way the tablet's do - badge at the left edge,
+   text in the column beside it - instead of a shrink-to-fit block floating in
+   the middle of a wide card. */
+.hud--display.hud--briefx .opening--display {
+  justify-items: stretch;
+}
+
+.hud--display.hud--briefx .opening--display .brief__rules {
+  width: 100%;
 }
 
 /* The rules were pinned to the top of a panel that used to be as short as they
