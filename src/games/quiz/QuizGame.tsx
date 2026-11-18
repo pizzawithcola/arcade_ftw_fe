@@ -93,11 +93,6 @@ export default function QuizGame({ room, nodeIndex }: { room: string; nodeIndex:
   // The review is whatever the node's cycle leaves after the answering window,
   // so retiming the round never leaves the device counting a different number
   // from the wall.
-  const reviewMs = Math.max(0, secondsEachMs - question.time_limit * 1000)
-  const reviewLeft = Math.max(
-    0,
-    Math.ceil((question.time_limit * 1000 + reviewMs - inCycleMs) / 1000),
-  )
   const total = useMemo(
     () =>
       questions.reduce((sum, item, at) => {
@@ -270,10 +265,11 @@ return (
             <div className="quiz__reveal">
               <p className="quiz__autonext">
                 {/* A timeout still has to say so: with the answer line gone,
-                    this word is the only reason nothing turned red. */}
+                    this word is the only reason nothing turned red. No seconds
+                    on the end: the review is reading time, and a countdown over
+                    it reads as a window the player still has. */}
                 {picked === undefined ? "Time's up · " : ''}
-                {index === questions.length - 1 ? 'Final score' : 'Next question'} in{' '}
-                {reviewLeft}s
+                {index === questions.length - 1 ? 'Final score' : 'Next question'}
               </p>
             </div>
           )}

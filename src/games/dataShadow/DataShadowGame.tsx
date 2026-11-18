@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useGameStore } from '../../store/gameStore'
 import { useNodeElapsed } from '../../hooks/useNodeElapsed'
 import { useScoreReport } from '../../hooks/useScoreReport'
 import { BLOCKS, IMAGES, LEAKS, POST_META, POST_TEXT } from './content'
@@ -23,7 +24,10 @@ import './DataShadowGame.css'
  * there is nothing left to aim at, only something to decide. The node's own
  * duration leaves ten seconds of verdict after this.
  */
-const ROUND_SECONDS = 50
+/** The answering window, used only until the node arrives with its own figure:
+ *  the wall derives the same number from `answer_sec`, and a hardcoded 50 here
+ *  is a second way for the room to disagree about how long is left. */
+const FALLBACK_ROUND_SECONDS = 50
 
 const BLOCK_OFFSETS: number[] = (() => {
   const offsets: number[] = []
@@ -69,7 +73,9 @@ export default function DataShadowGame({
   const report = useScoreReport(room, nodeIndex)
 
   const elapsed = useNodeElapsed()
-  const timeLeftMs = Math.max(0, ROUND_SECONDS * 1000 - elapsed)
+  const node = useGameStore((state) => state.node)
+  const roundSec = node?.answer_sec ?? FALLBACK_ROUND_SECONDS
+  const timeLeftMs = Math.max(0, roundSec * 1000 - elapsed)
   const secondsLeft = Math.ceil(timeLeftMs / 1000)
   const expired = timeLeftMs === 0
   // The result is shown only once the round's clock runs out, so a player who

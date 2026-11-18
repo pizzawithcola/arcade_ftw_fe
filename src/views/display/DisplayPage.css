@@ -1584,6 +1584,10 @@
    the room sat looking at it. It shows the top players of the event instead. */
 .display--idle {
   padding-bottom: clamp(1rem, 3vh, 2rem);
+  /* The wall never scrolls: the plate's glow is drawn outside its own box, and
+     without this it made the page 44px wider than the screen and gave the
+     projector a scrollbar. */
+  overflow: hidden;
 }
 
 .standby {
@@ -1605,7 +1609,9 @@
    is the size of what it holds. `StandbyBoard` divides the leftover height by
    the row height to decide how many rows it can show. */
 .standby .ldb__frame {
-  flex: 0 1 auto;
+  /* Neither the plate nor the list gives: `StandbyBoard` caps the row count to
+     the space, so shrinking here only pushed the last row outside the plate. */
+  flex: none;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1613,15 +1619,22 @@
 
 .standby .ldb__list {
   min-height: 0;
+  /* Never shrink: a squeezed list paints its last row outside the plate, and
+     `StandbyBoard` decides the count from this height - shrinking it made the
+     measurement disagree with what the room could see. */
+  flex: none;
 }
 
 /* Ten rows have the whole wall to themselves, so each one is taller and the
-   type is larger: this is read from the back of a room, not at a desk. */
+   type is larger: this is read from the back of a room, not at a desk. The
+   padding is what gives if the plate needs the height - a tenth row that fits
+   beats nine rows with air, and `StandbyBoard` measures what is left either
+   way. */
 .standby .ldb__row {
   break-inside: avoid;
   grid-template-columns: 3.2rem minmax(0, 1fr) auto;
-  padding: clamp(0.55rem, 1.3vh, 1rem) clamp(0.75rem, 1.1vw, 1.1rem);
-  margin-bottom: clamp(0.35rem, 0.85vh, 0.6rem);
+  padding: clamp(0.3rem, 0.7vh, 0.6rem) clamp(0.75rem, 1.1vw, 1.1rem);
+  margin-bottom: clamp(0.15rem, 0.4vh, 0.32rem);
 }
 
 .standby .ldb__rank,
@@ -1637,6 +1650,21 @@
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+}
+
+/* The plate's own name, in the display face like every other title in the show:
+   the wall has no room header between rounds, so the list needs to say what it
+   is. Sized under the section boards so it labels the plate rather than
+   competing with it. */
+.standby__title {
+  margin: 0 0 clamp(0.3rem, 1vh, 0.7rem);
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: clamp(1.1rem, 2.4vh, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--c-text-muted);
 }
 
 .display__standbynote {
@@ -1798,16 +1826,28 @@
   margin-bottom: 1.7rem;
 }
 
-/* One option per row made the boxes long: a single answer ran the width of the
-   panel. They stop at 80% of it, the type steps down with them, and the gap
-   between rows is the 16px of air the room asked for. */
+/* The wall draws this round the way the iPads do: the question reads from the
+   left with the brand rail beside it, and the four answers are one stack of
+   equal boxes with only the hairline gap between them. */
 .hud--display .display__quiz {
   gap: 0.7rem;
 }
 
+.hud--display .display__prompt {
+  width: 80%;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--c-brand-deep);
+  font-size: 1.22rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+
 .hud--display .display__options {
   width: 80%;
-  gap: 1rem;
+  /* The tablet's own gap: flush enough to read as one control, with the border
+     of each box still visible between them. */
+  gap: 0.4rem;
   /* Equal rows, text centred in each: four answers of four different lengths
      read as one control, the way the iPads draw them. */
   grid-auto-rows: 1fr;
@@ -1837,8 +1877,14 @@
      its height out of every screen we have already fitted to the panel. */
   position: absolute;
   top: 1.2rem;
-  left: 0;
-  right: 0;
+  /* The panel's own measure, not the screen's: `.hud` insets the frame by its
+     padding and the frame takes 90% of what is left, so the track takes the
+     same expression. Edge to edge it read as part of the bezel rather than as
+     a readout above the panel it belongs to. */
+  --wall-pad: clamp(0.6rem, 1.8vw, 1.4rem);
+  left: 50%;
+  width: calc(90% - 1.8 * var(--wall-pad));
+  transform: translateX(-50%);
   display: grid;
   grid-template-columns: repeat(var(--gstage-cols, 4), minmax(0, 1fr));
   gap: 0.5rem;

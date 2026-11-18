@@ -17,10 +17,10 @@ import './HallucinationGame.css'
 type Picks = Record<string, number>
 
 /** A whole question cycle, used only until the node arrives with its own figure. */
-const FALLBACK_SECONDS_EACH = 25
+const FALLBACK_SECONDS_EACH = 30
 
 /** The answering window inside that cycle, likewise. */
-const FALLBACK_ANSWER_SECONDS = 15
+const FALLBACK_ANSWER_SECONDS = 20
 
 export default function HallucinationGame({
   room,

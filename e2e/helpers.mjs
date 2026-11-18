@@ -13,8 +13,9 @@
 
 export const BASE = process.env.E2E_BASE ?? 'http://localhost:5070'
 
-/** How long a full show runs, from `flow.py`. The walk test asserts this. */
-export const SHOW_SECONDS = 519
+/** How long a full show runs, from `flow.py`. The walk test asserts this.
+ *  Hallucination is 3 x (20s answer + 10s review) now, not 15 + 10. */
+export const SHOW_SECONDS = 534
 
 export class Api {
   constructor() {

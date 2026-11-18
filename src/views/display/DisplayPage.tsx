@@ -140,8 +140,12 @@ function roundRemainingMs(
   const tailMs = question
     ? question.seconds_each * 1000 - answerSec * 1000
     : Math.max(0, (node?.duration_sec ?? 0) * 1000 - answerSec * 1000)
-  const answerLeft = left - tailMs
-  return answerLeft > 0 ? answerLeft : left
+  // The clock counts the window the room can act in. Once that window closes
+  // there is nothing left to count: falling back to the node's own remainder
+  // made the review look like a second, fresh window - the wall read 0:10 in
+  // Data Shadow's reveal, which is the ten seconds of reveal, not ten seconds
+  // to answer anything.
+  return Math.max(0, left - tailMs)
 }
 
 /** Minutes and seconds left on the node, for the wall's own header clock. */
@@ -826,7 +830,10 @@ export default function DisplayPage() {
                 {/* The current round's clock, in the same place the games put
                     theirs: dead centre. It answers "how long have we got" for
                     the round in front of the room, not for the game as a whole. */}
-                {phase === 'playing' || phase === 'paused' ? (
+                {/* No clock once the answering window has closed: the review
+                    is reading time, and a number counting it down reads as
+                    "answer this", which is exactly what the room cannot do. */}
+                {(phase === 'playing' || phase === 'paused') && roundLeft > 0 ? (
                   <span
                     className={`display__clock ${
                       roundLeft <= 10_000 ? 'is-urgent' : ''
