@@ -196,7 +196,7 @@ export default function LightPreview() {
                   <div className="hallu__prompt">
                     <p className="hallu__label">You asked</p>
                     <p>
-                      I need to take my car to the car wash, which is 50 feet from my house. Should
+                      I need to wash my car and the car wash is 50 feet from my house. Should
                       I walk or should I drive?
                     </p>
                   </div>
@@ -274,19 +274,8 @@ export default function LightPreview() {
 
         <Frame caption="Waiting room · leaderboard" detail="meter bars as tints">
           <div className="ldb standby">
-            <div className="ldb__rail" aria-hidden="true" />
             <div className="ldb__frame">
-              <p className="ldb__live">
-                <span className="ldb__pulse" />
-                Top players
-              </p>
-              <div className="ldb__legend standby__legend" aria-hidden="true">
-                <div className="standby__legendcol">
-                  <span>rank</span>
-                  <span>player</span>
-                  <span>score</span>
-                </div>
-              </div>
+              <span className="ldb__ring" aria-hidden="true" />
               <ol className="ldb__list">
                 {BOARD.map((row) => (
                   <li className={`ldb__row ${row.rank === 1 ? 'is-rank-1' : ''}`} key={row.name}>

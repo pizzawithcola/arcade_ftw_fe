@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { fetchLeaderboard } from '../api'
 
 /**
@@ -13,10 +14,11 @@ import { fetchLeaderboard } from '../api'
  * plate had, which made "how am I doing" a matter of looking in the right half;
  * a single readable ten is the answer a room actually asks for.
  *
- * Ten is the ceiling, not the promise: the wall is 16:9, a laptop is not, and
- * the row height is in rem. So the list is capped to what the plate can hold at
- * the size it is being drawn - measured, because a fixed ten ran off the bottom
- * of the screen as soon as the window was shorter than the projector.
+ * Ten, always: a top ten that quietly becomes a top nine is not a top ten, and
+ * the tenth name is the one somebody in the room is looking for. When the wall
+ * cannot hold ten rows at their natural size the rows give the height instead -
+ * the board is measured, the ten are divided into what is left, and the list
+ * stays a list of ten from the projector down to a laptop.
  */
 
 /** The board is a top ten: read as one list, compared by eye. */
@@ -51,76 +53,58 @@ export default function StandbyBoard() {
   }, [])
 
   const listRef = useRef<HTMLOListElement | null>(null)
-  const [cap, setCap] = useState(TOP_N)
+  const [rowHeight, setRowHeight] = useState<number | null>(null)
 
-  // How many rows fit: the plate's height minus the live line and the legend,
-  // divided by one row's own height. Read off the DOM rather than guessed from
-  // the viewport, because the row is sized in rem and the padding is not.
+  // Ten rows, or ten rows made to fit: the plate's own height minus what the
+  // title and the frame spend, divided by the number of places being shown.
   useLayoutEffect(() => {
     const list = listRef.current
     const board = list?.closest('.standby') as HTMLElement | null
     if (!list || !board) return
+
     const measure = () => {
-      // The board's own box, never the frame's: the frame is content-sized, so
-      // measuring against it is circular - fewer rows made a shorter frame,
-      // which fitted fewer rows, until the list collapsed to one.
+      const rows = Array.from(list.children) as HTMLElement[]
+      if (rows.length === 0) return
+      // Read the natural size first, or the squeeze applied last time is what
+      // gets measured and the rows ratchet down every frame.
+      setRowHeight(null)
+      void list.offsetHeight
+      const style = getComputedStyle(rows[0])
+      const gap = parseFloat(style.marginBottom) || 0
+      const natural = rows[0].offsetHeight
+      if (natural === 0) return
+      // The board's own box is the stable side of this: the frame is sized by
+      // its rows, so measuring against it makes the count chase itself.
       const frame = list.closest('.ldb__frame') as HTMLElement | null
-      const first = list.querySelector('.ldb__row') as HTMLElement | null
-      // Height *plus* the gap under it: the row's own box leaves out its margin,
-      // and ten rows' worth of margin is most of a row at this size. The last
-      // row needs no gap under it, so the division adds one back.
-      const rowStyle = first ? getComputedStyle(first) : null
-      const gap = rowStyle ? parseFloat(rowStyle.marginBottom) || 0 : 0
-      const rowH = first ? first.offsetHeight + gap : 0
-      if (!frame || rowH === 0) return
-      // What the plate spends before the first row: the frame's own box (border,
-      // padding, the live line and the legend) minus the list. Measured this way
-      // it does not move when the row count does, so the count cannot chase
-      // itself down.
-      // Everything the board spends before the rows: the frame's own box minus
-      // the list, plus any sibling above the frame (the title).
-      const siblings = [...board.children]
-        .filter((child) => child !== frame)
-        .reduce((sum, child) => {
-          const style = getComputedStyle(child as HTMLElement)
-          return (
-            sum +
-            (child as HTMLElement).offsetHeight +
-            (parseFloat(style.marginTop) || 0) +
-            (parseFloat(style.marginBottom) || 0)
-          )
-        }, 0)
-      const overhead = frame.offsetHeight - list.offsetHeight + siblings
-      const room = Math.max(
-        1,
-        Math.floor((board.clientHeight - overhead + gap) / rowH),
-      )
-      setCap((current) => {
-        const next = Math.min(TOP_N, room)
-        return next === current ? current : next
-      })
+      const title = board.querySelector('.standby__title') as HTMLElement | null
+      const titleBox = title ? title.offsetHeight + (parseFloat(getComputedStyle(title).marginBottom) || 0) : 0
+      const chrome = frame ? frame.offsetHeight - list.offsetHeight : 0
+      const room = board.clientHeight - titleBox - chrome
+      const needed = rows.length * natural + (rows.length - 1) * gap
+      if (needed <= room) return
+      // One row's share of what is left: the gaps are kept, the row shrinks.
+      const per = (room - (rows.length - 1) * gap) / rows.length
+      // Below two thirds the type stops fitting the row it is in, so the plate
+      // takes the last of it rather than the numbers going illegible.
+      setRowHeight(Math.max(natural * 0.66, per))
     }
-    // Once now, then again on the next frame: the first pass can land before the
-    // plate has its final height, and a single low reading would stick - the
-    // board itself never resizes again, so nothing would ask it to recount.
+
     measure()
     const frameId = requestAnimationFrame(measure)
-    const observer = new ResizeObserver(measure)
+    const observer = new ResizeObserver(() => requestAnimationFrame(measure))
     observer.observe(board)
-    observer.observe(list)
     return () => {
       cancelAnimationFrame(frameId)
       observer.disconnect()
     }
   }, [rows.length])
 
-  const shown = rows.slice(0, cap)
+  const shown = rows.slice(0, TOP_N)
   // Every bar is measured against the leader, as on every other board.
   const leader = Math.max(1, ...shown.map((row) => Math.max(0, row.score)))
 
   return (
     <div className="ldb standby">
-      <div className="ldb__rail" aria-hidden="true" />
       {/* The plate needs a name on the wall: between rounds there is no room
           title above it, so a bare list of ten names read as whatever the last
           screen happened to be. */}
@@ -129,18 +113,12 @@ export default function StandbyBoard() {
         <p className="ldb__empty">No scores yet.</p>
       ) : (
         <div className="ldb__frame">
-          <p className="ldb__live">
-            <span className="ldb__pulse" aria-hidden="true" />
-            Top players
-          </p>
-          <div className="ldb__legend standby__legend" aria-hidden="true">
-            <div className="standby__legendcol">
-              <span>rank</span>
-              <span>player</span>
-              <span>score</span>
-            </div>
-          </div>
-          <ol className="ldb__list" ref={listRef}>
+          <span className="ldb__ring" aria-hidden="true" />
+          <ol
+            className="ldb__list"
+            ref={listRef}
+            style={rowHeight === null ? undefined : ({ '--standby-row': `${rowHeight}px` } as CSSProperties)}
+          >
             {shown.map((row) => (
               <li key={`${row.rank}-${row.nickname}`} className="ldb__row">
                 <span

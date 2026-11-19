@@ -194,8 +194,11 @@
   background: color-mix(in srgb, var(--c-brand) 7%, var(--c-surface));
 }
 
-[data-theme='light'] .ldb__rail {
-  opacity: 0.8;
+/* The plate's edge light on paper: the bloom of a red glow reads as a blur, so
+   the drop shadow goes and the ring keeps only its own colour. */
+[data-theme='light'] .ldb__ring {
+  filter: none;
+  opacity: 0.85;
 }
 
 /* Type that sits *on* a red fill - and only that. The score of the leading row

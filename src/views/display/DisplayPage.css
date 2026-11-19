@@ -582,15 +582,6 @@
   width: min(100%, 60rem);
 }
 
-.display__liveboardhead {
-  margin: 0;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: 1.5rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--c-text);
-}
-
 /* ─── the wall's version of a game question ───────────────────────────────────
    The same conversation the iPads show, set for five metres: bigger type, a
    wider measure, and no chat actions (nobody taps a projector). */
@@ -1635,6 +1626,11 @@
   grid-template-columns: 3.2rem minmax(0, 1fr) auto;
   padding: clamp(0.3rem, 0.7vh, 0.6rem) clamp(0.75rem, 1.1vw, 1.1rem);
   margin-bottom: clamp(0.15rem, 0.4vh, 0.32rem);
+  /* Set only when ten rows do not fit at their natural size: `StandbyBoard`
+     divides the plate by ten and hands the answer down, so the list stays a
+     list of ten instead of losing its last place off the bottom. */
+  height: var(--standby-row, auto);
+  overflow: hidden;
 }
 
 .standby .ldb__rank,
@@ -1675,34 +1671,6 @@
   text-transform: uppercase;
   text-align: center;
   color: var(--c-text-muted);
-}
-
-/* The legend repeats over each column, in the row's own three-column grid. */
-/* One line of labels over one column of rows: the board is a top ten now, so a
-   second legend would label a column that no longer exists. */
-.standby__legend {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  /* The row's own side padding, so the three labels sit over the three columns. */
-  padding: 0 clamp(0.75rem, 1.1vw, 1.1rem) 0.5rem;
-  border-bottom: 0;
-  margin-bottom: 0.6rem;
-}
-
-.standby__legendcol {
-  display: grid;
-  /* The same three columns as `.standby .ldb__row`, or the labels sit a
-     half-character off the numbers they label. */
-  grid-template-columns: 3.2rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0 0.75rem;
-  border-bottom: 1px solid var(--c-border);
-  padding-bottom: 0.5rem;
-}
-
-.standby__legendcol span:last-child {
-  text-align: right;
 }
 
 /* ─── the wall at 2.5% of the screen height ───────────────────────────────────

@@ -13,56 +13,65 @@
   margin: clamp(1rem, 3vh, 2.2rem) auto 0;
 }
 
-/* A pool of red behind the plate, so the board sits in the scene instead of
-   being pasted onto it. */
-.ldb::before {
-  content: '';
+/* ─── the edge ───────────────────────────────────────────────────────────────
+   The plate carries its own light instead of a rail across the top and a pool of
+   red behind it. Two arcs half a turn apart travel the border, each with a white
+   head and a tail that dies behind it - the read a running agent panel gives.
+   `@property` is what makes the angle animatable; without it the gradient would
+   step in whole degrees. */
+
+@property --ldb-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.ldb__ring {
   position: absolute;
-  inset: -8% -12% 12%;
-  background: radial-gradient(
-    ellipse 60% 45% at 50% 0%,
-    color-mix(in srgb, var(--c-brand-deep) 26%, transparent),
-    transparent 70%
-  );
+  inset: 0;
+  padding: 4px;
   pointer-events: none;
-}
-
-/* A single illuminated edge across the top: the one line that says "powered". */
-.ldb__rail {
-  position: relative;
-  height: 2px;
-  margin-bottom: clamp(0.9rem, 2.4vh, 1.6rem);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--c-brand-deep) 90%, transparent) 18%,
-    var(--c-brand) 50%,
-    color-mix(in srgb, var(--c-brand-deep) 90%, transparent) 82%,
-    transparent
+  /* The white sits at the largest angle of each band, which is where the light
+     is going: the gradient turns clockwise, so a smaller angle is the tail. */
+  background: conic-gradient(
+    from var(--ldb-angle),
+    transparent 0deg 18deg,
+    color-mix(in srgb, var(--c-brand) 18%, transparent) 52deg,
+    color-mix(in srgb, var(--c-brand) 65%, transparent) 64deg,
+    var(--c-brand) 70deg,
+    #fff 76deg,
+    transparent 80deg,
+    transparent 196deg,
+    color-mix(in srgb, var(--c-brand) 18%, transparent) 232deg,
+    color-mix(in srgb, var(--c-brand) 65%, transparent) 244deg,
+    var(--c-brand) 250deg,
+    #fff 256deg,
+    transparent 260deg,
+    transparent 360deg
   );
-  box-shadow: 0 0 18px color-mix(in srgb, var(--c-glow) 55%, transparent);
-  overflow: hidden;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* A 3px line with no bloom reads as a hairline from the back of a room. */
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c-brand) 55%, transparent));
+  animation: ldb-edge var(--ldb-lap, 4.2s) linear infinite;
 }
 
-/* A highlight travelling along that edge, so the board looks awake without any
-   number having to move. */
-.ldb__rail::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 22%;
-  background: linear-gradient(90deg, transparent, var(--c-text), transparent);
-  opacity: 0.85;
-  animation: ldb-rail 4.5s linear infinite;
-}
-
-@keyframes ldb-rail {
-  from {
-    transform: translateX(-100%);
-  }
+@keyframes ldb-edge {
   to {
-    transform: translateX(460%);
+    --ldb-angle: 360deg;
   }
+}
+
+/* A plate that had to split is wide and short, and a lap of it is mostly two
+   long horizontal runs: at the single-column speed the sides flashed past. */
+.ldb--wide .ldb__ring {
+  --ldb-lap: 6.2s;
 }
 
 .ldb__title {
@@ -107,9 +116,9 @@
       transparent 22%
     ),
     color-mix(in srgb, var(--c-surface) 88%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--c-brand) 32%, transparent),
-    inset 0 0 60px color-mix(in srgb, var(--c-shadow) 70%, transparent);
+  /* No inset highlight and no inner pool: the edge light is the only light on
+     this plate, and a red line along the top competed with it. */
+  box-shadow: inset 0 0 40px color-mix(in srgb, var(--c-shadow) 45%, transparent);
 }
 
 .ldb__frame::before,
@@ -134,21 +143,6 @@
   bottom: -1px;
   border-left: none;
   border-top: none;
-}
-
-.ldb__live {
-  display: flex;
-  align-items: center;
-  /* Centred over the board: sitting at the right edge it read as a status for
-     the last row rather than a heading for the list. */
-  justify-content: center;
-  gap: 0.5rem;
-  margin: 0 0 0.5rem;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
 }
 
 /* Where this device stands. A chip rather than a sentence, so it reads at a
@@ -184,55 +178,35 @@
   font-weight: 700;
 }
 
-/* Same columns as a row: the label has to sit over the thing it names. */
-.ldb__legend {
-  display: grid;
-  grid-template-columns: 2.6rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0 0.75rem 0.5rem;
-  border-bottom: 1px solid var(--c-border);
-  margin-bottom: 0.6rem;
-  font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--c-text-dim);
-  text-align: left;
-}
-
-.ldb__legend span:last-child {
-  text-align: right;
-}
-
-.ldb__pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--c-brand);
-  box-shadow: 0 0 10px var(--c-glow);
-  animation: ldb-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes ldb-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-}
-
 .ldb__list {
   margin: 0;
   padding: 0;
   list-style: none;
   column-gap: 1rem;
+  /* The last row's own margin collapses out of the list, which left the tenth
+     name sitting on the plate's edge. Padding cannot collapse. */
+  padding-bottom: clamp(0.45rem, 1.2vh, 0.8rem);
 }
 
 .ldb__list--split {
   column-count: 2;
+}
+
+/* A crowded board gives the height back: the rows tighten instead of running
+   past the plate. Two columns happen when the stack does not fit, and a pile of
+   more than six is the same problem standing up.
+   Padding and margin only - the type stays the size it was designed at, and two
+   columns have to line up with each other. */
+.ldb__list--tight .ldb__row {
+  padding: 0.3rem 0.6rem;
+  margin-bottom: 0.2rem;
+}
+
+/* A row in flight crosses its neighbours, so it has to paint over them, and it
+   is the compositor's job from the first frame to the last. */
+.ldb__list--flying .ldb__row {
+  z-index: 2;
+  will-change: transform;
 }
 
 .ldb__row {
@@ -250,11 +224,14 @@
   /* The board hangs inside shells that centre their text; a name has to start
      where the rank plate ends, whatever the host page does. */
   text-align: left;
-  /* The bar is the row's own score against the leader, so the spread is
-     readable without comparing two numbers down a column. */
-  transition:
-    transform 700ms cubic-bezier(0.2, 0.9, 0.25, 1),
-    border-color 400ms ease-out;
+  /* Only the colour: the travel between places is a Web Animation (see
+     `Leaderboard.tsx`), because a FLIP needs to know where the row was drawn
+     and a two-column board has no single axis to slide along. */
+  transition: border-color 400ms ease-out;
+  /* Set only when a crowded board has to give the height back, so a full room
+     still fits on the plate. The row keeps its padding and centres what is in
+     it. */
+  height: var(--ldb-row, auto);
   /* Opacity only, and `backwards` so the row is still hidden during its own
      delay. A keyframe that touched `transform` would outrank the inline
      translateY the slide sets, and the move - which is the whole point - would
@@ -383,8 +360,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ldb__rail::after,
-  .ldb__pulse,
+  .ldb__ring,
   .ldb__row {
     animation: none;
   }

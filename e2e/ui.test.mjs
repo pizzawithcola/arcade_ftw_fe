@@ -702,10 +702,12 @@ describe('the Ultimate round', () => {
       // Once the answers close, the wall swaps the question for the standings.
       await page.waitForTimeout(21_000)
       const board = await page.evaluate(() => ({
-        head: document.querySelector('.display__liveboardhead')?.textContent?.trim() ?? '',
+        heads: document.querySelectorAll('.display__liveboardhead').length,
         rows: document.querySelectorAll('.display__liveboard .ldb__row').length,
       }))
-      assert.equal(board.head, 'Standings')
+      // The board says what it is by being a board: a heading over five rows on
+      // a projector was a label the room could already read.
+      assert.equal(board.heads, 0, 'the standings carry no heading of their own')
       assert.ok(board.rows > 0, 'the standings are empty')
     } finally {
       await context.close()
@@ -1013,7 +1015,7 @@ describe('the clocks in the room agree', () => {
     // measure the harness rather than the clocks.
     await wall.page.bringToFront()
     const CASES = [
-      { node: 2, timer: '.hallu__timer', answer: 15, label: 'Hallucination' },
+      { node: 2, timer: '.hallu__timer', answer: 20, label: 'Hallucination' },
       { node: 5, timer: '.shadow__timer', answer: 50, label: 'Data Shadow' },
       { node: 10, timer: '.quiz__timer', answer: 20, label: 'Ultimate Quiz' },
     ]

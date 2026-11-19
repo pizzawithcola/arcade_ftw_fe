@@ -187,3 +187,215 @@
   font-size: 0.74rem;
   color: var(--c-text-muted);
 }
+
+/* ─── board edge light · POC ──────────────────────────────────────────────────
+   A leaderboard with no rail and no pool behind it: the plate itself carries the
+   light. The ring is a conic gradient masked down to the border, so only the
+   edge paints and the panel inside stays flat - the same trick an agent panel
+   uses while it is running. `@property` is what makes the angle animatable;
+   without it the gradient would step in whole degrees. */
+
+@property --poc-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.design__edge-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.design__edge {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.design__edge-label {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+}
+
+.design__edge-label span {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text);
+}
+
+.design__edge-label code {
+  font-size: 0.75rem;
+  color: var(--c-text-dim);
+}
+
+.design__edge-label em {
+  font-style: normal;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--c-text-muted);
+}
+
+.poc {
+  position: relative;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--c-surface) 92%, black);
+  isolation: isolate;
+}
+
+/* The ring: painted only where the mask keeps it - everything except the
+   content box - so it reads as a 2px edge rather than a wash. */
+.poc::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 3px;
+  border-radius: inherit;
+  pointer-events: none;
+  /* The ring is the only light on the plate, so it is allowed a little bloom:
+     at four metres a 3px line reads as a hairline without one. */
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c-brand) 55%, transparent));
+  background: conic-gradient(
+    from var(--poc-angle),
+    transparent 0deg 232deg,
+    color-mix(in srgb, var(--c-brand) 25%, transparent) 286deg,
+    color-mix(in srgb, var(--c-brand) 80%, transparent) 330deg,
+    var(--c-brand) 348deg,
+    #fff 353deg,
+    var(--c-brand) 357deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: poc-sweep 3.4s linear infinite;
+}
+
+@keyframes poc-sweep {
+  to {
+    --poc-angle: 360deg;
+  }
+}
+
+/* Two arcs half a turn apart, and the white sits at the head of each one: the
+   gradient runs clockwise, so the largest angle in a band is where the light is
+   going and everything at a smaller angle is the tail it is dragging. */
+.design__edge--twin .poc::before {
+  background: conic-gradient(
+    from var(--poc-angle),
+    transparent 0deg 18deg,
+    color-mix(in srgb, var(--c-brand) 22%, transparent) 58deg,
+    color-mix(in srgb, var(--c-brand) 70%, transparent) 68deg,
+    var(--c-brand) 73deg,
+    #fff 77deg,
+    transparent 80deg,
+    transparent 198deg,
+    color-mix(in srgb, var(--c-brand) 22%, transparent) 238deg,
+    color-mix(in srgb, var(--c-brand) 70%, transparent) 248deg,
+    var(--c-brand) 253deg,
+    #fff 257deg,
+    transparent 260deg,
+    transparent 360deg
+  );
+  animation-duration: 4.2s;
+}
+
+/* No travel: the edge itself is the light, breathing. */
+.design__edge--breathe .poc::before {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c-brand) 70%, transparent),
+    color-mix(in srgb, var(--c-brand) 25%, transparent)
+  );
+  animation: poc-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes poc-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.poc__rows {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.poc__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--c-border);
+  background: color-mix(in srgb, var(--c-surface-raised) 85%, transparent);
+  overflow: hidden;
+  font-size: 0.85rem;
+  color: var(--c-text);
+}
+
+.poc__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--c-brand-deep) 26%, transparent),
+    color-mix(in srgb, var(--c-brand) 8%, transparent)
+  );
+  border-right: 1px solid color-mix(in srgb, var(--c-brand) 70%, transparent);
+  pointer-events: none;
+}
+
+.poc__row > :not(.poc__fill) {
+  position: relative;
+}
+
+.poc__rank {
+  font-family: 'Orbitron', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
+}
+
+.poc__score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* The top-ten plate runs the whole width: it is the board the room actually
+   sits in front of, so the light is judged at its real height. */
+.design__edge--ten {
+  margin-top: 1.5rem;
+}
+
+.design__edge--ten .poc__rows {
+  gap: 0.3rem;
+}
+
+/* Ten places do not fit one column on the wall, so the plate splits into two:
+   the POC has to be drawn the same shape the room will see, or it is judging a
+   board that never appears. */
+.poc__rows--split {
+  display: block;
+  column-count: 2;
+  column-gap: 0.5rem;
+}
+
+.poc__rows--split .poc__row {
+  break-inside: avoid;
+  margin-bottom: 0.3rem;
+}

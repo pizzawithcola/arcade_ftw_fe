@@ -894,7 +894,6 @@ export default function DisplayPage() {
                 // Hallucination's section board follows straight on from this
                 // one, so the wall reads fifteen seconds of standings in a row.
                 <div className="display__liveboard">
-                  <p className="display__liveboardhead">Standings</p>
                   <RoomLeaderboard
                     key={`live-${nodeIndex}-${question.index}`}
                     code={code}
