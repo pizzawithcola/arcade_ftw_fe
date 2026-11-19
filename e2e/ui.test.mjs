@@ -74,6 +74,26 @@ after(async () => {
 })
 
 /**
+ * Put the shared room back after a test has built a room of its own.
+ *
+ * Opening a room closes every room still open - that is the engine's rule, so
+ * an operator cannot leave two shows running - which means the suite's own room
+ * goes down with it. Everything after such a test then finds no current room
+ * and the console reads "no room yet". Rebuilding it here keeps the rule intact
+ * and the suite honest about it, instead of each later test special-casing a
+ * state the room can no longer be in.
+ */
+async function reseedRoom() {
+  try {
+    await api.deleteRoom(ROOM)
+  } catch {
+    /* already gone */
+  }
+  await api.createRoom(ROOM)
+  await api.join(ROOM, HOST)
+}
+
+/**
  * A page that signs itself in before it loads, then lands on `path`.
  *
  * `as` matters: the wall runs on a display-scope token, the console needs the
@@ -666,8 +686,12 @@ describe('the Ultimate round', () => {
     const device = await stage(IPAD, { path: `/r/${ROOM}`, as: 'player' })
     try {
       await api.jump(ROOM, 10)
-      await page.waitForTimeout(900)
-      await device.page.waitForTimeout(900)
+      // Wait for the question itself, not for a fixed 900ms: the wall has to
+      // take a socket frame and fetch before it can draw, and under a loaded
+      // suite that is sometimes slower than the guess - which failed as "the
+      // wall drew no question", a red that says nothing about the product.
+      await page.waitForSelector('.display__quiz .display__prompt', { timeout: 15_000 })
+      await device.page.waitForSelector('.quiz__question', { timeout: 15_000 })
       const onWall = await page.evaluate(
         () => document.querySelector('.display__quiz .display__prompt')?.textContent ?? '',
       )
@@ -984,7 +1008,7 @@ describe('a room built without a game', () => {
         diamonds: document.querySelectorAll('.game__seg').length,
       }))
       assert.equal(welcome.cards, 3, 'one card per game in this room')
-      assert.deepEqual(welcome.names, ['AI Hallucination', 'Data Shadow', 'Ultimate Showdown'])
+      assert.deepEqual(welcome.names, ['AI Hallucination', 'Data Shadows', 'Ultimate Showdown'])
       assert.match(welcome.sub ?? '', /three games/i)
       assert.equal(welcome.diamonds, 3, 'the progress track counts this room too')
 
@@ -998,6 +1022,8 @@ describe('a room built without a game', () => {
       await context.close()
       await api.finishRoom(code).catch(() => {})
       await api.deleteRoom(code).catch(() => {})
+      // This test's room closed the shared one on its way in; put it back.
+      await reseedRoom()
     }
   })
 })
@@ -1077,7 +1103,7 @@ describe('event control', () => {
       const tabs = await page.locator('.admin__toggle button').allInnerTexts()
       assert.equal(tabs.length, 3, 'one button per event, from the backend list')
       assert.ok(
-        tabs.some((label) => /fintech week/i.test(label)),
+        tabs.some((label) => /fintech festival/i.test(label)),
         'the events the login screen offers are the ones in the report',
       )
 
@@ -1102,9 +1128,9 @@ describe('event control', () => {
       assert.ok(seen.size >= 1, 'a report rendered for every event')
 
       // The leaderboard is ordered, and no other event's player leaks in.
-      const totals = await page
-        .locator('.report__block table tbody tr td:nth-child(3)')
-        .allInnerTexts()
+      // Selected by its own cell class, not by column position: the Games table
+      // above has a third column too (the average), and it is not sorted.
+      const totals = await page.locator('.report__total').allInnerTexts()
       const numbers = totals.map((value) => Number(value.replace(/,/g, '')))
       assert.deepEqual(numbers, [...numbers].sort((a, b) => b - a), 'the board is best first')
 

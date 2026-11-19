@@ -1626,6 +1626,10 @@
   grid-template-columns: 3.2rem minmax(0, 1fr) auto;
   padding: clamp(0.3rem, 0.7vh, 0.6rem) clamp(0.75rem, 1.1vw, 1.1rem);
   margin-bottom: clamp(0.15rem, 0.4vh, 0.32rem);
+  /* Ten places arriving from the top down, a tenth of a second apart: each one
+     settles into its place rather than being simply there. */
+  animation: standby-row-land 320ms cubic-bezier(0.2, 0.9, 0.25, 1) backwards;
+  animation-delay: calc(var(--row, 0) * 100ms);
   /* Set only when ten rows do not fit at their natural size: `StandbyBoard`
      divides the plate by ten and hands the answer down, so the list stays a
      list of ten instead of losing its last place off the bottom. */
@@ -1646,6 +1650,32 @@
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+}
+
+/* The landing itself: a touch smaller, a breath past full size, settled. The
+   overshoot is 1.2% - enough to read as weight on a two-metre wall, small enough
+   that ten of them in a row do not look like they are bouncing. */
+@keyframes standby-row-land {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.012);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The landing above is more specific than the global reduced-motion rule in
+   `Leaderboard.css`, so it has to opt out on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .standby .ldb__row {
+    animation: none;
+  }
 }
 
 /* The plate's own name, in the display face like every other title in the show:

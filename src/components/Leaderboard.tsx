@@ -16,15 +16,24 @@ export interface LeaderboardEntry {
   total?: number
 }
 
+/** The share of the screen the standings may take. A constant, so it cannot
+ *  depend on the height it is used to compute. */
+const WALL_SHARE = 0.62
+/** Nine names fit one column on the wall; a tenth is where two columns start. */
+const SINGLE_COLUMN_MAX = 9
 /** Breathing room below the list before it counts as overflowing. */
 const BOTTOM_MARGIN = 24
-/** Below this a clipping ancestor has not been laid out yet, so it is no ruler. */
-const LAYOUT_FLOOR = 120
 
-/** The board as it stood a second ago, before this section's points land. */
-const HOLD_MS = 1000
-/** How long the numbers take to roll up to the new total. */
-const COUNT_MS = 1200
+/** The board as it stood a moment ago, before this section's points land. */
+const HOLD_MS = 500
+/**
+ * How long the numbers take to roll up to the new total.
+ *
+ * Longer than the hold on purpose: the room has to be able to watch a place
+ * change hands, and 1.2s was over before the eye had found the row. The move
+ * that follows is what says who won, so there is no point rushing to it.
+ */
+const COUNT_MS = 2000
 /** How long a row takes to travel from its old place to its new one. */
 const SLIDE_MS = 700
 /** The same curve the row's own transition declares. */
@@ -38,11 +47,22 @@ const SLIDE_EASE = 'cubic-bezier(0.2, 0.9, 0.25, 1)'
  * each one louder than the last. It is the only board anybody remembers, so it
  * is the only one that gets to be a moment rather than a list.
  */
-const PILE_FALL_MS = 460
-const PILE_STAGGER_MS = 260
+/** How long a row takes to fall. */
+const PILE_FALL_MS = 420
+/** Between places below the top three, last place first. */
+const PILE_STAGGER_MS = 200
+/**
+ * Between the top three, which are the ones the room is waiting for.
+ *
+ * A longer gap is not slowness: it is the pause that makes the third, second
+ * and first places three separate moments instead of one list arriving.
+ */
+const PILE_TOP_STAGGER_MS = 500
 const PILE_PRESS_MS = 240
 /** How far a landed row is pushed down by the weight above it. */
 const PILE_PRESS_PX = 9
+/** How far a row falls from. Longer than the gaps between rows, so it reads as a drop. */
+const PILE_DROP_PX = 220
 /** How long the top three keep glowing after they land. */
 const PILE_FLARE_MS = 900
 /** How long the top three take to settle from their landing pop. */
@@ -50,24 +70,40 @@ const PILE_POP_MS = 520
 /** Past this many places a single column no longer fits, so the pile is off. */
 const PILE_MAX_ROWS = 10
 
+/**
+ * When a place lands, in milliseconds from the start, last place first.
+ *
+ * Rows are handed over best-first, so the schedule is built from the bottom up:
+ * everyone below the podium takes 200ms each, and then the top three take 500ms
+ * each. A room of three or fewer is all podium, so it starts at zero rather
+ * than after a gap that has nobody in it.
+ */
+function revealDelay(index: number, count: number) {
+  const fromBottom = count - 1 - index
+  if (count <= 3) return fromBottom * PILE_TOP_STAGGER_MS
+  if (index >= 3) return fromBottom * PILE_STAGGER_MS
+  const below = (count - 4) * PILE_STAGGER_MS
+  return below + (3 - index) * PILE_TOP_STAGGER_MS
+}
+
 /** Where one row of the pile is at `clock` milliseconds in. */
 function pileAt(clock: number, index: number, count: number) {
-  const revealAt = (count - 1 - index) * PILE_STAGGER_MS
-  const since = clock - revealAt
-  if (since <= 0) return { y: -170, opacity: 0, landed: false }
+  const since = clock - revealDelay(index, count)
+  if (since <= 0) return { y: -PILE_DROP_PX, opacity: 0, landed: false }
   const fall = Math.min(1, since / PILE_FALL_MS)
-  // Cubic ease-out: heavy on the way down, soft on the landing.
-  const eased = 1 - (1 - fall) ** 3
-  // Every row above that has already landed is weight on this one.
+  // Accelerating, not decelerating: this is a weight being dropped, and an
+  // ease-out would slow it down exactly where it should hit hardest.
+  const eased = fall * fall
+  // Every row that lands above this one presses it down a little further.
   let press = 0
   for (let above = 0; above < index; above += 1) {
-    const landedAt = (count - 1 - above) * PILE_STAGGER_MS + PILE_FALL_MS
+    const landedAt = revealDelay(above, count) + PILE_FALL_MS
     const weight = clock - landedAt
     if (weight > 0 && weight < PILE_PRESS_MS) {
       press += PILE_PRESS_PX * (1 - weight / PILE_PRESS_MS)
     }
   }
-  return { y: -170 * (1 - eased) + press, opacity: fall, landed: fall === 1 }
+  return { y: -PILE_DROP_PX * (1 - eased) + press, opacity: fall, landed: fall === 1 }
 }
 
 /** The order a board is drawn in before this section's points land. */
@@ -120,9 +156,18 @@ export default function Leaderboard({
   const list = useRef<HTMLOListElement | null>(null)
   const rowEls = useRef(new Map<string, HTMLLIElement>())
   const before = useRef(new Map<string, { left: number; top: number }>())
-  const [split, setSplit] = useState(false)
   const [phase, setPhase] = useState<Phase>('done')
   const [clock, setClock] = useState(0)
+  /**
+   * When this board's three beats started.
+   *
+   * A board can be handed new rows halfway through - the wall fetches once more
+   * after it goes up, to catch points written a moment too late. Restarting the
+   * clock from that render replayed the hold and the count from the top, which
+   * read as the board rewinding. One clock per mount: a later fetch changes the
+   * numbers being counted towards, never the time already spent.
+   */
+  const startedAt = useRef<number | null>(null)
 
   const withHistory = rows.filter((row) => typeof row.previous === 'number').length
   // A pile is a single column by definition, so the final board never splits.
@@ -131,9 +176,20 @@ export default function Leaderboard({
   const piling = pile && rows.length > 1 && rows.length <= PILE_MAX_ROWS
   const pileMs =
     rows.length > 0
-      ? (rows.length - 1) * PILE_STAGGER_MS + PILE_FALL_MS + PILE_FLARE_MS
+      ? revealDelay(0, rows.length) + PILE_FALL_MS + PILE_FLARE_MS
       : 0
   const animated = !pile && rows.length > 1 && withHistory === rows.length
+  /**
+   * One column or two, from the number of names alone.
+   *
+   * Nine fit one column on the wall; ten do not. Deciding this by MEASURING was
+   * the bug that blanked the display: the two-column rule makes rows shorter,
+   * the shorter rows then measured as "it fits", going back to one column made
+   * them tall again, and the board flipped between the two layouts until React
+   * gave up and unmounted the screen. Data in, layout out - one direction only,
+   * so there is no loop to have.
+   */
+  const split = !(pile && piling) && rows.length > SINGLE_COLUMN_MAX
 
   // The rows on screen right now: the old order while the scores roll, the new
   // one from the moment the board is allowed to move.
@@ -155,13 +211,17 @@ export default function Leaderboard({
 
   // ── the list's beats: hold, then re-order, then let the transition land ────
   useEffect(() => {
-    // A fetch that resolves with new rows is the event this hangs on, and it is
-    // not one React can see; the board has to start held or it arrives settled,
-    // which is the thing the whole animation exists to avoid.
-    // oxlint-disable-next-line react/set-state-in-effect
-    if (animated) setPhase('hold')
     if (!animated) return
-    const timer = window.setTimeout(() => setPhase('slide'), HOLD_MS + COUNT_MS)
+    // A resolved fetch is the event this hangs on, and it is not one React can
+    // see; the board has to start held or it arrives settled, which is the one
+    // thing the whole animation exists to avoid.
+    if (startedAt.current === null) {
+      startedAt.current = performance.now()
+      // oxlint-disable-next-line react/set-state-in-effect
+      setPhase('hold')
+    }
+    const left = Math.max(0, startedAt.current + HOLD_MS + COUNT_MS - performance.now())
+    const timer = window.setTimeout(() => setPhase('slide'), left)
     return () => window.clearTimeout(timer)
   }, [animated, rows])
 
@@ -173,9 +233,9 @@ export default function Leaderboard({
       ...rows.map((row) => Math.max(0, row.total ?? row.score)),
     )
     let frame = 0
-    const start = performance.now()
+    const origin = startedAt.current ?? performance.now()
     const step = (now: number) => {
-      const spent = now - start
+      const spent = now - origin
       const through = Math.min(1, Math.max(0, (spent - HOLD_MS) / COUNT_MS))
       for (const row of rows) {
         const element = rowEls.current.get(row.nickname)
@@ -189,6 +249,12 @@ export default function Leaderboard({
         if (fill) {
           const share = Math.min(1, Math.max(0, value / leader))
           fill.style.width = `${(share * 100).toFixed(1)}%`
+          // A bar of no width still draws its bright right edge, which reads as
+          // a score the player does not have. Hidden rather than unmounted: an
+          // element that is not there cannot be grown, and every row that
+          // started this section on zero - which is every row, on the first
+          // question - used to arrive fully drawn instead of filling up.
+          fill.style.visibility = share > 0 ? '' : 'hidden'
         }
       }
       if (spent < HOLD_MS + COUNT_MS) frame = requestAnimationFrame(step)
@@ -197,94 +263,58 @@ export default function Leaderboard({
     return () => cancelAnimationFrame(frame)
   }, [animated, phase, rows])
 
-  // ── one column or two, and rows short enough to fit either way ─────────────
-  // A layout effect, not an effect: the rows have to know their stride before
-  // the first paint, or a split board flashes as a single column first.
-  //
-  // Written straight to the list rather than through state: the height it sets
-  // is also the height the next measurement reads, and a state round trip
-  // between the two is what makes a board ratchet itself smaller every frame.
+  // ── rows short enough for the space the column count left them ─────────────
+  // Only the ROW HEIGHT is measured, and never in a way that can feed back: the
+  // room comes from the box the board is drawn in (constant), the chrome around
+  // the rows is constant, and the answer is written once and quantised. Nothing
+  // here can change the column count, which is what used to close the loop.
   useLayoutEffect(() => {
     const element = list.current
-    const observer = new ResizeObserver(() => requestAnimationFrame(measure))
-    let watched: Element | null = null
+    if (!element) return
 
-    const measure = () => {
-      const items = Array.from(element?.children ?? []) as HTMLElement[]
-      if (!element || items.length === 0) {
-        setSplit(false)
-        return
-      }
+    const fit = () => {
+      const items = Array.from(element.children) as HTMLElement[]
+      if (items.length === 0) return
+      // Natural size first, so last time's squeeze is not what gets measured.
       element.style.removeProperty('--ldb-row')
-      void element.offsetHeight
       const gap = parseFloat(getComputedStyle(items[0]).marginBottom) || 0
       const natural = items[0].offsetHeight
       if (natural === 0) return
-      const stacked = items.reduce((sum, item) => sum + item.offsetHeight + gap, 0)
-      const listTop = element.getBoundingClientRect().top
-      // The box this board is drawn in. A clipping or scrolling ancestor is the
-      // real ceiling: the wall has a stage under its header, and whatever stands
-      // above the list (the standings heading) is spent from the same budget.
-      let clip: Element | null = element.parentElement
-      while (clip && clip !== document.body) {
-        const overflow = getComputedStyle(clip).overflowY
-        if (overflow === 'auto' || overflow === 'hidden' || overflow === 'scroll') break
-        clip = clip.parentElement
-      }
-      if (clip !== watched) {
-        watched = clip
-        observer.disconnect()
-        observer.observe(element)
-        if (clip && clip !== document.body) observer.observe(clip)
-      }
-      // A clipping ancestor that has not been laid out yet reads as a few
-      // pixels tall, and squeezing against that turns a short board into a
-      // compressed one. Below the threshold the window is the only honest
-      // ceiling, and the observer above asks again once the box has a size.
-      const fitted = clip && clip !== document.body ? clip.getBoundingClientRect() : null
-      const box = fitted && fitted.height >= LAYOUT_FLOOR ? fitted : null
-      const ceiling = Math.min(window.innerHeight, box?.bottom ?? window.innerHeight)
-      // What sits above the list, read at its natural size in this same pass.
-      // It moves a little when the rows shrink - the whole block is centred -
-      // so this settles over two or three frames instead of being pinned to a
-      // number taken before the heading was on screen.
-      const chrome = listTop - (box?.top ?? 0)
-      const available = ceiling - ((box?.top ?? 0) + chrome) - BOTTOM_MARGIN
-      // The final board is a stack: splitting it would draw two shorter piles.
-      // A board too big to stack is not a pile any more, so it may split.
-      const columns = pile && piling ? 1 : stacked > available ? 2 : 1
-      setSplit(columns === 2)
-      // Two columns halve the height; whatever is still over comes out of the
-      // rows, so a full room reads as a full room instead of a list whose bottom
-      // edge fell off the plate.
-      const perColumn = Math.ceil(items.length / columns)
-      // What the board has to lose is the difference between everything it draws
-      // - the heading above it, the plate, and the padding under the last row -
-      // and the box it is drawn in. Measured from the board's own box, both ends
-      // are counted by construction, so nothing has to be guessed.
+      const perColumn = Math.ceil(items.length / (split ? 2 : 1))
+      const rowsHeight = perColumn * natural + (perColumn - 1) * gap
+      // Everything the board draws that is not a row: heading, plate padding,
+      // the pad under the last row. Read once, at natural size.
       const whole = board.current
-      const over = whole && box
-        ? Math.max(
-            0,
-            whole.getBoundingClientRect().top - box.top + whole.offsetHeight + BOTTOM_MARGIN - box.height,
-          )
-        : 0
-      const room = natural - over / perColumn
-      // Below two thirds the type no longer fits the row it is in.
-      if (room < natural) {
-        element.style.setProperty('--ldb-row', `${Math.max(natural * 0.66, room).toFixed(1)}px`)
-      }
+      if (!whole) return
+      const chrome = whole.offsetHeight - rowsHeight
+      // The budget comes from the SCREEN, never from the board's own box. Every
+      // ancestor here is sized by its content, so asking one of them how much
+      // room is left answers with the board's current height - which is the
+      // circle that blanked the display. The window does not move when rows
+      // shrink.
+      const usable = window.innerHeight * WALL_SHARE
+      const room = (usable - chrome - BOTTOM_MARGIN - (perColumn - 1) * gap) / perColumn
+      if (room >= natural) return
+      // Below two thirds the type no longer fits the row it is in, and the board
+      // clips rather than shrinking further: a floor is what stops this from
+      // chasing an impossible height.
+      const target = Math.round(Math.max(natural * 0.66, room) * 2) / 2
+      if (Math.abs(target - natural) < 0.5) return
+      element.style.setProperty('--ldb-row', `${target}px`)
     }
 
-    measure()
-    if (element) observer.observe(element)
-    const onResize = () => requestAnimationFrame(measure)
+    fit()
+    // One more pass on the next frame: the first can land before the plate has
+    // been laid out, and a zero height there simply returns. A single extra
+    // pass cannot loop - it is not re-armed by the height it writes.
+    const frame = requestAnimationFrame(fit)
+    const onResize = () => fit()
     window.addEventListener('resize', onResize)
     return () => {
-      observer.disconnect()
+      cancelAnimationFrame(frame)
       window.removeEventListener('resize', onResize)
     }
-  }, [shownRows, pile, piling])
+  }, [rows, split, piling, pile])
 
   // ── where every row stood, just before the board is allowed to move ────────
   useLayoutEffect(() => {
@@ -383,7 +413,7 @@ export default function Leaderboard({
               // The top three are the ones the room came to see: they land with
               // a flare, rank one loudest.
               const tier = piling && rank <= 3 ? 4 - rank : 0
-              const landedAt = (rows.length - 1 - at) * PILE_STAGGER_MS + PILE_FALL_MS
+              const landedAt = revealDelay(at, rows.length) + PILE_FALL_MS
               const sinceLand = clock - landedAt
               const flare = drop !== null && tier > 0 && drop.landed && sinceLand < PILE_FLARE_MS
               // The three at the top land with weight: a pop that settles, so the
@@ -422,10 +452,15 @@ export default function Leaderboard({
                     .join(' ')}
                   style={style}
                 >
-                  {/* A zero-share row gets no bar at all: a 0% bar still draws
-                      its bright right edge, which reads as a score it does not
-                      have. */}
-                  {share > 0 && <span className="ldb__fill" aria-hidden="true" />}
+                  {/* Rendered even at zero width, so the roll-up can grow it:
+                      unmounted, it could only appear fully drawn when the
+                      count ended. `visibility` hides the one thing a 0% bar
+                      still paints, its bright right edge. */}
+                  <span
+                    className="ldb__fill"
+                    aria-hidden="true"
+                    style={{ visibility: share > 0 ? undefined : 'hidden' }}
+                  />
                   <span className="ldb__rank">{String(rank).padStart(2, '0')}</span>
                   <span className="ldb__name">{row.nickname}</span>
                   <span className="ldb__score">{displayed}</span>

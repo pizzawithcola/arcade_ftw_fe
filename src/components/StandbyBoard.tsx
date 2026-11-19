@@ -119,12 +119,24 @@ export default function StandbyBoard() {
             ref={listRef}
             style={rowHeight === null ? undefined : ({ '--standby-row': `${rowHeight}px` } as CSSProperties)}
           >
-            {shown.map((row) => (
-              <li key={`${row.rank}-${row.nickname}`} className="ldb__row">
+            {shown.map((row, at) => (
+              // Keyed by nickname, not by place: the board re-polls every few
+              // seconds, and a row that remounts because somebody overtook it
+              // would replay its landing in the middle of a still board.
+              <li
+                key={row.nickname}
+                className="ldb__row"
+                style={{ '--row': at } as CSSProperties}
+              >
                 <span
                   className="ldb__fill"
                   aria-hidden="true"
-                  style={{ '--fill': `${Math.round((row.score / leader) * 100)}%` } as React.CSSProperties}
+                  style={
+                    {
+                      '--fill': `${Math.round((row.score / leader) * 100)}%`,
+                      visibility: row.score > 0 ? undefined : 'hidden',
+                    } as CSSProperties
+                  }
                 />
                 <span className="ldb__rank">{String(row.rank).padStart(2, '0')}</span>
                 <span className="ldb__name">{row.nickname}</span>

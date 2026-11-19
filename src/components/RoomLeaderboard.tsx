@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchRoomLeaderboard } from '../api'
 import Leaderboard, { type LeaderboardEntry } from './Leaderboard'
 
@@ -46,6 +46,17 @@ export default function RoomLeaderboard({
 }) {
   const [rows, setRows] = useState<LeaderboardEntry[]>([])
   const [redraw, setRedraw] = useState(0)
+  /**
+   * Where each player stood when this board was drawn, per mount.
+   *
+   * A board that redraws - the wall fetches once more a couple of seconds in,
+   * to catch points written just after it went up - must keep the numbers it
+   * promised to animate FROM. Reading the memory back on the redraw made
+   * `previous` equal the new total, so the second fetch wiped out the whole
+   * story: no roll-up, no reordering, a board that just sat there. The memory
+   * itself still moves forward, because the next board needs a baseline.
+   */
+  const baseline = useRef(new Map<string, number>())
 
   useEffect(() => {
     if (!refreshAfterMs) return
@@ -62,17 +73,21 @@ export default function RoomLeaderboard({
         setRows(
           board.map((row) => {
             const key = `${code}|${section}|${row.nickname}`
-            const before = lastStanding.get(key)
-            // A re-scored node can put a player below where they were; that is a
-            // reset, not a point lost, so the server's own baseline is used and
-            // the memory starts again from there.
-            const fresh = before !== undefined && before <= row.total
+            // The standing before this section, taken from the board that was
+            // drawn last. A total that went DOWN is not a reset: a wrong answer
+            // costs points, and the board has to show that fall. Treating it as
+            // a reset sent the row back to the section's zero baseline, so the
+            // third review filled up from nothing while the rest of the room
+            // counted from where they stood.
+            if (!baseline.current.has(key)) {
+              baseline.current.set(key, lastStanding.get(key) ?? row.previous)
+            }
             lastStanding.set(key, row.total)
             return {
               rank: row.rank,
               nickname: row.nickname,
               score: row.score,
-              previous: fresh ? before : row.previous,
+              previous: baseline.current.get(key),
               total: row.total,
             }
           }),
