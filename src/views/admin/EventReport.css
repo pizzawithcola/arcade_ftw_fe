@@ -107,6 +107,7 @@
 .report__days li {
   display: grid;
   grid-template-columns: 3.2rem 1fr 2rem;
+  padding-block: 0.1rem;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
@@ -118,7 +119,9 @@
 }
 
 .report__day-track {
-  height: 0.5rem;
+  /* Thick enough to read as a bar rather than as a rule with a tint: at eight
+     pixels the two columns were a pair of hairlines. */
+  height: 0.8rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--c-text) 10%, transparent);
 }

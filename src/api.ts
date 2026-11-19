@@ -216,12 +216,15 @@ export interface EventSummary {
   event: EventOption
   /** Everyone who signed in for this event. */
   players: number
-  /** How many of them actually answered anything. */
+  /** How many of them were in a room and answered something, zeroes included. */
+  played: number
+  played_rate: number
+  /** How many of those answers were worth anything. */
   scored: number
   scored_rate: number
   score: { average: number; median: number; best: number; lowest: number }
   games: Record<string, EventGameStat>
-  registrations_per_day: { date: string; count: number }[]
+  registrations_per_day: { date: string; count: number; played: number }[]
   rooms: {
     rounds: number
     participations: number

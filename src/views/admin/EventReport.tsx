@@ -35,7 +35,7 @@ const GAMES: { key: string; label: string }[] = [
   { key: 'ultimate', label: 'Ultimate' },
 ]
 
-const BOARD_LIMIT = 20
+const BOARD_LIMIT = 10
 
 /**
  * Which event the page opens on.
@@ -164,6 +164,13 @@ export default function EventReport() {
     }
   }
 
+  // A game nobody played is a module that was switched off for this event, not a
+  // result. A row and a column of zeroes both read as "nobody played this",
+  // which is a different and worse claim, so both go.
+  const playedGames = summary
+    ? GAMES.filter((game) => (summary.games[game.key]?.players ?? 0) > 0)
+    : GAMES
+
   return (
     <section className="admin__panel report">
       <div className="admin__panel-head">
@@ -211,11 +218,11 @@ export default function EventReport() {
       ) : (
         <>
           <div className="report__cards">
-            <Card label="Signed in" value={number(summary.players)} note="players, all time" />
+            <Card label="Registered" value={number(summary.players)} note="players, all time" />
             <Card
               label="Played"
-              value={number(summary.scored)}
-              note={`${percent(summary.scored_rate)} of them scored`}
+              value={number(summary.played)}
+              note={`${percent(summary.played_rate)} of them played · ${number(summary.scored)} scored`}
             />
             <Card
               label="Average"
@@ -257,7 +264,7 @@ export default function EventReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    {GAMES.map((game) => {
+                    {playedGames.map((game) => {
                       const stat = summary.games[game.key]
                       return (
                         <tr key={game.key}>
@@ -274,8 +281,8 @@ export default function EventReport() {
             </div>
 
             <div className="report__block">
-              <h3>Sign-ups per day</h3>
-              <DayChart days={summary.registrations_per_day} />
+              <h3>Played per day</h3>
+              <DayChart days={summary.registrations_per_day.map((day) => ({ date: day.date, count: day.played }))} />
             </div>
           </div>
 
@@ -296,7 +303,7 @@ export default function EventReport() {
                       <th>#</th>
                       <th>Nickname</th>
                       <th>Total</th>
-                      {GAMES.map((game) => (
+                      {playedGames.map((game) => (
                         <th key={game.key}>{game.label}</th>
                       ))}
                     </tr>
@@ -307,7 +314,7 @@ export default function EventReport() {
                         <td className="admin__dim">{row.rank}</td>
                         <td>{row.nickname}</td>
                         <td className="report__total">{number(row.total_score)}</td>
-                        {GAMES.map((game) => (
+                        {playedGames.map((game) => (
                           <td key={game.key}>{number(row[game.key as keyof EventLeaderboardRow] as number)}</td>
                         ))}
                       </tr>
@@ -349,8 +356,9 @@ function Card({ label, value, note }: { label: string; value: string; note: stri
  *  room filled up, and whether anyone came back.
  */
 function DayChart({ days }: { days: { date: string; count: number }[] }) {
-  if (days.length === 0) return <p className="report__note">No sign-ups yet.</p>
-  const busiest = Math.max(...days.map((day) => day.count))
+  if (days.length === 0) return <p className="report__note">Nobody has played yet.</p>
+  // Played can be zero on every day, and 0 / 0 would paint a NaN width.
+  const busiest = Math.max(1, ...days.map((day) => day.count))
   return (
     <ol className="report__days">
       {days.map((day) => (
