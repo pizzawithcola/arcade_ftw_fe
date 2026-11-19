@@ -229,9 +229,13 @@
      and a two-column board has no single axis to slide along. */
   transition: border-color 400ms ease-out;
   /* Set only when a crowded board has to give the height back, so a full room
-     still fits on the plate. The row keeps its padding and centres what is in
-     it. */
+     still fits on the plate. The type scales with it, and the row keeps its
+     content on the centre line rather than letting it sit high in a shorter
+     box. */
   height: var(--ldb-row, auto);
+  /* Padding follows the ROW, not the type: that is what keeps a 22px name
+     inside a 56px row instead of pushing the row out of the plate. */
+  padding-block: calc(0.55rem * var(--ldb-fit, 1));
   /* Opacity only, and `backwards` so the row is still hidden during its own
      delay. A keyframe that touched `transform` would outrank the inline
      translateY the slide sets, and the move - which is the whole point - would
@@ -279,11 +283,15 @@
 .ldb__rank {
   display: grid;
   place-items: center;
-  height: 1.9rem;
+  /* The plate follows the ROW when a crowded board gives the height back, and
+     the digits inside it follow the type. Sizing the plate off the type scale
+     left it taller than the row it sits in: it overflowed, the grid pushed
+     everything down to fit it, and the names stopped being centred. */
+  height: calc(1.9rem * var(--ldb-fit, 1));
   border: 1px solid var(--c-border);
   background: var(--c-well);
   font-family: 'Orbitron', ui-monospace, monospace;
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--ldb-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
@@ -294,7 +302,7 @@
 
 .ldb__name {
   color: var(--c-text);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--ldb-scale, 1));
   letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -306,7 +314,7 @@
   font-family: 'Orbitron', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--ldb-scale, 1));
   color: var(--c-text);
 }
 

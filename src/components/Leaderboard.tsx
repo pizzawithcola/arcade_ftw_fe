@@ -19,6 +19,10 @@ export interface LeaderboardEntry {
 /** The share of the screen the standings may take. A constant, so it cannot
  *  depend on the height it is used to compute. */
 const WALL_SHARE = 0.62
+/** The smallest the type goes, however short the row gets. 0.9 of natural is
+ *  24px names and 25px scores on a 1080p wall - as small as this board can go
+ *  and still be read from the back of the room. */
+const TYPE_FLOOR = 0.9
 /** Nine names fit one column on the wall; a tenth is where two columns start. */
 const SINGLE_COLUMN_MAX = 9
 /** Breathing room below the list before it counts as overflowing. */
@@ -277,6 +281,8 @@ export default function Leaderboard({
       if (items.length === 0) return
       // Natural size first, so last time's squeeze is not what gets measured.
       element.style.removeProperty('--ldb-row')
+      element.style.removeProperty('--ldb-scale')
+      element.style.removeProperty('--ldb-fit')
       const gap = parseFloat(getComputedStyle(items[0]).marginBottom) || 0
       const natural = items[0].offsetHeight
       if (natural === 0) return
@@ -301,6 +307,14 @@ export default function Leaderboard({
       const target = Math.round(Math.max(natural * 0.66, room) * 2) / 2
       if (Math.abs(target - natural) < 0.5) return
       element.style.setProperty('--ldb-row', `${target}px`)
+      // The type has to come down with the row, or a squeezed board is a row of
+      // the same words in a smaller box: cramped, and no longer centred once the
+      // line box is taller than the space around it. It stops at 80% of the
+      // natural size - further down the words stop being readable from the back
+      // of the room, which is the whole point of the board.
+      const fit = target / natural
+      element.style.setProperty('--ldb-fit', fit.toFixed(3))
+      element.style.setProperty('--ldb-scale', Math.max(fit, TYPE_FLOOR).toFixed(3))
     }
 
     fit()
