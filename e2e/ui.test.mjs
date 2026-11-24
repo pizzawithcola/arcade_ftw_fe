@@ -1087,17 +1087,17 @@ describe('the clocks in the room agree', () => {
   })
 })
 
-describe('event control', () => {
-  test('draws one event at a time and never touches the show', async () => {
+describe('event report', () => {
+  test('reports one event at a time and never touches the show', async () => {
     // The page is in the console so an operator can look at the last event while
-    // this one is running. It may change which event the boards rank, but it must
-    // never move the show - asserted at the end.
+    // this one is running. It is read-only: which event the boards rank is a
+    // control, and controls live on the console. Both are asserted here.
     const before = await api.state(ROOM)
     const original = (await api.get('/api/settings', { token: api.adminToken, expect: 200 }))
       .active_event
     const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
     try {
-      await page.getByRole('button', { name: /event control/i }).click()
+      await page.getByRole('button', { name: /event report/i }).click()
       await page.waitForTimeout(1500)
 
       const tabs = await page.locator('.admin__toggle button').allInnerTexts()
@@ -1108,11 +1108,12 @@ describe('event control', () => {
       )
 
       const cards = await page.locator('.report__card').count()
-      assert.equal(cards, 6, 'signed in, played, average, best, rounds, joins')
+      assert.equal(cards, 6, 'registered, played, average, best, rounds, joins')
 
       // Pick each event in turn: the numbers must come back for each one rather
       // than the first event's report staying on screen.
       const seen = new Set()
+      let boards = 0
       for (const tab of await page.locator('.admin__toggle button').all()) {
         await tab.click()
         await page.waitForTimeout(900)
@@ -1124,33 +1125,75 @@ describe('event control', () => {
         for (const card of await page.locator('.report__card-value').allInnerTexts()) {
           assert.match(card, /^[\d,.]+$/, `a card read "${card}"`)
         }
+        // The leaderboard is ordered, and no other event's player leaks in.
+        // Selected by its own cell class, not by column position: the Games table
+        // above has a third column too (the average), and it is not sorted.
+        // An event nobody scored in draws no board at all, which is a valid
+        // report - so the ordering is only checked where there is one.
+        const totals = (await page.locator('.report__total').allInnerTexts()).map((value) =>
+          Number(value.replace(/,/g, '')),
+        )
+        if (totals.length === 0) continue
+        boards += 1
+        assert.deepEqual(totals, [...totals].sort((a, b) => b - a), 'the board is best first')
       }
       assert.ok(seen.size >= 1, 'a report rendered for every event')
+      assert.ok(boards > 0, 'no event drew a ranked board at all')
 
-      // The leaderboard is ordered, and no other event's player leaks in.
-      // Selected by its own cell class, not by column position: the Games table
-      // above has a third column too (the average), and it is not sorted.
-      const totals = await page.locator('.report__total').allInnerTexts()
-      const numbers = totals.map((value) => Number(value.replace(/,/g, '')))
-      assert.deepEqual(numbers, [...numbers].sort((a, b) => b - a), 'the board is best first')
-
-      // Picking an event is a decision, not a filter: it is stored, so the wall
-      // and the waiting room draw that event's board too.
+      // Reading a report is not a decision: the shared board must not move.
       const stored = await api.get('/api/settings', { token: api.adminToken, expect: 200 })
-      assert.ok(stored.active_event, 'picking an event stored nothing')
+      assert.equal(
+        stored.active_event,
+        original,
+        'the report changed which event the boards rank',
+      )
       assert.equal(
         await page.locator('.report__tab-live').count(),
-        1,
-        'exactly one event is marked as the one being shown',
+        0,
+        'the report still marks an event as the one being shown',
       )
-      const board = await api.get('/api/leaderboard?limit=50', { expect: 200 })
-      assert.equal(board.event, stored.active_event, 'the shared board ignored the choice')
-      for (const row of board.players) {
-        assert.ok(row.nickname, 'the scoped board returned a row without a name')
-      }
-      // A one-off look elsewhere does not disturb the stored choice.
-      const mixed = await api.get('/api/leaderboard?limit=50&event=all', { expect: 200 })
+    } finally {
+      await context.close()
+    }
+
+    const after = await api.state(ROOM)
+    assert.equal(after.phase, before.phase, 'the report changed the show')
+    assert.equal(after.index, before.index, 'the report moved the show')
+  })
+
+  test('the console picks which event the boards rank', async () => {
+    // The control the report used to carry. It belongs beside the show controls,
+    // because it changes what the audience is looking at.
+    const original = (await api.get('/api/settings', { token: api.adminToken, expect: 200 }))
+      .active_event
+    const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
+    try {
+      await page.getByRole('button', { name: /arcade console/i }).click()
+      await page.waitForTimeout(1200)
+
+      const board = page.locator('.admin__board')
+      await board.waitFor()
+      const buttons = board.locator('.admin__toggle button')
+      assert.equal(await buttons.count(), 4, 'all events, plus one per event')
+
+      // Pick the first real event and check the shared board followed.
+      await buttons.nth(1).click()
+      await page.waitForTimeout(900)
+      const stored = await api.get('/api/settings', { token: api.adminToken, expect: 200 })
+      assert.ok(stored.active_event, 'picking an event stored nothing')
+      const shared = await api.get('/api/leaderboard?limit=50', { expect: 200 })
+      assert.equal(shared.event, stored.active_event, 'the shared board ignored the choice')
+
+      // And back to every event at once, which is what `All events` means.
+      await buttons.first().click()
+      await page.waitForTimeout(900)
+      const cleared = await api.get('/api/settings', { token: api.adminToken, expect: 200 })
+      assert.equal(cleared.active_event, null, 'all events should store no event')
+      const mixed = await api.get('/api/leaderboard?limit=50', { expect: 200 })
       assert.equal(mixed.event, null, '`all` should rank every event together')
+      for (const row of mixed.players) {
+        assert.ok(row.nickname, 'the unscoped board returned a row without a name')
+      }
     } finally {
       await context.close()
       // Leave the console as it was found: the boards are shared state.
@@ -1160,10 +1203,6 @@ describe('event control', () => {
         expect: 200,
       })
     }
-
-    const after = await api.state(ROOM)
-    assert.equal(after.phase, before.phase, 'the report changed the show')
-    assert.equal(after.index, before.index, 'the report moved the show')
   })
 })
 

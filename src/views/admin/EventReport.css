@@ -42,15 +42,9 @@
   color: var(--c-text-dim);
 }
 
-/* Games and the day chart sit side by side while there is room, and stack when
-   the console is narrow rather than squeezing the table. */
-.report__split {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
+/* Games, the day chart and the comparison each take the full width instead of
+   sharing a row: five columns of numbers plus a bar do not fit half a console,
+   and a table that scrolls sideways in a report reads as a bug. */
 .report__block {
   min-width: 0;
   margin-bottom: 1rem;
@@ -106,7 +100,7 @@
 
 .report__days li {
   display: grid;
-  grid-template-columns: 3.2rem 1fr 2rem;
+  grid-template-columns: 3.2rem 1fr 4.4rem;
   padding-block: 0.1rem;
   align-items: center;
   gap: 0.5rem;
@@ -138,6 +132,48 @@
   color: var(--c-text);
 }
 
+/* That day's sign-ups, dimmed beside who played: the pair is the point, and a
+   second column of bars would say the same thing twice. */
+.report__day-total {
+  color: var(--c-text-dim);
+}
+
+/* Share of the perfect run, as a bar in the cell: a column of percentages alone
+   is hard to scan down, and the bar makes "this game was the hard one" obvious. */
+.report__share {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 7.5rem;
+}
+
+.report__share-track {
+  flex: 1;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-text) 10%, transparent);
+}
+
+.report__share-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-brand) 75%, transparent);
+}
+
+.report__share-value {
+  min-width: 2.2rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+/* The row for the event the page is showing, so a comparison table of three
+   rows still says which one the rest of the page is about. */
+.report__row--current td {
+  background: color-mix(in srgb, var(--c-brand-deep) 10%, transparent);
+}
+
 /* The headcount on each event button: enough to see which one has an audience
    without switching to it. */
 .report__tab-count {
@@ -148,24 +184,6 @@
 
 .admin__toggle button.is-active .report__tab-count {
   color: var(--c-text-muted);
-}
-
-/* Which event the room is being shown. Sits inside the button it belongs to so
-   it can never point at a different one than the label beside it. */
-.report__tab-live {
-  margin-left: 0.4rem;
-  padding: 0.02rem 0.32rem;
-  border: 1px solid color-mix(in srgb, var(--c-brand-deep) 70%, transparent);
-  border-radius: 999px;
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--c-brand);
-}
-
-.report__saving {
-  font-size: 0.7rem;
-  color: var(--c-text-dim);
 }
 
 .report__boards {

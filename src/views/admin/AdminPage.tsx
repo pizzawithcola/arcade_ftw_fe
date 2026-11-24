@@ -158,7 +158,7 @@ function jumpGroups(flow: FlowNode[]): JumpGroup[] {
   return groups
 }
 
-type Section = 'console' | 'data' | 'events' | 'settings' | 'design'
+type Section = 'console' | 'data' | 'report' | 'settings' | 'design'
 type DataTab = 'rooms' | 'players'
 
 interface PlayerDraft {
@@ -172,7 +172,7 @@ interface PlayerDraft {
 const SECTIONS: { key: Section; label: string; note: string }[] = [
   { key: 'console', label: 'Arcade Console', note: 'Run the show' },
   { key: 'data', label: 'Arcade Data', note: 'Rooms and players' },
-  { key: 'events', label: 'Event Control', note: 'Which event is shown' },
+  { key: 'report', label: 'Event Report', note: 'How the event went' },
   { key: 'settings', label: 'Game Setting', note: 'Quiz bank' },
   { key: 'design', label: 'Design', note: 'Tokens and palette' },
 ]
@@ -203,6 +203,10 @@ export default function AdminPage() {
   // venue laptop and this one agree and a refreshed browser does not quietly
   // restore the full show; `modules` is the local copy the checkboxes draw.
   const [modules, setModules] = useState<string[]>(ALL_MODULES)
+  // Which event the shared boards rank. `null` ranks every event together, and
+  // it is the server's value rather than this tab's, because the wall, the
+  // waiting room and the public board all read the same setting.
+  const [activeEvent, setActiveEvent] = useState<string | null>(null)
   // The room in front of the operator, so the picker can retime it while it is
   // still waiting. Read through a ref: the callback below must not be rebuilt on
   // every poll, or a run of checkbox clicks would race itself.
@@ -224,7 +228,9 @@ export default function AdminPage() {
     let live = true
     void fetchSettings()
       .then((loaded) => {
-        if (live) setModules(loaded.modules)
+        if (!live) return
+        setModules(loaded.modules)
+        setActiveEvent(loaded.active_event)
       })
       // A console that cannot read the setting still has to run: the full show
       // is the safe assumption, and the picker shows it plainly.
@@ -289,6 +295,21 @@ export default function AdminPage() {
     const id = window.setInterval(() => void load(), 2000)
     return () => window.clearInterval(id)
   }, [session, load])
+
+  const chooseActiveEvent = useCallback((next: string | null) => {
+    // Optimistic for the same reason as the module boxes: a segmented control
+    // that lags a round trip reads as a missed click. A refusal re-reads the
+    // server, so the switch never claims a pick that was not stored.
+    setActiveEvent(next)
+    void saveSettings({ active_event: next })
+      .then((saved) => setActiveEvent(saved.active_event))
+      .catch((caught: unknown) => {
+        setError(caught instanceof Error ? caught.message : String(caught))
+        void fetchSettings()
+          .then((loaded) => setActiveEvent(loaded.active_event))
+          .catch(() => undefined)
+      })
+  }, [])
 
   // The whole roster, pulled once when the data section opens and then on
   // demand. It used to be scoped to the current room and re-read every three
@@ -445,6 +466,9 @@ export default function AdminPage() {
           {section === 'console' && (
             <ConsoleView
               room={room}
+              events={events}
+              activeEvent={activeEvent}
+              onActiveEvent={chooseActiveEvent}
               onAction={run}
               onStartRound={startRound}
               busy={busy}
@@ -466,7 +490,7 @@ export default function AdminPage() {
               onDeletePlayer={(player) => void removePlayer(player)}
             />
           )}
-          {section === 'events' && <EventReport />}
+          {section === 'report' && <EventReport />}
           {section === 'settings' && (
             <SettingsView modules={modules} onModules={onModules} />
           )}
@@ -600,11 +624,17 @@ function ModulePicker({
 
 function ConsoleView({
   room,
+  events,
+  activeEvent,
+  onActiveEvent,
   onAction,
   onStartRound,
   busy,
 }: {
   room: RoomSnapshot | undefined
+  events: EventOption[]
+  activeEvent: string | null
+  onActiveEvent: (next: string | null) => void
   onAction: (action: string) => void
   onStartRound: () => void
   busy: boolean
@@ -697,37 +727,67 @@ function ConsoleView({
                 and state. */}
             <ScreenPreview code={room.code} screen={screen} />
           </div>
-
-          <div className="admin__progress">
-            <p className="admin__hint">
-              Jump straight to a node instead of waiting for the clock:
-            </p>
-            <div className="admin__jumps">
-              {(room.state.flow ? jumpGroups(room.state.flow) : []).map((group) => (
-                <div key={group.key} className="admin__jumpgroup">
-                  <span className="admin__jumpgroup-title">{group.title}</span>
-                  <div className="admin__jumpgroup-buttons">
-                    {group.buttons.map((button) => (
-                      <button
-                        key={button.index}
-                        type="button"
-                        disabled={busy}
-                        className={button.index === room.state.index ? 'is-current' : ''}
-                        onClick={() => onAction(`go/${button.index}`)}
-                      >
-                        {button.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </>
       ) : (
         <p className="admin__hint">
           No room is open. Create one to start the next round.
         </p>
+      )}
+
+      {/* Which event the shared boards rank. Between the show controls and the
+          node jumps: not a way to run the show, but it does change what every
+          screen in the room is drawing. */}
+      <div className="admin__board">
+        <span className="admin__board-title">Leaderboard Event</span>
+        <div className="admin__toggle" role="tablist" aria-label="Event the leaderboards rank">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeEvent === null}
+            className={activeEvent === null ? 'is-active' : ''}
+            onClick={() => onActiveEvent(null)}
+          >
+            All events
+          </button>
+          {events.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              role="tab"
+              aria-selected={option.key === activeEvent}
+              className={option.key === activeEvent ? 'is-active' : ''}
+              onClick={() => onActiveEvent(option.key)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {room && (
+        <div className="admin__progress">
+          <h3 className="admin__progress-title">Node Control</h3>
+          <div className="admin__jumps">
+            {(room.state.flow ? jumpGroups(room.state.flow) : []).map((group) => (
+              <div key={group.key} className="admin__jumpgroup">
+                <span className="admin__jumpgroup-title">{group.title}</span>
+                <div className="admin__jumpgroup-buttons">
+                  {group.buttons.map((button) => (
+                    <button
+                      key={button.index}
+                      type="button"
+                      disabled={busy}
+                      className={button.index === room.state.index ? 'is-current' : ''}
+                      onClick={() => onAction(`go/${button.index}`)}
+                    >
+                      {button.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </section>
   )

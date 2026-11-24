@@ -191,7 +191,7 @@ export default function ThemePreview() {
             </div>
 
             <div className="admin__progress">
-              <p className="admin__hint">Jump straight to a node instead of waiting for the clock:</p>
+              <h3 className="admin__progress-title">Node Control</h3>
               <div className="admin__jumps">
                 {JUMP_GROUPS.map((group) => (
                   <div className="admin__jumpgroup" key={group.title}>

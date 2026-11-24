@@ -207,6 +207,36 @@
   flex-wrap: wrap;
 }
 
+/* Which event the shared leaderboards rank. A section of its own between the
+   show controls and the node jumps: a rule above it matches the one below it,
+   and the labels are long enough that wrapping them into the head bar pushed
+   the room code and the new-room button around every time an event was added. */
+.admin__board {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--c-border);
+}
+
+.admin__board-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+/* The full switch size, not the compressed one the head bar uses. This is a
+   named section now rather than a footnote, and it is the control the operator
+   reaches for mid-show with an audience watching - so it gets a taller target
+   than the default, which matters on the iPad console. */
+.admin__board .admin__toggle button {
+  padding: 0.55rem 0.95rem;
+  font-size: 0.8rem;
+}
+
 /* Starting a round must not require a code or a second screen. */
 .admin__new-round {
   padding: 0.38rem 0.8rem;
@@ -535,6 +565,18 @@
 .admin__progress {
   border-top: 1px solid var(--c-border);
   padding-top: 0.9rem;
+}
+
+/* The jump board's own name, in the same micro-label voice as the leaderboard
+   pick above it. It used to be a sentence explaining what the buttons do; the
+   headings now say where you are, and the buttons say what they do. */
+.admin__progress-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
 }
 
 .admin__table-note {

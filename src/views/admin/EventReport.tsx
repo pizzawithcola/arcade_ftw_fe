@@ -1,12 +1,10 @@
 /**
- * Event control: one event's numbers, and which event the room is being shown.
+ * Event report: what one event's numbers say, read-only.
  *
- * Nothing here touches a room, a score or a player, so it is safe to use while a
- * show is running. What it *does* control is the board every screen draws: the
- * pick is stored on the server (`settings.active_event`), so the wall, the
- * waiting room and the public leaderboard all rank the same event the operator
- * chose here. Picking in this page is therefore a decision, not a filter - it
- * used to change nothing but this page's own numbers.
+ * Nothing here touches a room, a score, a player or which event the boards rank -
+ * that last one moved to the console, where the controls that change the audience
+ * view live. This page only reads, so an operator can leave it open on a second
+ * screen for the whole show and nothing it does can reach the room.
  *
  * Every count comes from the event the players chose at the login screen
  * (`players.event`). The one inferred number is the round count: rooms carry no
@@ -19,8 +17,6 @@ import {
   fetchEventLeaderboard,
   fetchEventOptions,
   fetchEventSummary,
-  fetchSettings,
-  saveSettings,
   type EventLeaderboardRow,
   type EventOptionRow,
   type EventSummary,
@@ -34,6 +30,22 @@ const GAMES: { key: string; label: string }[] = [
   { key: 'sabotage', label: 'AI Cyber Battle' },
   { key: 'ultimate', label: 'Ultimate' },
 ]
+
+/**
+ * What a perfect run of each game is worth.
+ *
+ * Hardcoded from the games' own rules, which is the point: the two that live in
+ * the frontend are `perfectScore()` for Ultimate and the 3 x 200 answer cap for
+ * Hallucination, and Data Shadow and a solo Sabotage are both 800. A player can
+ * still exceed these through a manual score adjustment, so the share is clamped
+ * rather than trusted to stay under 100%.
+ */
+const GAME_MAX: Record<string, number> = {
+  hallucination: 600,
+  data: 800,
+  sabotage: 800,
+  ultimate: 600,
+}
 
 const BOARD_LIMIT = 10
 
@@ -69,17 +81,25 @@ function percent(rate: number): string {
   return `${Math.round(rate * 100)}%`
 }
 
+/** One row of the cross-event table: the same handful of numbers every event, so
+ *  the comparison is read down the columns rather than across two pages. */
+interface EventCompared {
+  key: string
+  label: string
+  players: number
+  played: number
+  average: number
+  rounds: number
+}
+
 export default function EventReport() {
   const [options, setOptions] = useState<{ events: EventOptionRow[]; latest: string | null }>({
     events: [],
     latest: null,
   })
   const [chosen, setChosen] = useState('')
-  // What the boards are actually ranking right now. Kept apart from `chosen`
-  // so the switch can show a save in progress instead of lying about it.
-  const [active, setActive] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
   const [summary, setSummary] = useState<EventSummary | null>(null)
+  const [compared, setCompared] = useState<EventCompared[]>([])
   const [board, setBoard] = useState<EventLeaderboardRow[]>([])
   const [error, setError] = useState('')
 
@@ -87,14 +107,10 @@ export default function EventReport() {
   // the "most recently played" default, neither of which the console has.
   useEffect(() => {
     let live = true
-    Promise.all([fetchEventOptions(), fetchSettings()])
-      .then(([next, settings]) => {
+    fetchEventOptions()
+      .then((next) => {
         if (!live) return
         setOptions(next)
-        setActive(settings.active_event)
-        // Opening the page on the event the room is being shown is what an
-        // operator expects; a remembered pick only wins if there is no active one.
-        if (settings.active_event) setChosen(settings.active_event)
       })
       .catch((problem: unknown) => {
         if (!live) return
@@ -117,13 +133,36 @@ export default function EventReport() {
 
     const load = async () => {
       try {
-        const [nextSummary, nextBoard] = await Promise.all([
+        // Every event, in one pass: the comparison table is what turns three
+        // separate reports into a claim about the show, and it must cover the
+        // events that are not on screen. A failed sibling drops its own row
+        // rather than the whole page.
+        const [nextSummary, nextBoard, siblings] = await Promise.all([
           fetchEventSummary(key),
           fetchEventLeaderboard(key, BOARD_LIMIT),
+          Promise.all(
+            events.map((option) =>
+              fetchEventSummary(option.key)
+                .then((other) => ({ option, other }))
+                .catch(() => null),
+            ),
+          ),
         ])
         if (!live) return
         setSummary(nextSummary)
         setBoard(nextBoard)
+        setCompared(
+          siblings
+            .filter((entry) => entry !== null)
+            .map(({ option, other }) => ({
+              key: option.key,
+              label: option.label,
+              players: other.players,
+              played: other.played,
+              average: other.score.average,
+              rounds: other.rooms.rounds,
+            })),
+        )
         setError('')
       } catch (problem) {
         if (!live) return
@@ -139,29 +178,15 @@ export default function EventReport() {
       live = false
       window.clearInterval(id)
     }
-  }, [key])
+  }, [key, events])
 
-  const pick = async (next: string) => {
+  const pick = (next: string) => {
     // The old event's numbers must not sit on screen while the new ones load:
     // they would read as the answer for the event just chosen.
     setSummary(null)
     setError('')
     setChosen(next)
     window.localStorage.setItem(STORE_KEY, next)
-    setSaving(true)
-    try {
-      const saved = await saveSettings({ active_event: next })
-      setActive(saved.active_event)
-    } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'Could not change the event.')
-      // Fall back to whatever the server still holds, so the badge never claims
-      // a choice that was not stored.
-      void fetchSettings()
-        .then((settings) => setActive(settings.active_event))
-        .catch(() => undefined)
-    } finally {
-      setSaving(false)
-    }
   }
 
   // A game nobody played is a module that was switched off for this event, not a
@@ -174,9 +199,9 @@ export default function EventReport() {
   return (
     <section className="admin__panel report">
       <div className="admin__panel-head">
-        <h2>Event Control</h2>
+        <h2>Event Report</h2>
         <div className="admin__head-tools">
-          <div className="admin__toggle" role="tablist" aria-label="Event">
+          <div className="admin__toggle" role="tablist" aria-label="Event to report on">
             {events.map((option) => (
               <button
                 key={option.key}
@@ -184,31 +209,19 @@ export default function EventReport() {
                 role="tab"
                 aria-selected={option.key === key}
                 className={option.key === key ? 'is-active' : ''}
-                onClick={() => void pick(option.key)}
+                onClick={() => pick(option.key)}
               >
                 {option.label}
                 <span className="report__tab-count">{number(option.players)}</span>
-                {/* Which one the room is actually being shown. A tick, not a
-                    second control: the badge follows the server, so it cannot
-                    claim a choice a failed save never stored. */}
-                {option.key === active && (
-                  <span className="report__tab-live" title="Shown on the wall and the leaderboard">
-                    live
-                  </span>
-                )}
               </button>
             ))}
           </div>
-          {saving && <span className="report__saving">saving…</span>}
         </div>
       </div>
 
       <p className="report__note report__boards">
-        {active
-          ? `The wall, the waiting room and the public leaderboard rank ${
-              events.find((option) => option.key === active)?.label ?? active
-            } only.`
-          : 'Every event is ranked together on the board. Pick one to show a single event.'}
+        Read-only. Which event the boards rank is set in the console; this page only counts what
+        already happened.
       </p>
 
       {error !== '' ? (
@@ -250,40 +263,95 @@ export default function EventReport() {
             />
           </div>
 
-          <div className="report__split">
-            <div className="report__block">
-              <h3>Games</h3>
+          <div className="report__block">
+            <h3>
+              Games
+              <span className="report__hint">average as a share of the perfect run</span>
+            </h3>
+            <div className="report__table-wrap">
+              <table className="admin__table">
+                <thead>
+                  <tr>
+                    <th>Game</th>
+                    <th>Players</th>
+                    <th>Average</th>
+                    <th>Best</th>
+                    <th>Of max</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {playedGames.map((game) => {
+                    const stat = summary.games[game.key]
+                    const ceiling = GAME_MAX[game.key] ?? 0
+                    // Clamped: a manual score adjustment can push a player past
+                    // the game's own ceiling, and a bar over 100% reads as a bug.
+                    const share = ceiling > 0 ? Math.min(1, (stat?.average ?? 0) / ceiling) : 0
+                    return (
+                      <tr key={game.key}>
+                        <td>{game.label}</td>
+                        <td>{number(stat?.players ?? 0)}</td>
+                        <td>{average(stat?.average ?? 0)}</td>
+                        <td>{number(stat?.best ?? 0)}</td>
+                        <td className="report__share">
+                          <span className="report__share-track">
+                            <span
+                              className="report__share-bar"
+                              style={{ width: `${Math.round(share * 100)}%` }}
+                            />
+                          </span>
+                          <span className="report__share-value">{percent(share)}</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="report__block">
+            <h3>
+              Played per day
+              <span className="report__hint">of that day&rsquo;s sign-ups</span>
+            </h3>
+            <DayChart days={summary.registrations_per_day} />
+          </div>
+
+          <div className="report__block">
+            <h3>
+              Events compared
+              <span className="report__hint">same questions, three rooms</span>
+            </h3>
+            {compared.length === 0 ? (
+              <p className="report__note">No event has numbers yet.</p>
+            ) : (
               <div className="report__table-wrap">
                 <table className="admin__table">
                   <thead>
                     <tr>
-                      <th>Game</th>
-                      <th>Players</th>
+                      <th>Event</th>
+                      <th>Registered</th>
+                      <th>Played</th>
+                      <th>Played %</th>
                       <th>Average</th>
-                      <th>Best</th>
+                      <th>Rounds</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {playedGames.map((game) => {
-                      const stat = summary.games[game.key]
-                      return (
-                        <tr key={game.key}>
-                          <td>{game.label}</td>
-                          <td>{number(stat?.players ?? 0)}</td>
-                          <td>{average(stat?.average ?? 0)}</td>
-                          <td>{number(stat?.best ?? 0)}</td>
-                        </tr>
-                      )
-                    })}
+                    {compared.map((row) => (
+                      <tr key={row.key} className={row.key === key ? 'report__row--current' : ''}>
+                        <td>{row.label}</td>
+                        <td>{number(row.players)}</td>
+                        <td>{number(row.played)}</td>
+                        <td>{row.players > 0 ? percent(row.played / row.players) : '—'}</td>
+                        <td>{row.average > 0 ? average(row.average) : '—'}</td>
+                        <td>{number(row.rounds)}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            <div className="report__block">
-              <h3>Played per day</h3>
-              <DayChart days={summary.registrations_per_day.map((day) => ({ date: day.date, count: day.played }))} />
-            </div>
+            )}
           </div>
 
           <div className="report__block">
@@ -350,15 +418,17 @@ function Card({ label, value, note }: { label: string; value: string; note: stri
   )
 }
 
-/** Registrations by day, as bars against the busiest day.
+/** Sign-ups by day, as bars against the busiest day.
  *
  *  A chart rather than a table because the shape is the point: which day the
- *  room filled up, and whether anyone came back.
+ *  room filled up, and whether anyone came back. The bar is the number who
+ *  played, the dim number beside it is that day's sign-ups, so the gap between
+ *  arriving and playing is visible without a second chart.
  */
-function DayChart({ days }: { days: { date: string; count: number }[] }) {
+function DayChart({ days }: { days: { date: string; count: number; played: number }[] }) {
   if (days.length === 0) return <p className="report__note">Nobody has played yet.</p>
   // Played can be zero on every day, and 0 / 0 would paint a NaN width.
-  const busiest = Math.max(1, ...days.map((day) => day.count))
+  const busiest = Math.max(1, ...days.map((day) => day.played))
   return (
     <ol className="report__days">
       {days.map((day) => (
@@ -367,10 +437,13 @@ function DayChart({ days }: { days: { date: string; count: number }[] }) {
           <span className="report__day-track">
             <span
               className="report__day-bar"
-              style={{ width: `${Math.max(4, (day.count / busiest) * 100)}%` }}
+              style={{ width: `${Math.max(4, (day.played / busiest) * 100)}%` }}
             />
           </span>
-          <span className="report__day-count">{day.count}</span>
+          <span className="report__day-count">
+            {day.played}
+            <span className="report__day-total">/{day.count}</span>
+          </span>
         </li>
       ))}
     </ol>
