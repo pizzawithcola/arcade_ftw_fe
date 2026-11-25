@@ -1231,7 +1231,7 @@ describe('event report', () => {
       )
       assert.match(
         await page.locator('.report__archive').innerText(),
-        /^Arcade 1\.0 · AI Cyber Arcade for UAE AI Connect - 2 rooms · 2 days · 5 games · 30 mins per round$/,
+        /^Arcade 1\.0 · AI Cyber Arcade for UAE AI Connect - 2 rooms · 2 days · 5 games · 30 mins per round · 500 points in total$/,
         'the archive must name the show the way the room named it',
       )
       const archiveGames = await page.locator('.report__share').count()
