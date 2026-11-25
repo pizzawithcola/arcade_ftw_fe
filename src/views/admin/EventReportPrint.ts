@@ -90,7 +90,7 @@ const STYLES = `
   .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.8mm; }
   .card {
     min-width: 0;
-    padding: 1.6mm 1.8mm;
+    padding: 1.6mm 1.4mm;
     border: 0.5pt solid #d7dce4;
     border-radius: 1.6mm;
   }
@@ -101,10 +101,13 @@ const STYLES = `
     text-transform: uppercase;
     color: #6b7484;
   }
+  /* 10pt, not 11: a score carries its share - "2,000 (100%)" - and six cards
+     across A4 leave about 26mm each, where 11pt threw that onto a second line. */
   .card b {
     display: block;
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: 500;
+    letter-spacing: -0.01em;
     overflow-wrap: anywhere;
   }
   .bars { width: 100%; border-collapse: collapse; }

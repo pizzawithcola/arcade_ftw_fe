@@ -49,6 +49,9 @@
 }
 
 .report__card {
+  /* The value sizes itself against the card (13cqw below): six cards in a
+     console column are narrow enough that 1.2rem wrapped "2,000 (100%)". */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -67,14 +70,16 @@
 }
 
 .report__card-value {
-  /* The share may drop to a second line ("10,856.8" / "(100%)") when six cards
-     share the row. Truncating it would hide the number the card exists for, and
-     letting it overflow the border was the bug this replaced. */
+  /* The share may still drop to a second line for an absurd total
+     ("10,856.8" / "(100%)"). Truncating it would hide the number the card exists
+     for, and letting it overflow the border was the bug this replaced. */
   overflow-wrap: anywhere;
   /* The UI face, not Orbitron: that display face draws a slashed zero and a
      squared seven, so "10.0" reads like a row of boxes at a glance. The wall's
      clock keeps the same rule for the same reason. */
-  font-size: 1.2rem;
+  /* Scales with the card instead of guessing: a narrow console keeps "2,000
+     (100%)" on one line and a wide one still gets the full 1.2rem. */
+  font-size: clamp(0.75rem, 13cqw, 1.2rem);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 1.12;
