@@ -1101,14 +1101,69 @@ describe('event report', () => {
       await page.waitForTimeout(1500)
 
       const tabs = await page.locator('.admin__toggle button').allInnerTexts()
-      assert.equal(tabs.length, 3, 'one button per event, from the backend list')
+      // Five short names, in the order the reports are printed.
+      assert.match(tabs[0], /uae ai connect/i, 'the archive is the first tab')
+      assert.match(tabs[1], /all arcade 2\.0/i, 'the summary is the second tab')
+      assert.equal(tabs.length, 5)
+
+      // The all-time report cuts itself per event: bars for who played where,
+      // a Games table with one column per event, and no board of names.
+      assert.equal(
+        await page.locator('.report__block h3', { hasText: 'Played per event' }).count(),
+        1,
+        'the summary charts its events, not its days',
+      )
+      const gameHeads = await page.locator('.report__block thead tr').first().innerText()
+      // The header cells are uppercased by CSS, so the match is case-blind.
+      assert.match(gameHeads, /total avg/i, 'the Games table needs a total column')
+      assert.match(gameHeads, /hk fintech avg/i, 'one column per event')
+      assert.match(gameHeads, /sg fintech avg/i, 'one column per event')
+      assert.equal(
+        await page.locator('.report__block h3', { hasText: 'Score distribution' }).count(),
+        1,
+        'the board should be replaced by a distribution',
+      )
+      assert.equal(
+        await page.locator('.report__block h3', { hasText: /^Leaderboard/ }).count(),
+        0,
+        'the all-time report should not list names',
+      )
+
+      // Average and best carry the share in brackets: the absolute score alone
+      // cannot be compared with an event that ran fewer games.
+      const averageCard = await page
+        .locator('.report__card', { hasText: 'Average' })
+        .locator('.report__card-value')
+        .innerText()
+      assert.match(averageCard, /^[\d,.]+ \(\d+%\)$/, `the average card read "${averageCard}"`)
+
+      // Every report says which arcade it is, which show, and which days.
+      assert.equal(
+        await page.locator('.report__title').innerText(),
+        'Arcade 2.0 - Overall Summary',
+        'the summary report should name itself at the top',
+      )
+      // The ceiling rides with the number, so no separate column is needed for
+      // "of max" or "of played".
+      assert.equal(
+        await page.locator('.report__block th', { hasText: /of (played|max)/i }).count(),
+        0,
+        'the Games table should not carry a share-of column',
+      )
+      const fractions = await page
+        .locator('.report__block td')
+        .evaluateAll((cells) => cells.map((cell) => cell.textContent ?? ''))
       assert.ok(
-        tabs.some((label) => /fintech festival/i.test(label)),
+        fractions.some((text) => /^[\d,.]+ \/ [\d,]+$/.test(text.trim())),
+        'average and best should read as "324.5 / 600"',
+      )
+      assert.ok(
+        tabs.some((label) => /sg ftf/i.test(label)),
         'the events the login screen offers are the ones in the report',
       )
 
       const cards = await page.locator('.report__card').count()
-      assert.equal(cards, 6, 'registered, played, average, best, rounds, joins')
+      assert.equal(cards, 6, 'registered, played, rounds, size, average, best')
 
       // Pick each event in turn: the numbers must come back for each one rather
       // than the first event's report staying on screen.
@@ -1123,7 +1178,10 @@ describe('event report', () => {
         seen.add(headline)
         // Every card is a number, not a blank or an error.
         for (const card of await page.locator('.report__card-value').allInnerTexts()) {
-          assert.match(card, /^[\d,.]+$/, `a card read "${card}"`)
+          // Every card is a number, not a blank or an error. An em dash is the
+          // report saying "there is no number for this yet", which is valid on
+          // an event that has no rooms; a trailing "(34%)" is the share.
+          assert.match(card, /^[\d,.]+( \(\d+%\))?$|^—$/, `a card read "${card}"`)
         }
         // The leaderboard is ordered, and no other event's player leaks in.
         // Selected by its own cell class, not by column position: the Games table
@@ -1139,6 +1197,47 @@ describe('event report', () => {
       }
       assert.ok(seen.size >= 1, 'a report rendered for every event')
       assert.ok(boards > 0, 'no event drew a ranked board at all')
+
+      // Arcade 1.0 is its own page: five games out of 100, a top ten and a
+      // banner saying the numbers are another scale's. No comparison table,
+      // because there is nothing here that can be compared.
+      await page.getByRole('tab', { name: /uae ai connect/i }).click()
+      await page.waitForTimeout(1200)
+      await page.locator('.report__archive').waitFor()
+      assert.equal(
+        await page.locator('.report__title').innerText(),
+        'Arcade 1.0 - UAE AI Connect (Sep. 29-30)',
+      )
+      assert.match(
+        await page.locator('.report__archive').innerText(),
+        /^Arcade 1\.0 · AI Cyber Arcade for UAE AI Connect - 2 rooms · 2 days · 5 games · 30 mins per round$/,
+        'the archive must name the show the way the room named it',
+      )
+      const archiveGames = await page.locator('.report__share').count()
+      assert.equal(archiveGames, 5, 'five 1.0 games, not four 2.0 sections')
+      // The countries and the days are the two shapes the archive page is read
+      // for, and they sit in one row of cards.
+      assert.equal(await page.locator('.report__pie-disc').count(), 1, 'no country pie')
+      assert.equal(
+        await page.locator('.report__legend li').count(),
+        7,
+        'one legend row per country in the export',
+      )
+      assert.equal(
+        await page.locator('.report__pair').first().locator('.report__bars li').count(),
+        2,
+        'the export carries two days of sign-ups',
+      )
+      assert.equal(
+        await page.getByRole('heading', { name: /events compared/i }).count(),
+        0,
+        'an archived event must not sit in a comparison with 2.0 events',
+      )
+      assert.equal(
+        await page.locator('.report__total').count(),
+        10,
+        'the 1.0 export carries a top ten, not a full board',
+      )
 
       // Reading a report is not a decision: the shared board must not move.
       const stored = await api.get('/api/settings', { token: api.adminToken, expect: 200 })
@@ -1161,6 +1260,47 @@ describe('event report', () => {
     assert.equal(after.index, before.index, 'the report moved the show')
   })
 
+  test('downloads every report as one A4 page each, in tab order', async () => {
+    // The print dialog itself is not something a test can drive, so the frame's
+    // `print` is stubbed and the document it was handed is inspected instead.
+    // What matters is the set: every report, in tab order, one page each, and a
+    // page that fits A4 rather than spilling onto a second sheet.
+    const { context, page } = await stage(WALL, { path: '/admin', as: 'operator' })
+    await page.addInitScript(() => {
+      // Runs in every frame, so it lands in the print frame before it is used.
+      window.print = () => {
+        const pages = [...document.querySelectorAll('.page')]
+        window.parent.__printed = {
+          headings: pages.map((one) => one.querySelector('h1')?.textContent ?? ''),
+          heights: pages.map((one) => Math.round(one.getBoundingClientRect().height)),
+        }
+      }
+    })
+    try {
+      await page.getByRole('button', { name: /event report/i }).click()
+      await page.waitForTimeout(1500)
+      await page.getByRole('button', { name: /^download$/ }).click()
+      await page.waitForFunction(() => window.__printed !== undefined, null, { timeout: 15_000 })
+
+      const printed = await page.evaluate(() => window.__printed)
+      assert.deepEqual(printed.headings, [
+        'Arcade 1.0 - UAE AI Connect (Sep. 29-30)',
+        'Arcade 2.0 - Overall Summary',
+        'Arcade 2.0 - Hong Kong Fintech Week (Nov. 2-3)',
+        'Arcade 2.0 - Hong Kong Employee Week (Nov. 9-11)',
+        'Arcade 2.0 - Singapore Fintech Festival (Nov. 18-20)',
+      ])
+      // A4 is 297mm tall; 14mm top and bottom margins leave 269mm, which is 1017
+      // CSS pixels. A report taller than that prints on two sheets, and "one
+      // page per report" is the whole point of the button.
+      for (const height of printed.heights) {
+        assert.ok(height <= 1017, `a report page is ${height}px tall and would spill`)
+      }
+    } finally {
+      await context.close()
+    }
+  })
+
   test('the console picks which event the boards rank', async () => {
     // The control the report used to carry. It belongs beside the show controls,
     // because it changes what the audience is looking at.
@@ -1174,7 +1314,11 @@ describe('event report', () => {
       const board = page.locator('.admin__board')
       await board.waitFor()
       const buttons = board.locator('.admin__toggle button')
-      assert.equal(await buttons.count(), 4, 'all events, plus one per event')
+      assert.equal(
+        await buttons.count(),
+        4,
+        'all events, plus one per event that can be signed in for',
+      )
 
       // Pick the first real event and check the shared board followed.
       await buttons.nth(1).click()

@@ -192,10 +192,22 @@ export async function fetchRoomLeaderboard(
 }
 
 export interface EventOptionRow extends EventOption {
+  /** What the report's tab says - short, because five of them share a row. */
+  tab: string
+  /** The line above the report: arcade generation, show name and dates. */
+  title: string
+  /** The days the show ran, as the organisers wrote them. Null on the summary. */
+  dates?: string | null
+  /** Booth/day/game/round-length summary. Null on the all-time summary. */
+  facts?: string | null
   /** Everyone who ever signed in for this event. */
   players: number
   /** ISO timestamp of the newest sign-up, or null for an event nobody chose. */
   last_registration: string | null
+  /** Set on an event that ran on Arcade 1.0. Those numbers are not this
+   *  system's: they are read from `/events/{key}/archive`, never from the live
+   *  report, and nothing on the live page may add them to a 2.0 total. */
+  source?: string
 }
 
 /** Every event with its headcount, and which one was played most recently. */
@@ -210,10 +222,12 @@ export interface EventGameStat {
   players: number
   average: number
   best: number
+  /** What a perfect run of this game is worth. */
+  max: number
 }
 
 export interface EventSummary {
-  event: EventOption
+  event: EventOption & { tab: string; title: string; facts: string | null }
   /** Everyone who signed in for this event. */
   players: number
   /** How many of them were in a room and answered something, zeroes included. */
@@ -222,9 +236,30 @@ export interface EventSummary {
   /** How many of those answers were worth anything. */
   scored: number
   scored_rate: number
-  score: { average: number; median: number; best: number; lowest: number }
+  score: {
+    average: number
+    median: number
+    best: number
+    lowest: number
+    /** What this event's perfect run was worth; null on the all-time summary. */
+    max: number | null
+    /** Average / best as a 0-100 share of each player's own event ceiling. */
+    average_share: number
+    best_share: number
+  }
   games: Record<string, EventGameStat>
   registrations_per_day: { date: string; count: number; played: number }[]
+  /** Total-score bands, for the distribution chart. */
+  distribution: { label: string; count: number }[]
+  /** Only on the all-time summary: the same numbers cut per event. */
+  by_event?: {
+    key: string
+    label: string
+    short: string
+    players: number
+    played: number
+    games: Record<string, { players: number; average: number }>
+  }[]
   rooms: {
     rounds: number
     participations: number
@@ -260,6 +295,50 @@ export async function fetchEventLeaderboard(
     `/api/events/${encodeURIComponent(key)}/leaderboard?limit=${limit}`,
   )
   return body.players
+}
+
+/** An event that ran on Arcade 1.0.
+ *
+ *  Its own payload shape on purpose: five games scored out of 100, a top ten
+ *  instead of a full board, and a headcount that was counted by another system.
+ *  Sharing the live report's type would invite a total to be added up across
+ *  the two scales.
+ */
+export interface EventArchive {
+  key: string
+  label: string
+  tab: string
+  /** The line above the numbers: "Arcade 1.0 - UAE AI Connect (Sep. 29-30)". */
+  title: string
+  dates?: string | null
+  source: string
+  event: { name: string; description: string | null; start_at: string; end_at: string }
+  /** The one-line description the console prints above the numbers. */
+  tagline: string
+  headline: {
+    participants: number
+    active_players: number
+    countries: number
+    rounds: number
+    round_players: number
+    answers: number
+  }
+  countries: { region: string; count: number }[]
+  registrations_per_day: { date: string; count: number }[]
+  games: { key: string; label: string; players: number; average: number; best: number; max: number }[]
+  leaderboard: {
+    rank: number
+    nickname: string
+    name: string
+    region: string
+    total_score: number
+  }[]
+  leaderboard_note: string
+}
+
+/** One archived (Arcade 1.0) event, read-only and on its own scale. */
+export function fetchEventArchive(key: string): Promise<EventArchive> {
+  return request<EventArchive>(`/api/events/${encodeURIComponent(key)}/archive`)
 }
 
 export async function loginPlayer(nickname: string, event: string): Promise<PlayerSession> {

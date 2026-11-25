@@ -1,6 +1,41 @@
 /* Event results: a read-only page, so it borrows the panel furniture from the
    console and adds only what a report needs - cards, a chart, a wide table. */
 
+/* Pie wedges. The one place on this page that spends hues other than the brand
+   red: eight steps of red are eight guesses, and a country breakdown has to be
+   readable without checking the legend every time. Mid-tone on purpose, so the
+   same values hold up on the dark panel and on the light one. */
+.report {
+  --report-pie-1: #e5484d;
+  --report-pie-2: #f5a524;
+  --report-pie-3: #14b8a6;
+  --report-pie-4: #6e7bf2;
+  --report-pie-5: #a855f7;
+  --report-pie-6: #22c55e;
+  --report-pie-7: #64748b;
+  --report-pie-8: #ec4899;
+}
+
+/* The show's shape in one line: booths, days, games, round length. Sits under the
+   title because it qualifies everything below it - "3 games" explains why the
+   Games table has three rows. */
+.report__facts {
+  margin: -0.55rem 0 0.9rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  color: var(--c-text-dim);
+}
+
+/* The report's own name, above everything it describes: which arcade, which
+   show, which days. Not an <h2> - that is the section name in the sidebar. */
+.report__title {
+  margin: 0 0 0.9rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--c-text);
+}
+
 .report__cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -42,11 +77,32 @@
   color: var(--c-text-dim);
 }
 
-/* Games, the day chart and the comparison each take the full width instead of
-   sharing a row: five columns of numbers plus a bar do not fit half a console,
-   and a table that scrolls sideways in a report reads as a bug. */
+/* Every block is a card: a report is read block by block, and a table floating
+   on the panel background with nothing around it looked like it had escaped
+   from somewhere else. Full width by default - five columns of numbers plus a
+   bar do not fit half a console, and a table that scrolls sideways in a report
+   reads as a bug. `.report__pair` is the exception, for the two small charts. */
 .report__block {
   min-width: 0;
+  margin-bottom: 1rem;
+  padding: 0.85rem 0.95rem 0.9rem;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface-raised);
+}
+
+/* Two small charts side by side, stacking when the console is narrow rather
+   than squeezing a pie chart into 120px. */
+.report__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  /* Stretch, not start: two cards in one row at different heights read as a
+     layout accident even when the content explains it. */
+  align-items: stretch;
+}
+
+.report__pair > .report__block {
   margin-bottom: 1rem;
 }
 
@@ -74,6 +130,20 @@
   overflow-x: auto;
 }
 
+/* Tables read down their first column, so every cell starts at the same edge.
+   The admin tables elsewhere right-align their numbers, which is right for a
+   grid of digits and wrong here: a report is read as sentences, and a header
+   that starts in a different place from its column makes the eye jump. */
+.report .admin__table th,
+.report .admin__table td {
+  text-align: left;
+}
+
+.report .admin__table th:last-child,
+.report .admin__table td:last-child {
+  text-align: left;
+}
+
 .report__total {
   font-weight: 600;
 }
@@ -89,52 +159,147 @@
   color: var(--c-warning);
 }
 
-.report__days {
+/* One row per day: a date, a bar, the number, and that day's sign-ups. The
+   rows are short by design - this block shares a row with the pie, and a tall
+   chart there would set the height for both cards. */
+.report__bars {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  width: 100%;
   gap: 0.3rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.report__days li {
+/* The first column is sized for the longest label it carries - an event name
+   ("HK Employee") rather than a date - so the bars of a per-event chart all start
+   at the same edge. `nowrap` because a label that wraps to three lines makes the
+   row three times taller than the bar it belongs to. */
+.report__bars li {
   display: grid;
-  grid-template-columns: 3.2rem 1fr 4.4rem;
-  padding-block: 0.1rem;
+  grid-template-columns: 5.6rem 1fr 2.4rem 3.4rem;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
 }
 
-.report__day-date {
+.report__bar-date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--c-text-muted);
 }
 
-.report__day-track {
-  /* Thick enough to read as a bar rather than as a rule with a tint: at eight
-     pixels the two columns were a pair of hairlines. */
-  height: 0.8rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--c-text) 10%, transparent);
-}
-
-.report__day-bar {
+.report__bar-track {
+  position: relative;
   display: block;
-  height: 100%;
+  height: 0.85rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--c-brand) 75%, transparent);
+  background: color-mix(in srgb, var(--c-text) 9%, transparent);
+  overflow: hidden;
 }
 
-.report__day-count {
+/* That day's sign-ups, behind the played bar. */
+.report__bar-ghost {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-text) 13%, transparent);
+}
+
+.report__bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-brand) 80%, transparent);
+}
+
+.report__bar-value {
+  text-align: right;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.report__bar-note {
+  color: var(--c-text-dim);
+  white-space: nowrap;
+}
+
+/* A chart's body keeps a floor height and centres what is in it.
+   One day of data draws one 14px bar, which made the card collapse to the
+   height of its own heading and the row of cards jump around as tabs changed.
+   The floor holds the space whether there is one datum or twenty, and centring
+   keeps a single bar from hugging the top of an otherwise empty card. */
+.report__chart {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 140px;
+}
+
+/* Pie and its legend share a row inside the card: the wedges alone cannot be
+   read to the last percent, and a legend above them would push the chart down. */
+.report__pie {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.report__pie-disc {
+  flex: none;
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--c-border);
+}
+
+.report__legend {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.report__legend li {
+  display: grid;
+  /* A fixed column for the count keeps the numbers in a column of their own
+     instead of trailing each label by whatever width that label happens to be. */
+  grid-template-columns: 0.5rem minmax(4rem, 1fr) 2rem 2.4rem;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.report__legend-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+}
+
+.report__legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-muted);
+}
+
+.report__legend-n {
   text-align: right;
   color: var(--c-text);
 }
 
-/* That day's sign-ups, dimmed beside who played: the pair is the point, and a
-   second column of bars would say the same thing twice. */
-.report__day-total {
+.report__legend-pct {
+  text-align: right;
   color: var(--c-text-dim);
 }
 
@@ -174,6 +339,37 @@
   background: color-mix(in srgb, var(--c-brand-deep) 10%, transparent);
 }
 
+/* Five event names, one of them an archive title, do not fit across one console
+   width - so these are separate tiles that wrap onto a second row, rather than a
+   single segmented bar that would clip the last event off the edge. */
+.report .admin__toggle {
+  flex-wrap: wrap;
+  overflow: visible;
+  border: none;
+  gap: 0.3rem;
+}
+
+.report .admin__toggle button {
+  white-space: nowrap;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+}
+
+.report .admin__toggle button + button {
+  border-left: 1px solid var(--c-border);
+}
+
+.report .admin__toggle button.is-active {
+  border-color: color-mix(in srgb, var(--c-brand-deep) 65%, transparent);
+}
+
+/* The one action on this page: it produces a file, so it takes the accent the
+   console gives its own primary buttons. Pushed to the far end of the row so a
+   mis-click cannot land on it while switching reports. */
+.report__download {
+  margin-left: auto;
+}
+
 /* The headcount on each event button: enough to see which one has an audience
    without switching to it. */
 .report__tab-count {
@@ -189,3 +385,17 @@
 .report__boards {
   margin: 0 0 0.9rem;
 }
+
+/* Arcade 1.0 archives.
+   The banner is the one thing on this page that must not be skimmed: these
+   numbers came from a different scoring scale, and a reader who adds them to a
+   2.0 total gets a wrong answer. */
+.report__archive {
+  margin: 0 0 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 2px solid var(--c-brand);
+  background: color-mix(in srgb, var(--c-brand) 8%, transparent);
+  border-radius: 0 6px 6px 0;
+  color: var(--c-text-muted);
+}
+
