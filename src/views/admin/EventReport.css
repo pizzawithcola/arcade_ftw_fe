@@ -36,9 +36,14 @@
   color: var(--c-text);
 }
 
+/* Six cards across one console row.
+   `minmax(0, ...)` and `min-width: 0` on the card are what stop the last one
+   spilling: with an intrinsic minimum, a long value or a wide font pushes the
+   final column past the panel, and its right border is drawn outside the clip
+   and disappears. */
 .report__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
   gap: 0.6rem;
   margin-bottom: 1rem;
 }
@@ -47,6 +52,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  min-width: 0;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--c-border);
   border-radius: 8px;
@@ -54,27 +60,26 @@
 }
 
 .report__card-label {
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--c-text-muted);
 }
 
 .report__card-value {
+  /* The share may drop to a second line ("10,856.8" / "(100%)") when six cards
+     share the row. Truncating it would hide the number the card exists for, and
+     letting it overflow the border was the bug this replaced. */
+  overflow-wrap: anywhere;
   /* The UI face, not Orbitron: that display face draws a slashed zero and a
      squared seven, so "10.0" reads like a row of boxes at a glance. The wall's
      clock keeps the same rule for the same reason. */
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
-  line-height: 1.1;
+  line-height: 1.12;
   letter-spacing: -0.01em;
   color: var(--c-text);
-}
-
-.report__card-note {
-  font-size: 0.7rem;
-  color: var(--c-text-dim);
 }
 
 /* Every block is a card: a report is read block by block, and a table floating
@@ -162,6 +167,26 @@
 /* One row per day: a date, a bar, the number, and that day's sign-ups. The
    rows are short by design - this block shares a row with the pie, and a tall
    chart there would set the height for both cards. */
+/* The column names above a bar list, sharing its grid so the labels sit over
+   the columns they belong to. */
+.report__bars-head {
+  display: grid;
+  grid-template-columns: 5.6rem 1fr 2.4rem 3.4rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.report__bars-head span:nth-child(3) {
+  text-align: right;
+}
+
 .report__bars {
   display: flex;
   flex-direction: column;
@@ -240,6 +265,85 @@
   min-height: 140px;
 }
 
+/* Two views of one set of numbers, side by side: the table side and the shape
+   side. Stacking them would double the height of the block for no new reading. */
+/* The second column is sized to its chart rather than to a share of the card.
+   A percentage share left the eleven columns stretched across 470px, which is
+   why they looked so far apart: each slot was 38px wide around a 9px bar. */
+.report__chart-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 1.2rem;
+  align-items: center;
+}
+
+@media (max-width: 60rem) {
+  .report__chart-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Eleven columns of a ten-point scale. Fixed height so the shape is comparable
+   between reports, and no gridlines: the numbers sit on top of each column. */
+.report__columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 8.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report__column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  height: 100%;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A thin column, centred in its slot: eleven fat bars turn a distribution into
+   a wall, and the gap is what makes the shape readable. */
+.report__column-track {
+  position: relative;
+  width: 100%;
+  flex: 1;
+}
+
+.report__column-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(100%, 0.5rem);
+  transform: translateX(-50%);
+  border-radius: 2px 2px 0 0;
+  background: color-mix(in srgb, var(--c-brand) 80%, transparent);
+}
+
+/* The count rides on its own bar rather than sitting in a row along the top,
+   where it reads as a second table. */
+.report__column-value {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--c-text-dim);
+}
+
+/* Tick numbers stay upright: a rotated digit run reads bottom-to-top, which
+   turns a range into something that looks like a negative number. */
+.report__column-label {
+  font-size: 0.5rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
 /* Pie and its legend share a row inside the card: the wedges alone cannot be
    read to the last percent, and a legend above them would push the chart down. */
 .report__pie {
@@ -248,6 +352,40 @@
   gap: 1rem;
   flex-wrap: wrap;
   width: 100%;
+}
+
+/* Beside a bar chart that already names every slice, the pie only needs the
+   wedges: a second copy of the labels would be the same words twice. */
+.report__pie--compact {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.report__pie--compact .report__pie-disc {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+/* The legend takes the space beside the disc, not the row under it: `width:
+   100%` here would force the flex row to wrap and put the labels back
+   underneath, which is the layout this replaced. */
+.report__pie--compact .report__legend {
+  flex: 1 1 auto;
+  width: auto;
+  /* Capped, or the label column takes the rest of the card and the counts end up
+     stranded against the right edge, an inch from the names they belong to. */
+  max-width: 7.5rem;
+  min-width: 0;
+  font-size: 0.68rem;
+}
+
+.report__pie--compact .report__legend li {
+  grid-template-columns: 0.45rem minmax(2.5rem, 1fr) auto;
+}
+
+.report__pie--compact .report__legend-pct {
+  display: none;
 }
 
 .report__pie-disc {

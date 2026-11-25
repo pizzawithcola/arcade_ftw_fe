@@ -260,32 +260,12 @@ export default function EventReport() {
           {summary.event.facts && <p className="report__facts">{summary.event.facts}</p>}
 
           <div className="report__cards">
-            <Card label="Registered" value={number(summary.players)} note="players, all time" />
-            <Card
-              label="Played"
-              value={number(summary.played)}
-              note={`${percent(summary.played_rate)} of them played · ${number(summary.scored)} scored`}
-            />
-            <Card
-              label="Rounds"
-              value={number(summary.rooms.rounds)}
-              note={summary.rooms.derived ? 'inferred from who joined' : 'rooms run'}
-            />
-            {/* People per round, not the running total: the total is what you
-                divide to get this, so it belongs in the note. `Size` is how big
-                a room got, which is what decides whether the show felt full. */}
+            <Card label="Registered" value={number(summary.players)} />
+            <Card label="Played" value={number(summary.played)} />
+            <Card label="Rounds" value={number(summary.rooms.rounds)} />
             <Card
               label="Size"
-              value={
-                summary.rooms.rounds ? average(summary.rooms.average_per_round) : '—'
-              }
-              note={
-                summary.rooms.rounds
-                  ? `${number(summary.rooms.participations)} entries over ${number(
-                      summary.rooms.rounds,
-                    )} round${summary.rooms.rounds === 1 ? '' : 's'}`
-                  : 'no room has been opened'
-              }
+              value={summary.rooms.rounds ? average(summary.rooms.average_per_round) : '—'}
             />
             {/* The share in brackets is what makes the number comparable across
                 events: 949.6 means nothing until you know a perfect run was
@@ -293,12 +273,10 @@ export default function EventReport() {
             <Card
               label="Average"
               value={withShare(summary.score.average, summary.score.average_share)}
-              note={`median ${number(summary.score.median)}`}
             />
             <Card
               label="Best"
               value={withShare(summary.score.best, summary.score.best_share, number)}
-              note={summary.players ? `lowest ${number(summary.score.lowest)}` : 'nobody scored'}
             />
           </div>
 
@@ -313,14 +291,26 @@ export default function EventReport() {
             </h3>
             <div className="report__chart">
               {isAll && summary.by_event ? (
-                <BarList
-                  rows={summary.by_event.map((row) => ({
-                    label: row.short,
-                    value: row.played,
-                    ghost: row.players,
-                    note: `of ${number(row.players)}`,
-                  }))}
-                />
+                // Bars and a pie of the same numbers: the bars compare, the pie
+                // shows the share of the whole, and one event carrying 89% of
+                // the players is a different show from three even nights.
+                <div className="report__chart-split">
+                  <BarList
+                    rows={summary.by_event.map((row) => ({
+                      label: row.short,
+                      value: row.played,
+                      ghost: row.players,
+                      note: `of ${number(row.players)}`,
+                    }))}
+                  />
+                  <Pie
+                    slices={summary.by_event.map((row) => ({
+                      label: row.short,
+                      value: row.played,
+                    }))}
+                    compact
+                  />
+                </div>
               ) : (
                 <DayBars days={summary.registrations_per_day} />
               )}
@@ -385,12 +375,24 @@ export default function EventReport() {
                 </span>
               </h3>
               <div className="report__chart">
-                <BarList
-                  rows={summary.distribution.map((band) => ({
-                    label: band.label,
-                    value: band.count,
-                  }))}
-                />
+                {/* The same eleven numbers twice on purpose: the list is exact
+                    and readable, the columns are the shape. Ten-point bands make
+                    the columns even enough to read as a distribution instead of
+                    a staircase. */}
+                <div className="report__chart-split">
+                  <BarList
+                    rows={summary.distribution.map((band) => ({
+                      label: band.label,
+                      value: band.count,
+                    }))}
+                  />
+                  <Columns
+                    bars={summary.distribution.map((band) => ({
+                      label: tick(band.label),
+                      value: band.count,
+                    }))}
+                  />
+                </div>
               </div>
               <p className="report__note report__hint">
                 0 is its own band: answered something and scored nothing is a finding, not the
@@ -455,13 +457,61 @@ export default function EventReport() {
   )
 }
 
-function Card({ label, value, note }: { label: string; value: string; note: string }) {
+/** One number, its name, and nothing else.
+ *
+ *  The line of explanation under each value is gone: it repeated what the block
+ *  below already shows (the median is in the distribution, the scored count is
+ *  on the Played bar) and it made the row tall enough that the sixth card was
+ *  pushed past the panel edge.
+ */
+function Card({ label, value }: { label: string; value: string }) {
   return (
     <div className="report__card">
       <span className="report__card-label">{label}</span>
       <span className="report__card-value">{value}</span>
-      <span className="report__card-note">{note}</span>
     </div>
+  )
+}
+
+/** `1–10%` -> `10`: a column axis wants the band's top edge as a number.
+ *
+ *  Rotated range labels were unreadable - the en dash ended up where a minus
+ *  sign goes, so "1-10" came out looking like "-10" - and a dash inside a
+ *  stacked glyph run is a lie about the data.
+ */
+function tick(label: string): string {
+  const bounds = label.replace('%', '').split('–')
+  return bounds[bounds.length - 1] ?? label
+}
+
+/** One column per band, scaled to the tallest.
+ *
+ *  The vertical twin of `BarList`: the list gives exact counts, the columns give
+ *  the shape, and eleven thin bars read as a distribution where a wall of fat
+ *  ones would not.
+ */
+function Columns({ bars }: { bars: { label: string; value: number }[] }) {
+  if (bars.length === 0) return <p className="report__note">Nothing to draw yet.</p>
+  const tallest = Math.max(1, ...bars.map((bar) => bar.value))
+  // 86 leaves the tallest bar room for its own number inside the track.
+  const height = (value: number) => Math.max(2, (value / tallest) * 86)
+  return (
+    <ol className="report__columns">
+      {bars.map((bar) => (
+        <li key={bar.label} className="report__column">
+          <span className="report__column-track">
+            <span className="report__column-bar" style={{ height: `${height(bar.value)}%` }} />
+            <span
+              className="report__column-value"
+              style={{ bottom: `calc(${height(bar.value)}% + 0.22rem)` }}
+            >
+              {number(bar.value)}
+            </span>
+          </span>
+          <span className="report__column-label">{bar.label}</span>
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -472,12 +522,25 @@ function Card({ label, value, note }: { label: string; value: string; note: stri
  */
 function BarList({
   rows,
+  columns,
 }: {
   rows: { label: string; value: number; ghost?: number; note?: string }[]
+  /** Header labels: [bar, value, note]. Omitted where the block's title already
+   *  names both columns. */
+  columns?: [string, string, string?]
 }) {
   if (rows.length === 0) return <p className="report__note">Nothing to draw yet.</p>
   const busiest = Math.max(1, ...rows.map((row) => row.ghost ?? row.value))
   return (
+    <>
+    {columns && (
+      <div className="report__bars-head">
+        <span>{columns[0]}</span>
+        <span />
+        <span>{columns[1]}</span>
+        <span>{columns[2] ?? ''}</span>
+      </div>
+    )}
     <ul className="report__bars">
       {rows.map((row) => (
         <li key={row.label}>
@@ -497,6 +560,7 @@ function BarList({
         </li>
       ))}
     </ul>
+    </>
   )
 }
 
@@ -627,7 +691,15 @@ const PIE_COLOURS = [
   'var(--report-pie-8)',
 ]
 
-function Pie({ slices }: { slices: { label: string; value: number }[] }) {
+function Pie({
+  slices,
+  compact,
+}: {
+  slices: { label: string; value: number }[]
+  /** Wedges plus a short percentage list: for a pie that sits beside a bar
+   *  chart which already names every label. */
+  compact?: boolean
+}) {
   const total = slices.reduce((sum, slice) => sum + slice.value, 0)
   if (total === 0) return <p className="report__note">Nothing to break down yet.</p>
 
@@ -643,7 +715,7 @@ function Pie({ slices }: { slices: { label: string; value: number }[] }) {
   )
 
   return (
-    <div className="report__pie">
+    <div className={`report__pie${compact ? ' report__pie--compact' : ''}`}>
       <span
         className="report__pie-disc"
         style={{ background: `conic-gradient(${stops.join(', ')})` }}
@@ -674,38 +746,18 @@ function Pie({ slices }: { slices: { label: string; value: number }[] }) {
  */
 function ArchiveReport({ archive }: { archive: EventArchive }) {
   const { headline } = archive
-  const answersPerRound =
-    headline.rounds > 0 ? average(headline.answers / headline.rounds) : '—'
   return (
     <>
       <h3 className="report__title">{archive.title}</h3>
       <p className="report__note report__archive">{archive.tagline}</p>
 
       <div className="report__cards">
-        <Card
-          label="Participants"
-          value={number(headline.participants)}
-          note="signed in, Arcade 1.0"
-        />
-        <Card
-          label="Played"
-          value={number(headline.active_players)}
-          note={`${percent(
-            headline.participants > 0 ? headline.active_players / headline.participants : 0,
-          )} of them played`}
-        />
-        <Card label="Countries" value={number(headline.countries)} note="on the sign-in form" />
-        <Card label="Rounds" value={number(headline.rounds)} note="Ultimate Showdown rooms" />
-        <Card
-          label="Answers"
-          value={number(headline.answers)}
-          note={`${answersPerRound} per round · ${number(headline.round_players)} players`}
-        />
-        <Card
-          label="Best"
-          value={number(archive.leaderboard[0]?.total_score ?? 0)}
-          note="of about 500"
-        />
+        <Card label="Participants" value={number(headline.participants)} />
+        <Card label="Played" value={number(headline.active_players)} />
+        <Card label="Countries" value={number(headline.countries)} />
+        <Card label="Rounds" value={number(headline.rounds)} />
+        <Card label="Answers" value={number(headline.answers)} />
+        <Card label="Best" value={number(archive.leaderboard[0]?.total_score ?? 0)} />
       </div>
 
       <div className="report__pair">
@@ -726,14 +778,20 @@ function ArchiveReport({ archive }: { archive: EventArchive }) {
 
         <div className="report__block">
           <h3>
-            Registrations per day
-            <span className="report__hint">{number(headline.participants)} in total</span>
+            Played per day
+            <span className="report__hint">the 1.0 export records sign-ups only</span>
           </h3>
-          {/* The 1.0 export counts sign-ups only, so these bars have no
-              "played" series to draw inside them. */}
-          <div className="report__chart">
-            <DayBars days={archive.registrations_per_day} />
-          </div>
+          {/* Headed like the other reports so the block can be read in the same
+              place on every page. The numbers are sign-ups: Arcade 1.0's export
+              carries no per-day answers, which the hint says rather than
+              letting the title claim something the data cannot support. */}
+          <BarList
+            rows={archive.registrations_per_day.map((day) => ({
+              label: day.date.slice(5),
+              value: day.count,
+            }))}
+            columns={['Day', 'Sign-ups']}
+          />
         </div>
       </div>
 

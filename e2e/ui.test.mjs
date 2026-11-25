@@ -1129,6 +1129,27 @@ describe('event report', () => {
         'the all-time report should not list names',
       )
 
+      // A card is a label and a number, nothing else: the explanation under
+      // each value repeated what the blocks below already show.
+      assert.equal(
+        await page.locator('.report__card-note').count(),
+        0,
+        'the cards should carry no explanatory line',
+      )
+      // The summary shows its events twice on purpose: bars to compare them, a
+      // pie for the share of the room each one was.
+      assert.equal(
+        await page.locator('.report__pie--compact').count(),
+        1,
+        'Played per event needs a pie beside the bars',
+      )
+      // Ten-point bands, drawn as columns as well as rows.
+      assert.equal(
+        await page.locator('.report__column').count(),
+        11,
+        '0 plus ten bands should be eleven columns',
+      )
+
       // Average and best carry the share in brackets: the absolute score alone
       // cannot be compared with an event that ran fewer games.
       const averageCard = await page
@@ -1273,6 +1294,21 @@ describe('event report', () => {
         window.parent.__printed = {
           headings: pages.map((one) => one.querySelector('h1')?.textContent ?? ''),
           heights: pages.map((one) => Math.round(one.getBoundingClientRect().height)),
+          // Notes under each card were dropped: the card is a label and a number.
+          cardNotes: document.querySelectorAll('.card i').length,
+          // The last card's right border must clear the *paper* edge, not just the
+          // page box: measured against the page box it is always 0, and a border
+          // sitting on the paper edge gets shaved in half on a real printer.
+          cardOverflow: pages.map((one) => {
+            const paper = document.documentElement.clientWidth
+            const right = one.querySelector('.cards').lastElementChild.getBoundingClientRect().right
+            return +(right - paper).toFixed(1)
+          }),
+          columns: pages.map((one) => one.querySelectorAll('.column').length),
+          pies: pages.map((one) => one.querySelectorAll('.pie svg').length),
+          // The dialog opens with "Background graphics" off; without this the
+          // bars and legend dots print as blank space.
+          colorAdjust: getComputedStyle(document.body).printColorAdjust,
         }
       }
     })
@@ -1296,6 +1332,19 @@ describe('event report', () => {
       for (const height of printed.heights) {
         assert.ok(height <= 1017, `a report page is ${height}px tall and would spill`)
       }
+      assert.equal(printed.cardNotes, 0, 'the cards carry a label and a number, nothing else')
+      // Not merely "not past the edge": the border has to sit a hair inside it,
+      // or the page box shaves half of it off on a real printer.
+      for (const overflow of printed.cardOverflow) {
+        assert.ok(overflow <= -1, `the last card sits ${overflow}px from the page edge`)
+      }
+      // The all-time page is the only one with the distribution columns and the
+      // played-per-event pie; the other four print a board or a day chart.
+      assert.deepEqual(printed.columns, [0, 11, 0, 0, 0])
+      assert.deepEqual(printed.pies, [0, 1, 0, 0, 0])
+      // The dialog opens with "Background graphics" off; without this the bars,
+      // the legend dots and the column fills print as blank space.
+      assert.equal(printed.colorAdjust, 'exact', 'ink charts need print-color-adjust')
     } finally {
       await context.close()
     }
